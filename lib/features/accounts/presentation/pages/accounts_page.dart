@@ -152,7 +152,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<AccountType>(
-              initialValue: _selectedType,
+              value: _selectedType,
               decoration: const InputDecoration(labelText: 'Type de compte'),
               items: AccountType.values
                   .map((t) => DropdownMenuItem(value: t, child: Text(_typeLabel(t))))
@@ -180,7 +180,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _selectedCurrency,
+                    value: _selectedCurrency,
                     decoration: const InputDecoration(labelText: 'Devise'),
                     items: currencies
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
