@@ -17,7 +17,7 @@ jobs:
           channel: 'stable'
 
       - run: flutter create --platforms=android --project-name gestion_financiere .
-      - run: sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.24'/" android/build.gradle
+      - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle
       - run: flutter pub get
       - run: flutter build apk --release
 
