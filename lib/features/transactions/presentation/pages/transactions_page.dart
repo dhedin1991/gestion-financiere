@@ -40,7 +40,7 @@ class TransactionsPage extends ConsumerWidget {
             );
           }
 
-          final accounts = accountsAsync.asData?.value ?? <Account>[];
+          final accounts = accountsAsync.valueOrNull ?? <Account>[];
 
           return ListView.separated(
             padding: const EdgeInsets.all(16),
