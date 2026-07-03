@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK and Windows
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,3 +25,22 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - run: flutter create --platforms=windows --project-name gestion_financiere .
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-windows
+          path: build/windows/x64/runner/Release
