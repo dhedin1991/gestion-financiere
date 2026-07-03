@@ -28,7 +28,7 @@ class AccountCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
                 child: Icon(_iconFor(account.type), color: theme.colorScheme.primary),
               ),
               const SizedBox(width: 14),
