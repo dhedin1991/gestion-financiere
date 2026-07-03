@@ -180,7 +180,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                   }
                   _selectedAccountId ??= accounts.first.id;
                   return DropdownButtonFormField<int>(
-                    initialValue: _selectedAccountId,
+                    Value: _selectedAccountId,
                     decoration: const InputDecoration(labelText: 'Compte *'),
                     items: accounts
                         .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
@@ -195,7 +195,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Erreur catégories : $e'),
                 data: (categories) => DropdownButtonFormField<int>(
-                  Value: categories.any((c) => c.id == _selectedCategoryId)
+                  value: categories.any((c) => c.id == _selectedCategoryId)
                       ? _selectedCategoryId
                       : null,
                   decoration: const InputDecoration(labelText: 'Catégorie (optionnel)'),
