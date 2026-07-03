@@ -63,7 +63,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: const CardTheme(
         elevation: 0,
         color: const Color(0xFF1E2227),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
