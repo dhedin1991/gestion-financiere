@@ -180,7 +180,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                   }
                   _selectedAccountId ??= accounts.first.id;
                   return DropdownButtonFormField<int>(
-                    Value: _selectedAccountId,
+                    value: _selectedAccountId,
                     decoration: const InputDecoration(labelText: 'Compte *'),
                     items: accounts
                         .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
