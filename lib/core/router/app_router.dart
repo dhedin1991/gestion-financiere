@@ -6,6 +6,7 @@ import '../../features/accounts/presentation/pages/accounts_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/transactions/presentation/pages/transactions_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
+import '../../features/budgets/presentation/pages/budgets_page.dart';
 
 /// Provider unique du routeur — permet d'injecter facilement une logique
 /// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
@@ -30,8 +31,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const TransactionsPage(),
           ),
           GoRoute(
-          path: '/debts',
-          builder: (context, state) => const DebtsPage(),
+            path: '/debts',
+            builder: (context, state) => const DebtsPage(),
+          ),
+          GoRoute(
+            path: '/budgets',
+            builder: (context, state) => const BudgetsPage(),
           ),
           // Les futurs modules (Revenus, Dépenses, Budgets, Crédits,
           // Dettes, Patrimoine, Épargne, Investissements, Objectifs,
@@ -57,6 +62,7 @@ class _MainScaffold extends StatelessWidget {
     if (location.startsWith('/accounts')) currentIndex = 1;
     if (location.startsWith('/transactions')) currentIndex = 2;
     if (location.startsWith('/debts')) currentIndex = 3;
+    if (location.startsWith('/budgets')) currentIndex = 4;
 
     return Scaffold(
       body: child,
@@ -76,6 +82,9 @@ class _MainScaffold extends StatelessWidget {
             case 3:
               context.go('/debts');
               break;
+            case 4:
+              context.go('/budgets');
+              break;
           }
         },
         destinations: const [
@@ -83,6 +92,7 @@ class _MainScaffold extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Comptes'),
           NavigationDestination(icon: Icon(Icons.swap_vert), selectedIcon: Icon(Icons.swap_vert_circle), label: 'Transactions'),
           NavigationDestination(icon: Icon(Icons.handshake_outlined), selectedIcon: Icon(Icons.handshake), label: 'Dettes'),
+          NavigationDestination(icon: Icon(Icons.pie_chart_outline), selectedIcon: Icon(Icons.pie_chart), label: 'Budgets'),
         ],
       ),
     );
