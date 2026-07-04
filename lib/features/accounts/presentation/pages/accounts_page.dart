@@ -110,6 +110,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _bankController;
   late final TextEditingController _balanceController;
+  late final TextEditingController _currentBalanceController;
   AccountType _selectedType = AccountType.courant;
   String _selectedCurrency = 'XOF';
 
@@ -123,6 +124,9 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     _bankController = TextEditingController(text: e?.bankName ?? '');
     _balanceController = TextEditingController(
       text: e != null ? e.initialBalance.toStringAsFixed(0) : '',
+    );
+    _currentBalanceController = TextEditingController(
+      text: e != null ? e.currentBalance.toStringAsFixed(0) : '',
     );
     if (e != null) {
       _selectedType = e.type;
@@ -202,6 +206,22 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                 ),
               ],
             ),
+            if (isEditing) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _currentBalanceController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Corriger le solde actuel',
+                  helperText: 'Modifie uniquement le solde affiché, sans toucher au solde de départ',
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Champ requis';
+                  if (double.tryParse(v.replaceAll(',', '.')) == null) return 'Nombre invalide';
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _submit,
@@ -256,12 +276,14 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
         updatedAt: now,
       ));
     } else {
+      final currentBalance = double.parse(_currentBalanceController.text.replaceAll(',', '.'));
       await actions.update(widget.existing!.copyWith(
         name: _nameController.text.trim(),
         bankName: _bankController.text.trim().isEmpty ? null : _bankController.text.trim(),
         type: _selectedType,
         currency: _selectedCurrency,
         initialBalance: balance,
+        currentBalance: currentBalance,
       ));
     }
 
