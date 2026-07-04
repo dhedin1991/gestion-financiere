@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   Database? _database;
 
@@ -29,12 +29,11 @@ class AppDatabase {
       path,
       version: _dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         // Active les clés étrangères (désactivées par défaut dans SQLite).
         await db.execute('PRAGMA foreign_keys = ON');
       },
-      // onUpgrade sera complété au fil des versions futures (migrations),
-      // conformément à l'exigence d'évolutivité sans réécriture majeure.
     );
   }
 
@@ -119,9 +118,72 @@ class AppDatabase {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE debts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        person_name TEXT NOT NULL,
+        description TEXT,
+        total_amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'XOF',
+        account_id INTEGER,
+        due_date TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE debt_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        debt_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        payment_date TEXT NOT NULL,
+        note TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (debt_id) REFERENCES debts (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('CREATE INDEX idx_debts_type ON debts (type)');
+    await db.execute('CREATE INDEX idx_debt_payments_debt ON debt_payments (debt_id)');
     await _seedDefaultCategories(db);
   }
 
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE debts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          person_name TEXT NOT NULL,
+          description TEXT,
+          total_amount REAL NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'XOF',
+          account_id INTEGER,
+          due_date TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE debt_payments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          debt_id INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          payment_date TEXT NOT NULL,
+          note TEXT,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (debt_id) REFERENCES debts (id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute('CREATE INDEX idx_debts_type ON debts (type)');
+      await db.execute('CREATE INDEX idx_debt_payments_debt ON debt_payments (debt_id)');
+    }
+  }
+  
   /// Insère quelques catégories par défaut pour que l'app ne soit
   /// pas vide au premier lancement (l'utilisateur peut tout modifier ensuite).
   Future<void> _seedDefaultCategories(Database db) async {
