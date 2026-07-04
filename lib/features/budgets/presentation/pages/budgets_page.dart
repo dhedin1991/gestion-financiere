@@ -125,7 +125,7 @@ class _BudgetCard extends ConsumerWidget {
     } else if (budget.isGlobal) {
       title = 'Budget global';
     } else {
-      final categories = categoriesAsync.valueOrNull ?? <Category>[];
+      final categories = categoriesAsync.valueOrNull ?? <AppCategory>[];
       final match = categories.where((c) => c.id == budget.categoryId).toList();
       title = match.isNotEmpty ? match.first.name : 'Catégorie';
     }
