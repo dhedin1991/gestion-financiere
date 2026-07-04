@@ -4,6 +4,14 @@ import '../../../../core/database/database_providers.dart';
 import '../../data/datasources/category_dao.dart';
 import '../../domain/entities/category.dart';
 
+/// Toutes les catégories (revenus + dépenses confondus), utilisées
+/// par exemple dans le formulaire de budget.
+final allCategoriesProvider = FutureProvider.autoDispose<List<AppCategory>>((ref) async {
+  final income = await ref.watch(incomeCategoriesProvider.future);
+  final expense = await ref.watch(expenseCategoriesProvider.future);
+  return [...income, ...expense];
+});
+
 final categoryDaoProvider = Provider<CategoryDao>((ref) {
   return CategoryDao(ref.watch(appDatabaseProvider));
 });
