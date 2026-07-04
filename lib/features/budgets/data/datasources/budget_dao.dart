@@ -1,19 +1,20 @@
-import 'package:sqflite/sqflite.dart';
-
+import '../../../../core/database/app_database.dart';
 import '../../domain/entities/budget.dart';
 import '../models/budget_model.dart';
 
 /// Accès direct à la base SQLite pour tout ce qui concerne les budgets.
 class BudgetDao {
-  final Database db;
+  final AppDatabase _appDatabase;
 
-  BudgetDao(this.db);
+  BudgetDao(this._appDatabase);
 
   Future<int> create(BudgetModel budget) async {
+    final db = await _appDatabase.database;
     return db.insert('budgets', budget.toMap());
   }
 
   Future<int> update(BudgetModel budget) async {
+    final db = await _appDatabase.database;
     return db.update(
       'budgets',
       budget.toMap(),
@@ -23,15 +24,18 @@ class BudgetDao {
   }
 
   Future<int> delete(int id) async {
+    final db = await _appDatabase.database;
     return db.delete('budgets', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<BudgetModel>> getAll() async {
+    final db = await _appDatabase.database;
     final rows = await db.query('budgets', orderBy: 'start_date DESC');
     return rows.map((row) => BudgetModel.fromMap(row)).toList();
   }
 
   Future<BudgetModel?> getById(int id) async {
+    final db = await _appDatabase.database;
     final rows = await db.query('budgets', where: 'id = ?', whereArgs: [id]);
     if (rows.isEmpty) return null;
     return BudgetModel.fromMap(rows.first);
@@ -55,6 +59,7 @@ class BudgetDao {
   /// - Si le budget est global (categoryId null) : toutes les dépenses.
   /// - Si le budget cible une catégorie : uniquement ses dépenses.
   Future<double> getSpentAmount(BudgetModel budget) async {
+    final db = await _appDatabase.database;
     final endDate = periodEndDate(budget.startDate, budget.period);
 
     final whereClauses = <String>[
