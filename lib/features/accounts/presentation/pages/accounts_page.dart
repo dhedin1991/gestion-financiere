@@ -13,7 +13,19 @@ class AccountsPage extends ConsumerWidget {
     final accountsAsync = ref.watch(accountsListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes Comptes')),
+      appBar: AppBar(
+  title: const Text('Mes Comptes'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      tooltip: 'Actualiser',
+      onPressed: () {
+        ref.invalidate(accountsListProvider);
+        ref.invalidate(globalBalanceProvider);
+      },
+    ),
+  ],
+),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAccountForm(context, ref),
         icon: const Icon(Icons.add),
@@ -225,12 +237,13 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    final balance = double.parse(_balanceController.text.replaceAll(',', '.'));
-    final actions = ref.read(accountActionsProvider);
-    final now = DateTime.now();
+  final balance = double.parse(_balanceController.text.replaceAll(',', '.'));
+  final actions = ref.read(accountActionsProvider);
+  final now = DateTime.now();
 
+  try {
     if (widget.existing == null) {
       await actions.create(Account(
         name: _nameController.text.trim(),
@@ -253,27 +266,41 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     }
 
     if (mounted) Navigator.of(context).pop();
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+      );
+    }
   }
+}
 
   Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Supprimer ce compte ?'),
-        content: const Text('Cette action supprimera aussi toutes ses transactions associées.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
-    );
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Supprimer ce compte ?'),
+      content: const Text('Cette action supprimera aussi toutes ses transactions associées.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Supprimer'),
+        ),
+      ],
+    ),
+  );
 
-    if (confirmed == true && widget.existing?.id != null) {
+  if (confirmed == true && widget.existing?.id != null) {
+    try {
       await ref.read(accountActionsProvider).delete(widget.existing!.id!);
       if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }
