@@ -164,9 +164,40 @@ CREATE TABLE budgets (
 )
 ''');
 
-    await db.execute('CREATE INDEX idx_budgets_category ON budgets (category_id)');
+   await db.execute('CREATE INDEX idx_budgets_category ON budgets (category_id)');
     await db.execute('CREATE INDEX idx_budgets_period ON budgets (period)');
-    
+
+    await db.execute('''
+      CREATE TABLE savings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        account_id INTEGER NOT NULL,
+        target_amount REAL,
+        target_date TEXT,
+        current_balance REAL NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'XOF',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE savings_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        savings_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (savings_id) REFERENCES savings (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('CREATE INDEX idx_savings_account ON savings (account_id)');
+    await db.execute('CREATE INDEX idx_savings_transactions_savings ON savings_transactions (savings_id)');
+
     await _seedDefaultCategories(db);
   }
 
