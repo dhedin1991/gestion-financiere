@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/accounts/presentation/pages/accounts_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/transactions/presentation/pages/transactions_page.dart';
+import '../../features/debts/presentation/pages/debts_page.dart';
 
 /// Provider unique du routeur — permet d'injecter facilement une logique
 /// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
@@ -27,6 +28,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/transactions',
             builder: (context, state) => const TransactionsPage(),
+          ),
+          GoRoute(
+          path: '/debts',
+          builder: (context, state) => const DebtsPage(),
           ),
           // Les futurs modules (Revenus, Dépenses, Budgets, Crédits,
           // Dettes, Patrimoine, Épargne, Investissements, Objectifs,
@@ -51,6 +56,7 @@ class _MainScaffold extends StatelessWidget {
     int currentIndex = 0;
     if (location.startsWith('/accounts')) currentIndex = 1;
     if (location.startsWith('/transactions')) currentIndex = 2;
+    if (location.startsWith('/debts')) currentIndex = 3;
 
     return Scaffold(
       body: child,
@@ -67,12 +73,16 @@ class _MainScaffold extends StatelessWidget {
             case 2:
               context.go('/transactions');
               break;
+            case 3:
+              context.go('/debts');
+              break;
           }
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Accueil'),
           NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Comptes'),
           NavigationDestination(icon: Icon(Icons.swap_vert), selectedIcon: Icon(Icons.swap_vert_circle), label: 'Transactions'),
+          NavigationDestination(icon: Icon(Icons.handshake_outlined), selectedIcon: Icon(Icons.handshake), label: 'Dettes'),
         ],
       ),
     );
