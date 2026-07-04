@@ -201,6 +201,25 @@ CREATE TABLE budgets (
       await db.execute('CREATE INDEX idx_debts_type ON debts (type)');
       await db.execute('CREATE INDEX idx_debt_payments_debt ON debt_payments (debt_id)');
     }
+
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE budgets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          category_id INTEGER,
+          amount REAL NOT NULL,
+          period TEXT NOT NULL,
+          start_date TEXT NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'XOF',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute('CREATE INDEX idx_budgets_category ON budgets (category_id)');
+      await db.execute('CREATE INDEX idx_budgets_period ON budgets (period)');
+    }
   }
   
   /// Insère quelques catégories par défaut pour que l'app ne soit
