@@ -300,13 +300,13 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   Future<void> _confirmDelete(BuildContext context) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
       title: const Text('Supprimer ce compte ?'),
       content: const Text('Cette action supprimera aussi toutes ses transactions associées.'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+        TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
         TextButton(
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
           child: const Text('Supprimer'),
         ),
       ],
