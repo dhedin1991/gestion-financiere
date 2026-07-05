@@ -58,4 +58,34 @@ class AccountDao {
       whereArgs: [id],
     );
   }
+
+  Future<bool> hasLinkedData(int id) async {
+    final db = await _appDatabase.database;
+
+    final transactions = await db.query(
+      'transactions',
+      where: 'account_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (transactions.isNotEmpty) return true;
+
+    final debts = await db.query(
+      'debts',
+      where: 'account_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (debts.isNotEmpty) return true;
+
+    final savings = await db.query(
+      'savings',
+      where: 'account_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (savings.isNotEmpty) return true;
+
+    return false;
+  }
 }
