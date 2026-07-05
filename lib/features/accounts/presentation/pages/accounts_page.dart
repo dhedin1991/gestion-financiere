@@ -298,32 +298,69 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
 }
 
   Future<void> _confirmDelete(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Supprimer ce compte ?'),
-      content: const Text('Cette action supprimera aussi toutes ses transactions associées.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: const Text('Supprimer'),
-        ),
-      ],
-    ),
-  );
+    if (widget.existing?.id == null) return;
+    final accountId = widget.existing!.id!;
 
-  if (confirmed == true && widget.existing?.id != null) {
-    try {
-      await ref.read(accountActionsProvider).delete(widget.existing!.id!);
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+    final repository = ref.read(accountRepositoryProvider);
+    final hasLinkedData = await repository.hasLinkedData(accountId);
+
+    if (!mounted) return;
+
+    if (hasLinkedData) {
+      final archived = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Compte non vide'),
+          content: const Text(
+            'Ce compte contient des transactions, dettes ou épargnes liées. '
+            'Pour protéger tes données, il ne peut pas être supprimé définitivement. '
+            'Veux-tu l\'archiver à la place ? (Il sera masqué de la liste principale, sans rien perdre.)',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Archiver')),
+          ],
+        ),
+      );
+
+      if (archived == true) {
+        try {
+          await ref.read(accountActionsProvider).archive(accountId);
+          if (mounted) Navigator.of(context).pop();
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+            );
+          }
+        }
+      }
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer ce compte ?'),
+        content: const Text('Cette action est définitive.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(accountActionsProvider).delete(accountId);
+        if (mounted) Navigator.of(context).pop();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+          );
+        }
       }
     }
   }
-}
 } 
