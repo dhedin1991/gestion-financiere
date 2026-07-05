@@ -104,10 +104,16 @@ class _BudgetCard extends ConsumerWidget {
 
   String _periodLabel(BudgetPeriod p) {
     switch (p) {
+      case BudgetPeriod.journalier:
+        return 'Journalier';
       case BudgetPeriod.hebdomadaire:
         return 'Hebdomadaire';
       case BudgetPeriod.mensuel:
         return 'Mensuel';
+      case BudgetPeriod.trimestriel:
+        return 'Trimestriel';
+      case BudgetPeriod.semestriel:
+        return 'Semestriel';
       case BudgetPeriod.annuel:
         return 'Annuel';
     }
@@ -235,10 +241,16 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
 
   String _periodLabel(BudgetPeriod p) {
     switch (p) {
+      case BudgetPeriod.journalier:
+        return 'Journalier';
       case BudgetPeriod.hebdomadaire:
         return 'Hebdomadaire';
       case BudgetPeriod.mensuel:
         return 'Mensuel';
+      case BudgetPeriod.trimestriel:
+        return 'Trimestriel';
+      case BudgetPeriod.semestriel:
+        return 'Semestriel';
       case BudgetPeriod.annuel:
         return 'Annuel';
     }
