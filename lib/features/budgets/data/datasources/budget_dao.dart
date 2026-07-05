@@ -45,10 +45,16 @@ class BudgetDao {
   /// de début et de son type de période.
   DateTime periodEndDate(DateTime startDate, BudgetPeriod period) {
     switch (period) {
+      case BudgetPeriod.journalier:
+        return startDate.add(const Duration(days: 1));
       case BudgetPeriod.hebdomadaire:
         return startDate.add(const Duration(days: 7));
       case BudgetPeriod.mensuel:
         return DateTime(startDate.year, startDate.month + 1, startDate.day);
+      case BudgetPeriod.trimestriel:
+        return DateTime(startDate.year, startDate.month + 3, startDate.day);
+      case BudgetPeriod.semestriel:
+        return DateTime(startDate.year, startDate.month + 6, startDate.day);
       case BudgetPeriod.annuel:
         return DateTime(startDate.year + 1, startDate.month, startDate.day);
     }
