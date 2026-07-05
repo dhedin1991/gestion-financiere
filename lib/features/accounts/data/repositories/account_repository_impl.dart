@@ -59,4 +59,9 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<void> archiveAccount(int id) {
     return _dao.archive(id);
   }
+
+  @override
+  Future<bool> hasLinkedData(int id) {
+    return _dao.hasLinkedData(id);
+  }
 }
