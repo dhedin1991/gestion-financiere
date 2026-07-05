@@ -1,7 +1,10 @@
 /// Période sur laquelle un budget s'applique.
 enum BudgetPeriod {
+  journalier,
   hebdomadaire,
   mensuel,
+  trimestriel,
+  semestriel,
   annuel,
 }
 
