@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/domain/entities/category.dart';
@@ -18,7 +19,10 @@ class TransactionsPage extends ConsumerWidget {
     final accountsAsync = ref.watch(accountsListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Revenus & Dépenses')),
+      appBar: AppBar(
+        leading: const AppMenuButton(),
+        title: const Text('Revenus & Dépenses'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTransactionForm(context, ref),
         icon: const Icon(Icons.add),
