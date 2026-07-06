@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 5;
+  static const int _dbVersion = 6;
 
   Database? _database;
 
@@ -215,6 +215,47 @@ CREATE TABLE budgets (
 
     await db.execute('CREATE INDEX idx_patrimoine_category ON patrimoine_items (category)');
 
+    // ==========================================================
+    // TABLE : credits (Crédits professionnels)
+    // ==========================================================
+    await db.execute('''
+      CREATE TABLE credits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        contract_number TEXT,
+        principal_amount REAL NOT NULL,
+        interest_rate REAL NOT NULL DEFAULT 0,
+        start_date TEXT NOT NULL,
+        duration_months INTEGER NOT NULL,
+        monthly_payment REAL NOT NULL,
+        account_id INTEGER,
+        currency TEXT NOT NULL DEFAULT 'XOF',
+        status TEXT NOT NULL DEFAULT 'actif',
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE credit_installments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        credit_id INTEGER NOT NULL,
+        due_date TEXT NOT NULL,
+        amount REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'en_attente',
+        payment_date TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (credit_id) REFERENCES credits (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('CREATE INDEX idx_credits_status ON credits (status)');
+    await db.execute('CREATE INDEX idx_credit_installments_credit ON credit_installments (credit_id)');
+    await db.execute('CREATE INDEX idx_credit_installments_status ON credit_installments (status)');
+
     await _seedDefaultCategories(db);
   }
 
@@ -286,6 +327,46 @@ CREATE TABLE budgets (
       ''');
 
       await db.execute('CREATE INDEX idx_patrimoine_category ON patrimoine_items (category)');
+    }
+
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE credits (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          contract_number TEXT,
+          principal_amount REAL NOT NULL,
+          interest_rate REAL NOT NULL DEFAULT 0,
+          start_date TEXT NOT NULL,
+          duration_months INTEGER NOT NULL,
+          monthly_payment REAL NOT NULL,
+          account_id INTEGER,
+          currency TEXT NOT NULL DEFAULT 'XOF',
+          status TEXT NOT NULL DEFAULT 'actif',
+          notes TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE SET NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE credit_installments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          credit_id INTEGER NOT NULL,
+          due_date TEXT NOT NULL,
+          amount REAL NOT NULL,
+          status TEXT NOT NULL DEFAULT 'en_attente',
+          payment_date TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (credit_id) REFERENCES credits (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('CREATE INDEX idx_credits_status ON credits (status)');
+      await db.execute('CREATE INDEX idx_credit_installments_credit ON credit_installments (credit_id)');
+      await db.execute('CREATE INDEX idx_credit_installments_status ON credit_installments (status)');
     }
   }
   
