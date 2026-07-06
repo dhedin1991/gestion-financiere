@@ -30,6 +30,9 @@ dependencies:
   # Icônes modernes
   cupertino_icons: ^1.0.6
 
+  # Graphiques (Bilans)
+  fl_chart: ^0.69.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
