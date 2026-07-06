@@ -11,9 +11,11 @@ class PatrimoineItem {
   final PatrimoineCategory categorie;
   final double valeurEstimee;
   final String devise;
-  final DateTime dateAcquisition;
+  final DateTime? dateAcquisition;
   final String? description;
   final String? localisation;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const PatrimoineItem({
     this.id,
@@ -21,9 +23,11 @@ class PatrimoineItem {
     required this.categorie,
     required this.valeurEstimee,
     required this.devise,
-    required this.dateAcquisition,
+    this.dateAcquisition,
     this.description,
     this.localisation,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   PatrimoineItem copyWith({
@@ -35,6 +39,8 @@ class PatrimoineItem {
     DateTime? dateAcquisition,
     String? description,
     String? localisation,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return PatrimoineItem(
       id: id ?? this.id,
@@ -45,6 +51,8 @@ class PatrimoineItem {
       dateAcquisition: dateAcquisition ?? this.dateAcquisition,
       description: description ?? this.description,
       localisation: localisation ?? this.localisation,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
