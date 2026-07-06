@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../domain/entities/account.dart';
 import '../providers/account_providers.dart';
 import '../widgets/account_card.dart';
@@ -14,6 +15,7 @@ class AccountsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+  leading: const AppMenuButton(),
   title: const Text('Mes Comptes'),
   actions: [
     IconButton(
