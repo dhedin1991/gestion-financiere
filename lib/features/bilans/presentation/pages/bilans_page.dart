@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navigation/app_menu_button.dart';
 import '../widgets/net_worth_tab.dart';
 import '../widgets/revenue_expense_tab.dart';
 
@@ -12,6 +13,7 @@ class BilansPage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          leading: const AppMenuButton(),
           title: const Text('Bilans'),
           bottom: const TabBar(
             tabs: [
