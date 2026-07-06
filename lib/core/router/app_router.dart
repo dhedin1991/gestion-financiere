@@ -8,6 +8,7 @@ import '../../features/transactions/presentation/pages/transactions_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/budgets/presentation/pages/budgets_page.dart';
 import '../../features/savings/presentation/pages/savings_page.dart';
+import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 
 /// Provider unique du routeur — permet d'injecter facilement une logique
 /// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
@@ -43,6 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/savings',
             builder: (context, state) => const SavingsPage(),
           ),
+          GoRoute(
+            path: '/patrimoine',
+            builder: (context, state) => const PatrimoinePage(),
+          ),
           // Les futurs modules (Revenus, Dépenses, Budgets, Crédits,
           // Dettes, Patrimoine, Épargne, Investissements, Objectifs,
           // Échéances, Statistiques, Rapports, Sauvegardes, Paramètres)
@@ -69,6 +74,7 @@ class _MainScaffold extends StatelessWidget {
     if (location.startsWith('/debts')) currentIndex = 3;
     if (location.startsWith('/budgets')) currentIndex = 4;
     if (location.startsWith('/savings')) currentIndex = 5;
+    if (location.startsWith('/patrimoine')) currentIndex = 6;
 
     return Scaffold(
       body: child,
@@ -94,6 +100,9 @@ class _MainScaffold extends StatelessWidget {
             case 5:
               context.go('/savings');
               break;
+            case 6:
+              context.go('/patrimoine');
+              break;
           }
         },
         destinations: const [
@@ -103,6 +112,7 @@ class _MainScaffold extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.handshake_outlined), selectedIcon: Icon(Icons.handshake), label: 'Dettes'),
           NavigationDestination(icon: Icon(Icons.pie_chart_outline), selectedIcon: Icon(Icons.pie_chart), label: 'Budgets'),
           NavigationDestination(icon: Icon(Icons.savings_outlined), selectedIcon: Icon(Icons.savings), label: 'Épargne'),
+          NavigationDestination(icon: Icon(Icons.home_work_outlined), selectedIcon: Icon(Icons.home_work), label: 'Patrimoine'),
         ],
       ),
     );
