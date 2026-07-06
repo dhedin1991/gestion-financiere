@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../accounts/presentation/widgets/account_card.dart';
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -16,7 +17,10 @@ class DashboardPage extends ConsumerWidget {
     final accountsAsync = ref.watch(accountsListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tableau de bord')),
+      appBar: AppBar(
+        leading: const AppMenuButton(),
+        title: const Text('Tableau de bord'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(globalBalanceProvider);
