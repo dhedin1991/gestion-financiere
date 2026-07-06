@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../domain/entities/patrimoine_item.dart';
 import '../providers/patrimoine_providers.dart';
 import '../widgets/patrimoine_form_sheet.dart';
@@ -16,6 +17,7 @@ class PatrimoinePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppMenuButton(),
         title: const Text('Patrimoine'),
         actions: [
           IconButton(
