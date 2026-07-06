@@ -11,6 +11,9 @@ import '../../features/savings/presentation/pages/savings_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
+import '../navigation/app_drawer.dart';
+import '../navigation/scaffold_key_provider.dart';
+import 'app_info_page.dart';
 
 /// Provider unique du routeur — permet d'injecter facilement une logique
 /// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
@@ -58,83 +61,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/bilans',
             builder: (context, state) => const BilansPage(),
           ),
-          // Les futurs modules (Revenus, Dépenses, Budgets, Crédits,
-          // Dettes, Patrimoine, Épargne, Investissements, Objectifs,
-          // Échéances, Statistiques, Rapports, Sauvegardes, Paramètres)
-          // s'ajouteront ici, un par un, sans rien casser de l'existant.
+          // Les futurs modules s'ajouteront ici, un par un.
         ],
+      ),
+      GoRoute(
+        path: '/app-info',
+        builder: (context, state) => const AppInfoPage(),
       ),
     ],
   );
 });
 
-/// Structure commune (barre de navigation basse) partagée par tous les
-/// écrans principaux. Prévu pour accueillir les icônes des futurs modules.
-class _MainScaffold extends StatelessWidget {
+/// Structure commune (menu latéral) partagée par tous les écrans principaux.
+class _MainScaffold extends ConsumerWidget {
   final Widget child;
   const _MainScaffold({required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scaffoldKey = ref.watch(scaffoldKeyProvider);
     final location = GoRouterState.of(context).uri.toString();
 
-    int currentIndex = 0;
-    if (location.startsWith('/accounts')) currentIndex = 1;
-    if (location.startsWith('/transactions')) currentIndex = 2;
-    if (location.startsWith('/debts')) currentIndex = 3;
-    if (location.startsWith('/budgets')) currentIndex = 4;
-    if (location.startsWith('/savings')) currentIndex = 5;
-    if (location.startsWith('/patrimoine')) currentIndex = 6;
-    if (location.startsWith('/credits')) currentIndex = 7;
-    if (location.startsWith('/bilans')) currentIndex = 8;
-
     return Scaffold(
+      key: scaffoldKey,
+      drawer: AppDrawer(currentLocation: location),
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/accounts');
-              break;
-            case 2:
-              context.go('/transactions');
-              break;
-            case 3:
-              context.go('/debts');
-              break;
-            case 4:
-              context.go('/budgets');
-              break;
-            case 5:
-              context.go('/savings');
-              break;
-            case 6:
-              context.go('/patrimoine');
-              break;
-            case 7:
-              context.go('/credits');
-              break;
-            case 8:
-              context.go('/bilans');
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Accueil'),
-          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Comptes'),
-          NavigationDestination(icon: Icon(Icons.swap_vert), selectedIcon: Icon(Icons.swap_vert_circle), label: 'Transactions'),
-          NavigationDestination(icon: Icon(Icons.handshake_outlined), selectedIcon: Icon(Icons.handshake), label: 'Dettes'),
-          NavigationDestination(icon: Icon(Icons.pie_chart_outline), selectedIcon: Icon(Icons.pie_chart), label: 'Budgets'),
-          NavigationDestination(icon: Icon(Icons.savings_outlined), selectedIcon: Icon(Icons.savings), label: 'Épargne'),
-          NavigationDestination(icon: Icon(Icons.home_work_outlined), selectedIcon: Icon(Icons.home_work), label: 'Patrimoine'),
-          NavigationDestination(icon: Icon(Icons.request_quote_outlined), selectedIcon: Icon(Icons.request_quote), label: 'Crédits'),
-          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Bilans'),
-        ],
-      ),
     );
   }
 }
