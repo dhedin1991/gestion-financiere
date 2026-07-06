@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../domain/entities/credit.dart';
 import '../providers/credit_providers.dart';
 import '../widgets/credit_form_sheet.dart';
@@ -16,6 +17,7 @@ class CreditsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppMenuButton(),
         title: const Text('Crédits'),
         actions: [
           IconButton(
