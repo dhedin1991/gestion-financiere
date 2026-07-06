@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 7;
 
   Database? _database;
 
@@ -256,6 +256,25 @@ CREATE TABLE budgets (
     await db.execute('CREATE INDEX idx_credit_installments_credit ON credit_installments (credit_id)');
     await db.execute('CREATE INDEX idx_credit_installments_status ON credit_installments (status)');
 
+    // ==========================================================
+    // TABLE : net_worth_snapshots (photos du patrimoine net dans le temps)
+    // ==========================================================
+    await db.execute('''
+      CREATE TABLE net_worth_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        snapshot_date TEXT NOT NULL,
+        total_accounts REAL NOT NULL,
+        total_savings REAL NOT NULL,
+        total_patrimoine REAL NOT NULL,
+        total_debts REAL NOT NULL,
+        total_credits_remaining REAL NOT NULL,
+        net_worth REAL NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
+
     await _seedDefaultCategories(db);
   }
 
@@ -367,6 +386,24 @@ CREATE TABLE budgets (
       await db.execute('CREATE INDEX idx_credits_status ON credits (status)');
       await db.execute('CREATE INDEX idx_credit_installments_credit ON credit_installments (credit_id)');
       await db.execute('CREATE INDEX idx_credit_installments_status ON credit_installments (status)');
+    }
+
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE net_worth_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          snapshot_date TEXT NOT NULL,
+          total_accounts REAL NOT NULL,
+          total_savings REAL NOT NULL,
+          total_patrimoine REAL NOT NULL,
+          total_debts REAL NOT NULL,
+          total_credits_remaining REAL NOT NULL,
+          net_worth REAL NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
     }
   }
   
