@@ -109,8 +109,8 @@ class _BreakdownChart extends StatelessWidget {
 
     return BarChart(
       BarChartData(
-        maxY: maxAbs == 0 ? 1 : maxAbs * 1.2,
-        minY: -(maxAbs == 0 ? 1 : maxAbs * 1.2),
+        maxY: maxAbs == 0 ? 1.0 : maxAbs * 1.2,
+        minY: -(maxAbs == 0 ? 1.0 : maxAbs * 1.2),
         barGroups: [
           for (int i = 0; i < items.length; i++)
             BarChartGroupData(
