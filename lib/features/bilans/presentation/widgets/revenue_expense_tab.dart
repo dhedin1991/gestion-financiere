@@ -90,7 +90,7 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
                 padding: const EdgeInsets.fromLTRB(8, 16, 16, 16),
                 child: BarChart(
                   BarChartData(
-                    maxY: maxY == 0 ? 1 : maxY * 1.2,
+                    maxY: maxY == 0 ? 1.0 : maxY * 1.2,
                     barGroups: [
                       for (int i = 0; i < periods.length; i++)
                         BarChartGroupData(
