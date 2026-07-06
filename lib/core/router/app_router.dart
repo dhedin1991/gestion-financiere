@@ -10,6 +10,7 @@ import '../../features/budgets/presentation/pages/budgets_page.dart';
 import '../../features/savings/presentation/pages/savings_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
+import '../../features/bilans/presentation/pages/bilans_page.dart';
 
 /// Provider unique du routeur — permet d'injecter facilement une logique
 /// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
@@ -53,6 +54,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/credits',
             builder: (context, state) => const CreditsPage(),
           ),
+          GoRoute(
+            path: '/bilans',
+            builder: (context, state) => const BilansPage(),
+          ),
           // Les futurs modules (Revenus, Dépenses, Budgets, Crédits,
           // Dettes, Patrimoine, Épargne, Investissements, Objectifs,
           // Échéances, Statistiques, Rapports, Sauvegardes, Paramètres)
@@ -81,6 +86,7 @@ class _MainScaffold extends StatelessWidget {
     if (location.startsWith('/savings')) currentIndex = 5;
     if (location.startsWith('/patrimoine')) currentIndex = 6;
     if (location.startsWith('/credits')) currentIndex = 7;
+    if (location.startsWith('/bilans')) currentIndex = 8;
 
     return Scaffold(
       body: child,
@@ -112,6 +118,9 @@ class _MainScaffold extends StatelessWidget {
             case 7:
               context.go('/credits');
               break;
+            case 8:
+              context.go('/bilans');
+              break;
           }
         },
         destinations: const [
@@ -123,6 +132,7 @@ class _MainScaffold extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.savings_outlined), selectedIcon: Icon(Icons.savings), label: 'Épargne'),
           NavigationDestination(icon: Icon(Icons.home_work_outlined), selectedIcon: Icon(Icons.home_work), label: 'Patrimoine'),
           NavigationDestination(icon: Icon(Icons.request_quote_outlined), selectedIcon: Icon(Icons.request_quote), label: 'Crédits'),
+          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Bilans'),
         ],
       ),
     );
