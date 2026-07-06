@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
 
   Database? _database;
 
