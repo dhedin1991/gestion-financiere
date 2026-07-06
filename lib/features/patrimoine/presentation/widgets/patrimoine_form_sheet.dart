@@ -165,7 +165,7 @@ class _PatrimoineFormSheetState extends ConsumerState<PatrimoineFormSheet> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<PatrimoineCategory>(
-                initialValue: _categorie,
+                value: _categorie,
                 decoration: const InputDecoration(
                   labelText: 'Catégorie',
                   border: OutlineInputBorder(),
