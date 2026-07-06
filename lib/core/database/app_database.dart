@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 7;
+  static const int _dbVersion = 8;
 
   Database? _database;
 
@@ -266,6 +266,7 @@ CREATE TABLE budgets (
         total_accounts REAL NOT NULL,
         total_savings REAL NOT NULL,
         total_patrimoine REAL NOT NULL,
+        total_receivables REAL NOT NULL,
         total_debts REAL NOT NULL,
         total_credits_remaining REAL NOT NULL,
         net_worth REAL NOT NULL,
@@ -396,6 +397,7 @@ CREATE TABLE budgets (
           total_accounts REAL NOT NULL,
           total_savings REAL NOT NULL,
           total_patrimoine REAL NOT NULL,
+          total_receivables REAL NOT NULL DEFAULT 0,
           total_debts REAL NOT NULL,
           total_credits_remaining REAL NOT NULL,
           net_worth REAL NOT NULL,
@@ -404,6 +406,18 @@ CREATE TABLE budgets (
       ''');
 
       await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
+    }
+
+    if (oldVersion < 8) {
+      // Ajout de la colonne total_receivables si la table a déjà été créée
+      // en version 7 sans cette colonne (mise à jour avant la correction).
+      final columns = await db.rawQuery('PRAGMA table_info(net_worth_snapshots)');
+      final hasReceivables = columns.any((col) => col['name'] == 'total_receivables');
+      if (!hasReceivables) {
+        await db.execute(
+          'ALTER TABLE net_worth_snapshots ADD COLUMN total_receivables REAL NOT NULL DEFAULT 0',
+        );
+      }
     }
   }
   
