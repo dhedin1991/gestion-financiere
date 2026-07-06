@@ -7,37 +7,45 @@ class PatrimoineItemModel extends PatrimoineItem {
     required super.categorie,
     required super.valeurEstimee,
     required super.devise,
-    required super.dateAcquisition,
+    super.dateAcquisition,
     super.description,
     super.localisation,
+    required super.createdAt,
+    required super.updatedAt,
   });
 
   factory PatrimoineItemModel.fromMap(Map<String, dynamic> map) {
     return PatrimoineItemModel(
       id: map['id'] as int?,
-      nom: map['nom'] as String,
+      nom: map['name'] as String,
       categorie: PatrimoineCategory.values.firstWhere(
-        (e) => e.name == map['categorie'],
+        (e) => e.name == map['category'],
         orElse: () => PatrimoineCategory.autre,
       ),
-      valeurEstimee: (map['valeur_estimee'] as num).toDouble(),
-      devise: map['devise'] as String,
-      dateAcquisition: DateTime.parse(map['date_acquisition'] as String),
+      valeurEstimee: (map['estimated_value'] as num).toDouble(),
+      devise: map['currency'] as String,
+      dateAcquisition: map['acquisition_date'] != null
+          ? DateTime.parse(map['acquisition_date'] as String)
+          : null,
       description: map['description'] as String?,
-      localisation: map['localisation'] as String?,
+      localisation: map['location'] as String?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,
-      'nom': nom,
-      'categorie': categorie.name,
-      'valeur_estimee': valeurEstimee,
-      'devise': devise,
-      'date_acquisition': dateAcquisition.toIso8601String(),
+      'name': nom,
+      'category': categorie.name,
+      'estimated_value': valeurEstimee,
+      'currency': devise,
+      'acquisition_date': dateAcquisition?.toIso8601String(),
       'description': description,
-      'localisation': localisation,
+      'location': localisation,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
@@ -51,6 +59,8 @@ class PatrimoineItemModel extends PatrimoineItem {
       dateAcquisition: item.dateAcquisition,
       description: item.description,
       localisation: item.localisation,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
     );
   }
 }
