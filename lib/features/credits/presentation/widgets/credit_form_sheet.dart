@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -71,6 +73,43 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
     _currencyController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  /// Calcule la mensualité théorique à partir du capital, du taux annuel
+  /// et de la durée, selon la formule d'amortissement bancaire classique.
+  /// Retourne null si les champs nécessaires ne sont pas encore remplis
+  /// correctement.
+  double? _calculateSuggestedPayment() {
+    final principal = double.tryParse(_principalController.text.replaceAll(',', '.'));
+    final rate = double.tryParse(_interestController.text.replaceAll(',', '.'));
+    final duration = int.tryParse(_durationController.text);
+
+    if (principal == null || principal <= 0) return null;
+    if (rate == null || rate < 0) return null;
+    if (duration == null || duration <= 0) return null;
+
+    if (rate == 0) {
+      return principal / duration;
+    }
+
+    final monthlyRate = rate / 100 / 12;
+    final payment = principal * monthlyRate / (1 - math.pow(1 + monthlyRate, -duration));
+    return payment;
+  }
+
+  void _applySuggestedPayment() {
+    final suggested = _calculateSuggestedPayment();
+    if (suggested == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Remplis d\'abord le capital, le taux et la durée pour calculer la mensualité'),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _monthlyPaymentController.text = suggested.toStringAsFixed(0);
+    });
   }
 
   Future<void> _pickStartDate() async {
@@ -282,9 +321,14 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _monthlyPaymentController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Montant de la mensualité',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calculate_outlined),
+                    tooltip: 'Calculer à partir du capital, du taux et de la durée',
+                    onPressed: _applySuggestedPayment,
+                  ),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
@@ -294,6 +338,11 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Astuce : remplis le capital, le taux et la durée, puis appuie sur 🧮 pour calculer automatiquement la mensualité.',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
               const SizedBox(height: 12),
               accountsAsync.when(

@@ -64,6 +64,15 @@ class CreditDetailPage extends ConsumerWidget {
                 Text(
                   'Début : ${DateFormat('dd/MM/yyyy').format(credit.startDate)}',
                 ),
+                const Divider(height: 20),
+                Text(
+                  'Total à rembourser : ${fmt.format(credit.monthlyPayment * credit.durationMonths)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Intérêts générés sur la durée : '
+                  '${fmt.format((credit.monthlyPayment * credit.durationMonths) - credit.principalAmount)}',
+                ),
                 if (credit.notes != null && credit.notes!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(credit.notes!, style: const TextStyle(fontStyle: FontStyle.italic)),

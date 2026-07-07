@@ -97,6 +97,14 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.archive_outlined),
+              title: const Text('Archives'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/archives');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('Infos application'),
               onTap: () {

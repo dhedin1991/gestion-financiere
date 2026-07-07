@@ -35,6 +35,12 @@ final globalBalanceProvider = FutureProvider.autoDispose<double>((ref) async {
   return repository.getGlobalBalance();
 });
 
+/// Liste des comptes archivés — utilisée par la page Archives.
+final archivedAccountsListProvider = FutureProvider.autoDispose<List<Account>>((ref) async {
+  final repository = ref.watch(accountRepositoryProvider);
+  return repository.getArchivedAccounts();
+});
+
 /// Contrôleur exposant les actions (créer/modifier/supprimer un compte).
 /// Sépare volontairement les "commandes" (ce provider) des "lectures"
 /// (accountsListProvider) — plus simple à tester et à maintenir.
@@ -69,10 +75,16 @@ class AccountActions {
     _refresh();
   }
 
+  Future<void> unarchive(int id) async {
+    await _repository.unarchiveAccount(id);
+    _refresh();
+  }
+
   void _refresh() {
     // Invalide les providers de lecture pour que l'UI se remette à jour
     // automatiquement après une action d'écriture.
     _ref.invalidate(accountsListProvider);
     _ref.invalidate(globalBalanceProvider);
+    _ref.invalidate(archivedAccountsListProvider);
   }
 }

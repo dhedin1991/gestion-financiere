@@ -19,6 +19,10 @@ jobs:
       - run: flutter create --platforms=android --project-name gestion_financiere .
       - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
       - run: sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
+      - name: Ajout permission Internet et autorisation Wi-Fi local (synchronisation)
+        run: |
+          sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/a\        android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
       - run: flutter build apk --release
 

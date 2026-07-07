@@ -11,6 +11,7 @@ import '../../features/savings/presentation/pages/savings_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
+import '../../features/archives/presentation/pages/archives_page.dart';
 import '../../features/sync/presentation/pages/sync_page.dart';
 import '../navigation/app_drawer.dart';
 import '../navigation/scaffold_key_provider.dart';
@@ -62,16 +63,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/bilans',
             builder: (context, state) => const BilansPage(),
           ),
+          GoRoute(
+            path: '/app-info',
+            builder: (context, state) => const AppInfoPage(),
+          ),
+          GoRoute(
+            path: '/sync',
+            builder: (context, state) => const SyncPage(),
+          ),
+          GoRoute(
+            path: '/archives',
+            builder: (context, state) => const ArchivesPage(),
+          ),
           // Les futurs modules s'ajouteront ici, un par un.
         ],
-      ),
-      GoRoute(
-        path: '/app-info',
-        builder: (context, state) => const AppInfoPage(),
-      ),
-      GoRoute(
-        path: '/sync',
-        builder: (context, state) => const SyncPage(),
       ),
     ],
   );

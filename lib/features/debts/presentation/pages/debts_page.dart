@@ -109,7 +109,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _DebtCard extends StatelessWidget {
+class _DebtCard extends ConsumerWidget {
   final Debt debt;
   final VoidCallback onTap;
   final VoidCallback onPay;
@@ -117,7 +117,7 @@ class _DebtCard extends StatelessWidget {
   const _DebtCard({required this.debt, required this.onTap, required this.onPay});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDette = debt.type == DebtType.dette;
     final color = debt.isSettled ? Colors.grey : (isDette ? Colors.red : Colors.green);
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: debt.currency, decimalDigits: 0);
@@ -135,9 +135,162 @@ class _DebtCard extends StatelessWidget {
               ? 'Soldée'
               : 'Reste ${fmt.format(debt.remainingAmount)} sur ${fmt.format(debt.totalAmount)}',
         ),
-        trailing: debt.isSettled
-            ? const Icon(Icons.check_circle, color: Colors.grey)
-            : TextButton(onPressed: onPay, child: const Text('Payer')),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!debt.isSettled) TextButton(onPressed: onPay, child: const Text('Payer')),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'history') {
+                  _showHistory(context);
+                } else if (value == 'delete') {
+                  _confirmDelete(context, ref);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'history',
+                  child: ListTile(
+                    leading: Icon(Icons.history),
+                    title: Text('Historique des paiements'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(Icons.delete_outline, color: Colors.red),
+                    title: Text('Supprimer', style: TextStyle(color: Colors.red)),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showHistory(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _PaymentHistorySheet(debt: debt),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer cette entrée ?'),
+        content: const Text('Cette action supprimera aussi l\'historique des paiements liés.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
+        ],
+      ),
+    ).then((confirmed) async {
+      if (confirmed == true && debt.id != null) {
+        try {
+          await ref.read(debtActionsProvider).delete(debt.id!);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Entrée supprimée')),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erreur : $e')),
+            );
+          }
+        }
+      }
+    });
+  }
+}
+
+class _PaymentHistorySheet extends ConsumerWidget {
+  final Debt debt;
+
+  const _PaymentHistorySheet({required this.debt});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final paymentsAsync = ref.watch(debtPaymentsProvider(debt.id!));
+    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: debt.currency, decimalDigits: 0);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Historique des paiements — ${debt.personName}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 320,
+              child: paymentsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(child: Text('Erreur : $err')),
+                data: (payments) {
+                  if (payments.isEmpty) {
+                    return const Center(child: Text('Aucun paiement enregistré'));
+                  }
+                  return ListView.separated(
+                    itemCount: payments.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final payment = payments[index];
+                      return ListTile(
+                        title: Text(fmt.format(payment.amount)),
+                        subtitle: Text(
+                          '${DateFormat('dd/MM/yyyy').format(payment.paymentDate)}'
+                          '${payment.note != null && payment.note!.isNotEmpty ? ' - ${payment.note}' : ''}',
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('Supprimer ce paiement ?'),
+                                content: const Text('Le montant restant dû sera recalculé automatiquement.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                                    child: const Text('Annuler'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                                    child: const Text('Supprimer'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true && payment.id != null) {
+                              await ref.read(debtActionsProvider).deletePayment(payment.id!, debt.id!);
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

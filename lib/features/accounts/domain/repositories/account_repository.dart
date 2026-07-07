@@ -14,5 +14,7 @@ abstract class AccountRepository {
   Future<void> updateAccount(Account account);
   Future<void> deleteAccount(int id);
   Future<void> archiveAccount(int id);
+  Future<void> unarchiveAccount(int id);
+  Future<List<Account>> getArchivedAccounts();
   Future<bool> hasLinkedData(int id);
 }

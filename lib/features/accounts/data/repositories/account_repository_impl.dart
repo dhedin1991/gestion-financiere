@@ -61,6 +61,17 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<void> unarchiveAccount(int id) {
+    return _dao.unarchive(id);
+  }
+
+  @override
+  Future<List<Account>> getArchivedAccounts() async {
+    final rows = await _dao.findArchived();
+    return rows.map(AccountModel.fromMap).toList();
+  }
+
+  @override
   Future<bool> hasLinkedData(int id) {
     return _dao.hasLinkedData(id);
   }

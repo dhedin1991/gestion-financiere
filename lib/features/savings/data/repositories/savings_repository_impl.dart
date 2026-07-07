@@ -75,6 +75,42 @@ class SavingsRepositoryImpl implements SavingsRepository {
   }
 
   @override
+  Future<void> updateSavingsTransaction(SavingsTransaction transaction) async {
+    if (transaction.id == null) {
+      throw ArgumentError('Impossible de mettre à jour un mouvement sans id');
+    }
+
+    final savingsRow = await _dao.findById(transaction.savingsId);
+    if (savingsRow == null) {
+      throw StateError('Épargne introuvable');
+    }
+    final savings = SavingsModel.fromMap(savingsRow);
+
+    final transactions = await _dao.findTransactionsBySavings(transaction.savingsId);
+    final oldRowMap = transactions.firstWhere((t) => t['id'] == transaction.id);
+    final oldTransaction = SavingsTransactionModel.fromMap(oldRowMap);
+
+    final updated = SavingsTransaction(
+      id: transaction.id,
+      savingsId: transaction.savingsId,
+      type: transaction.type,
+      amount: transaction.amount,
+      date: transaction.date,
+      note: transaction.note,
+      createdAt: oldTransaction.createdAt,
+    );
+
+    await _dao.updateTransactionWithBalanceUpdate(
+      transactionId: transaction.id!,
+      data: SavingsTransactionModel.toMap(updated),
+      savingsId: transaction.savingsId,
+      accountId: savings.accountId,
+      oldSignedAmount: oldTransaction.signedAmount,
+      newSignedAmount: updated.signedAmount,
+    );
+  }
+
+  @override
   Future<void> deleteSavingsTransaction(int transactionId, int savingsId) async {
     final savingsRow = await _dao.findById(savingsId);
     if (savingsRow == null) {

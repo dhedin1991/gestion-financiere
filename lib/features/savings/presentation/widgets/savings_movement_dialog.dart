@@ -9,7 +9,16 @@ class SavingsMovementDialog extends ConsumerStatefulWidget {
   final Savings savings;
   final SavingsTransactionType type;
 
-  const SavingsMovementDialog({super.key, required this.savings, required this.type});
+  /// Si non-null, le dialogue passe en mode "modification" de ce mouvement
+  /// existant, au lieu de créer un nouveau mouvement.
+  final SavingsTransaction? existing;
+
+  const SavingsMovementDialog({
+    super.key,
+    required this.savings,
+    required this.type,
+    this.existing,
+  });
 
   @override
   ConsumerState<SavingsMovementDialog> createState() => _SavingsMovementDialogState();
@@ -17,21 +26,67 @@ class SavingsMovementDialog extends ConsumerStatefulWidget {
 
 class _SavingsMovementDialogState extends ConsumerState<SavingsMovementDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
+  late final TextEditingController _amountController;
+  late final TextEditingController _noteController;
+  late DateTime _selectedDate;
+  late SavingsTransactionType _type;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    _amountController = TextEditingController(
+      text: existing != null ? existing.amount.toStringAsFixed(0) : '',
+    );
+    _noteController = TextEditingController(text: existing?.note ?? '');
+    _selectedDate = existing?.date ?? DateTime.now();
+    _type = existing?.type ?? widget.type;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isVersement = widget.type == SavingsTransactionType.versement;
+    final isVersement = _type == SavingsTransactionType.versement;
+
+    // Solde disponible pour un retrait : si on modifie un retrait existant,
+    // on "rend" d'abord son ancien montant avant de vérifier la limite,
+    // pour ne pas bloquer inutilement une modification qui ne change pas
+    // vraiment le solde disponible.
+    final availableForWithdrawal = widget.savings.currentBalance +
+        (_isEditing && widget.existing!.type == SavingsTransactionType.retrait
+            ? widget.existing!.amount
+            : 0);
 
     return AlertDialog(
-      title: Text(isVersement ? 'Verser sur "${widget.savings.name}"' : 'Retirer de "${widget.savings.name}"'),
+      title: Text(
+        _isEditing
+            ? 'Modifier le mouvement'
+            : (isVersement ? 'Verser sur "${widget.savings.name}"' : 'Retirer de "${widget.savings.name}"'),
+      ),
       content: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_isEditing) ...[
+              SegmentedButton<SavingsTransactionType>(
+                segments: const [
+                  ButtonSegment(value: SavingsTransactionType.versement, label: Text('Versement')),
+                  ButtonSegment(value: SavingsTransactionType.retrait, label: Text('Retrait')),
+                ],
+                selected: {_type},
+                onSelectionChanged: (s) => setState(() => _type = s.first),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextFormField(
               controller: _amountController,
               autofocus: true,
@@ -41,7 +96,7 @@ class _SavingsMovementDialogState extends ConsumerState<SavingsMovementDialog> {
                 if (v == null || v.trim().isEmpty) return 'Champ requis';
                 final parsed = double.tryParse(v.replaceAll(',', '.'));
                 if (parsed == null || parsed <= 0) return 'Montant invalide';
-                if (!isVersement && parsed > widget.savings.currentBalance) {
+                if (!isVersement && parsed > availableForWithdrawal) {
                   return 'Solde insuffisant dans cette épargne';
                 }
                 return null;
@@ -73,7 +128,7 @@ class _SavingsMovementDialogState extends ConsumerState<SavingsMovementDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-        FilledButton(onPressed: _submit, child: const Text('Valider')),
+        FilledButton(onPressed: _submit, child: Text(_isEditing ? 'Enregistrer' : 'Valider')),
       ],
     );
   }
@@ -83,16 +138,31 @@ class _SavingsMovementDialogState extends ConsumerState<SavingsMovementDialog> {
     final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
     try {
-      await ref.read(savingsActionsProvider).addTransaction(
-            SavingsTransaction(
-              savingsId: widget.savings.id!,
-              type: widget.type,
-              amount: amount,
-              date: _selectedDate,
-              note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
-              createdAt: DateTime.now(),
-            ),
-          );
+      final actions = ref.read(savingsActionsProvider);
+      if (_isEditing) {
+        await actions.updateTransaction(
+          SavingsTransaction(
+            id: widget.existing!.id,
+            savingsId: widget.savings.id!,
+            type: _type,
+            amount: amount,
+            date: _selectedDate,
+            note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+            createdAt: widget.existing!.createdAt,
+          ),
+        );
+      } else {
+        await actions.addTransaction(
+          SavingsTransaction(
+            savingsId: widget.savings.id!,
+            type: _type,
+            amount: amount,
+            date: _selectedDate,
+            note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

@@ -80,6 +80,42 @@ class SavingsDao {
     });
   }
 
+  /// Met à jour un mouvement existant (montant, date, note, type) ET
+  /// répercute correctement la différence sur les deux soldes : on annule
+  /// d'abord l'effet de l'ancien montant, puis on applique l'effet du
+  /// nouveau, en une seule transaction atomique.
+  Future<void> updateTransactionWithBalanceUpdate({
+    required int transactionId,
+    required Map<String, dynamic> data,
+    required int savingsId,
+    required int accountId,
+    required double oldSignedAmount,
+    required double newSignedAmount,
+  }) async {
+    final db = await _appDatabase.database;
+    final nowIso = DateTime.now().toIso8601String();
+    final delta = newSignedAmount - oldSignedAmount;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'savings_transactions',
+        data,
+        where: 'id = ?',
+        whereArgs: [transactionId],
+      );
+
+      await txn.rawUpdate(
+        'UPDATE savings SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+        [delta, nowIso, savingsId],
+      );
+
+      await txn.rawUpdate(
+        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+        [delta, nowIso, accountId],
+      );
+    });
+  }
+
   /// Supprime un mouvement ET annule son effet sur les deux soldes.
   Future<void> deleteTransactionWithBalanceUpdate({
     required int transactionId,

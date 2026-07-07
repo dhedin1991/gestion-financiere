@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/navigation/app_menu_button.dart';
 import '../providers/sync_providers.dart';
 
 class SyncPage extends ConsumerStatefulWidget {
@@ -27,7 +26,6 @@ class _SyncPageState extends ConsumerState<SyncPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
         title: const Text('Synchronisation Wi-Fi'),
       ),
       body: ListView(

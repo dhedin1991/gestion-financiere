@@ -65,6 +65,12 @@ class SavingsActions {
     _ref.invalidate(savingsTransactionsProvider(transaction.savingsId));
   }
 
+  Future<void> updateTransaction(SavingsTransaction transaction) async {
+    await _repository.updateSavingsTransaction(transaction);
+    _refresh();
+    _ref.invalidate(savingsTransactionsProvider(transaction.savingsId));
+  }
+
   Future<void> deleteTransaction(int transactionId, int savingsId) async {
     await _repository.deleteSavingsTransaction(transactionId, savingsId);
     _refresh();

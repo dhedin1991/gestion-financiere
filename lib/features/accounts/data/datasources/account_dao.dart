@@ -59,6 +59,26 @@ class AccountDao {
     );
   }
 
+  Future<int> unarchive(int id) async {
+    final db = await _appDatabase.database;
+    return db.update(
+      'accounts',
+      {'is_archived': 0, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> findArchived() async {
+    final db = await _appDatabase.database;
+    return db.query(
+      'accounts',
+      where: 'is_archived = ?',
+      whereArgs: [1],
+      orderBy: 'updated_at DESC',
+    );
+  }
+
   Future<bool> hasLinkedData(int id) async {
     final db = await _appDatabase.database;
 

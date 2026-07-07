@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
+import '../widgets/savings_movement_dialog.dart';
 
 class SavingsHistoryPage extends ConsumerWidget {
   final Savings savings;
@@ -42,6 +43,14 @@ class SavingsHistoryPage extends ConsumerWidget {
                 subtitle: Text(
                   '${DateFormat('dd/MM/yyyy').format(t.date)}'
                   '${t.note != null && t.note!.isNotEmpty ? ' - ${t.note}' : ''}',
+                ),
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => SavingsMovementDialog(
+                    savings: savings,
+                    type: t.type,
+                    existing: t,
+                  ),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),

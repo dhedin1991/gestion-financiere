@@ -19,5 +19,9 @@ abstract class SavingsRepository {
   /// ET le solde du compte lié, de façon atomique.
   Future<void> addSavingsTransaction(SavingsTransaction transaction);
 
+  /// Modifie un mouvement existant (montant, date, note, type) en ajustant
+  /// correctement les soldes de l'épargne et du compte lié.
+  Future<void> updateSavingsTransaction(SavingsTransaction transaction);
+
   Future<void> deleteSavingsTransaction(int transactionId, int savingsId);
 }
