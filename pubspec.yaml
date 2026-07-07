@@ -36,6 +36,9 @@ dependencies:
   # Synchronisation Wi-Fi locale
   http: ^1.2.0
 
+  # Mémorisation des préférences (thème clair/sombre)
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
