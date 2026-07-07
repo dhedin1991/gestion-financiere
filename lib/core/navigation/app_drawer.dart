@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../theme/theme_providers.dart';
 
 /// Menu latéral principal de l'application, listant tous les modules.
 /// Remplace l'ancienne barre de navigation du bas, devenue trop chargée
 /// avec 9 modules.
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   final String currentLocation;
 
   const AppDrawer({super.key, required this.currentLocation});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
       _DrawerItem('Comptes', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, '/accounts'),
@@ -78,6 +82,13 @@ class AppDrawer extends StatelessWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: Icon(_themeIcon(themeMode)),
+              title: const Text('Apparence'),
+              subtitle: Text(_themeLabel(themeMode)),
+              onTap: () => _showThemeDialog(context, ref, themeMode),
+            ),
+            const Divider(height: 1),
+            ListTile(
               leading: const Icon(Icons.wifi_tethering),
               title: const Text('Synchronisation Wi-Fi'),
               onTap: () {
@@ -95,6 +106,53 @@ class AppDrawer extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+
+  IconData _themeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icons.light_mode_outlined;
+      case ThemeMode.dark:
+        return Icons.dark_mode_outlined;
+      case ThemeMode.system:
+        return Icons.brightness_auto_outlined;
+    }
+  }
+
+  String _themeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Clair';
+      case ThemeMode.dark:
+        return 'Sombre';
+      case ThemeMode.system:
+        return 'Automatique (selon l\'appareil)';
+    }
+  }
+
+  void _showThemeDialog(BuildContext context, WidgetRef ref, ThemeMode current) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Apparence'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ThemeMode.values.map((mode) {
+            return RadioListTile<ThemeMode>(
+              value: mode,
+              groupValue: current,
+              title: Text(_themeLabel(mode)),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(themeModeProvider.notifier).setThemeMode(value);
+                }
+                Navigator.of(dialogContext).pop();
+              },
+            );
+          }).toList(),
         ),
       ),
     );
