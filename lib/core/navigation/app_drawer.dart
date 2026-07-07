@@ -78,6 +78,14 @@ class AppDrawer extends StatelessWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.wifi_tethering),
+              title: const Text('Synchronisation Wi-Fi'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('Infos application'),
               onTap: () {
