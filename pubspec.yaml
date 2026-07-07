@@ -33,6 +33,9 @@ dependencies:
   # Graphiques (Bilans)
   fl_chart: ^0.69.0
 
+  # Synchronisation Wi-Fi locale
+  http: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
