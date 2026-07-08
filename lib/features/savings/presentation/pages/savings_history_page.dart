@@ -57,12 +57,12 @@ class SavingsHistoryPage extends ConsumerWidget {
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (_) => AlertDialog(
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text('Supprimer ce mouvement ?'),
                         content: const Text('Le solde de l\'épargne et du compte lié seront ajustés.'),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')),
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
                         ],
                       ),
                     );

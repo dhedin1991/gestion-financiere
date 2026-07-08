@@ -478,12 +478,12 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Supprimer cette entrée ?'),
         content: const Text('Cette action supprimera aussi l\'historique des paiements.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
         ],
       ),
     );
