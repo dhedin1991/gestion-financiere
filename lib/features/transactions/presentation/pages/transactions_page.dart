@@ -16,7 +16,7 @@ class TransactionsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -115,7 +115,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
     final categoriesAsync = _type == TransactionType.revenu
         ? ref.watch(incomeCategoriesProvider)
         : ref.watch(expenseCategoriesProvider);
@@ -176,18 +176,28 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Erreur comptes : $e'),
                 data: (accounts) {
-                  if (accounts.isEmpty) {
+                  // On ne propose pas les comptes archivés pour une NOUVELLE
+                  // transaction, mais on garde celui actuellement sélectionné
+                  // même s'il a été archivé depuis, pour ne pas faire planter
+                  // le menu déroulant lors d'une modification.
+                  final selectable = accounts
+                      .where((a) => !a.isArchived || a.id == _selectedAccountId)
+                      .toList();
+                  if (selectable.isEmpty) {
                     return const Text(
                       'Crée d\'abord un compte avant d\'ajouter une transaction.',
                       style: TextStyle(color: Colors.red),
                     );
                   }
-                  _selectedAccountId ??= accounts.first.id;
+                  _selectedAccountId ??= selectable.first.id;
                   return DropdownButtonFormField<int>(
                     value: _selectedAccountId,
                     decoration: const InputDecoration(labelText: 'Compte *'),
-                    items: accounts
-                        .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
+                    items: selectable
+                        .map((a) => DropdownMenuItem(
+                              value: a.id,
+                              child: Text(a.isArchived ? '${a.name} (archivé)' : a.name),
+                            ))
                         .toList(),
                     onChanged: (v) => setState(() => _selectedAccountId = v),
                     validator: (v) => v == null ? 'Sélectionne un compte' : null,

@@ -105,7 +105,7 @@ class _SavingsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: savings.currency, decimalDigits: 0);
 
     String accountName = '...';

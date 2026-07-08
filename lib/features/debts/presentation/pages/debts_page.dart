@@ -334,7 +334,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existing != null;
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -407,15 +407,23 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
             accountsAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
-              data: (accounts) => DropdownButtonFormField<int?>(
-                value: _selectedAccountId,
-                decoration: const InputDecoration(labelText: 'Compte lié (optionnel)'),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('Aucun')),
-                  ...accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))),
-                ],
-                onChanged: (v) => setState(() => _selectedAccountId = v),
-              ),
+              data: (accounts) {
+                final selectable = accounts
+                    .where((a) => !a.isArchived || a.id == _selectedAccountId)
+                    .toList();
+                return DropdownButtonFormField<int?>(
+                  value: _selectedAccountId,
+                  decoration: const InputDecoration(labelText: 'Compte lié (optionnel)'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Aucun')),
+                    ...selectable.map((a) => DropdownMenuItem(
+                          value: a.id,
+                          child: Text(a.isArchived ? '${a.name} (archivé)' : a.name),
+                        )),
+                  ],
+                  onChanged: (v) => setState(() => _selectedAccountId = v),
+                );
+              },
             ),
             const SizedBox(height: 24),
             FilledButton(

@@ -41,6 +41,15 @@ final archivedAccountsListProvider = FutureProvider.autoDispose<List<Account>>((
   return repository.getArchivedAccounts();
 });
 
+/// Liste de TOUS les comptes, y compris archivés. Utilisée uniquement dans
+/// les formulaires de modification (transactions, dettes, épargne, crédits)
+/// pour éviter un plantage du menu déroulant quand l'enregistrement en
+/// cours de modification est lié à un compte qui a été archivé depuis.
+final allAccountsIncludingArchivedProvider = FutureProvider.autoDispose<List<Account>>((ref) async {
+  final repository = ref.watch(accountRepositoryProvider);
+  return repository.getAllAccounts(includeArchived: true);
+});
+
 /// Contrôleur exposant les actions (créer/modifier/supprimer un compte).
 /// Sépare volontairement les "commandes" (ce provider) des "lectures"
 /// (accountsListProvider) — plus simple à tester et à maintenir.
@@ -86,5 +95,6 @@ class AccountActions {
     _ref.invalidate(accountsListProvider);
     _ref.invalidate(globalBalanceProvider);
     _ref.invalidate(archivedAccountsListProvider);
+    _ref.invalidate(allAccountsIncludingArchivedProvider);
   }
 }

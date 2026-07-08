@@ -182,7 +182,7 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -229,21 +229,29 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: TextFormField(
-                      controller: _principalController,
-                      decoration: const InputDecoration(
-                        labelText: 'Capital emprunté',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) return 'Obligatoire';
-                        if (double.tryParse(value.replaceAll(',', '.')) == null) {
-                          return 'Valeur invalide';
-                        }
-                        return null;
-                      },
-                    ),
+                    child: _isEditing
+                        ? InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Capital emprunté (non modifiable)',
+                              border: OutlineInputBorder(),
+                            ),
+                            child: Text(_principalController.text),
+                          )
+                        : TextFormField(
+                            controller: _principalController,
+                            decoration: const InputDecoration(
+                              labelText: 'Capital emprunté',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) return 'Obligatoire';
+                              if (double.tryParse(value.replaceAll(',', '.')) == null) {
+                                return 'Valeur invalide';
+                              }
+                              return null;
+                            },
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -257,6 +265,13 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
                   ),
                 ],
               ),
+              const SizedBox(height: 4),
+              if (_isEditing)
+                Text(
+                  'Le capital, la date de début et la durée ne sont plus modifiables une fois '
+                  'l\'échéancier généré, pour garder les échéances cohérentes.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _interestController,
@@ -349,6 +364,9 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => const SizedBox.shrink(),
                 data: (accounts) {
+                  final selectable = accounts
+                      .where((a) => !a.isArchived || a.id == _accountId)
+                      .toList();
                   return DropdownButtonFormField<int?>(
                     value: _accountId,
                     decoration: const InputDecoration(
@@ -360,10 +378,10 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
                         value: null,
                         child: Text('Aucun'),
                       ),
-                      ...accounts.map((Account account) {
+                      ...selectable.map((Account account) {
                         return DropdownMenuItem<int?>(
                           value: account.id,
-                          child: Text(account.name),
+                          child: Text(account.isArchived ? '${account.name} (archivé)' : account.name),
                         );
                       }),
                     ],

@@ -106,6 +106,14 @@ class AccountDao {
     );
     if (savings.isNotEmpty) return true;
 
+    final credits = await db.query(
+      'credits',
+      where: 'account_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (credits.isNotEmpty) return true;
+
     return false;
   }
 }

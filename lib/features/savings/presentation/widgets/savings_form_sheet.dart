@@ -36,7 +36,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existing != null;
-    final accountsAsync = ref.watch(accountsListProvider);
+    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -66,15 +66,23 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
               accountsAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Erreur comptes : $e'),
-                data: (accounts) => DropdownButtonFormField<int>(
-                  value: _selectedAccountId,
-                  decoration: const InputDecoration(labelText: 'Compte lié *'),
-                  items: accounts
-                      .map((a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedAccountId = v),
-                  validator: (v) => v == null ? 'Choisis un compte' : null,
-                ),
+                data: (accounts) {
+                  final selectable = accounts
+                      .where((a) => !a.isArchived || a.id == _selectedAccountId)
+                      .toList();
+                  return DropdownButtonFormField<int>(
+                    value: _selectedAccountId,
+                    decoration: const InputDecoration(labelText: 'Compte lié *'),
+                    items: selectable
+                        .map((a) => DropdownMenuItem(
+                              value: a.id,
+                              child: Text(a.isArchived ? '${a.name} (archivé)' : a.name),
+                            ))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedAccountId = v),
+                    validator: (v) => v == null ? 'Choisis un compte' : null,
+                  );
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
