@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../data/datasources/debt_dao.dart';
 import '../../data/repositories/debt_repository_impl.dart';
 import '../../domain/entities/debt.dart';
@@ -57,16 +58,26 @@ class DebtActions {
     _refresh();
   }
 
-  Future<void> addPayment(DebtPayment payment) async {
-    await _repository.addPayment(payment);
+  Future<void> addPayment(DebtPayment payment, Debt debt) async {
+    await _repository.addPayment(payment, debt);
     _ref.invalidate(debtsListProvider);
     _ref.invalidate(debtPaymentsProvider(payment.debtId));
+    if (debt.accountId != null) {
+      _ref.invalidate(accountsListProvider);
+      _ref.invalidate(allAccountsIncludingArchivedProvider);
+      _ref.invalidate(globalBalanceProvider);
+    }
   }
 
-  Future<void> deletePayment(int paymentId, int debtId) async {
+  Future<void> deletePayment(int paymentId, int debtId, {int? accountId}) async {
     await _repository.deletePayment(paymentId, debtId);
     _ref.invalidate(debtsListProvider);
     _ref.invalidate(debtPaymentsProvider(debtId));
+    if (accountId != null) {
+      _ref.invalidate(accountsListProvider);
+      _ref.invalidate(allAccountsIncludingArchivedProvider);
+      _ref.invalidate(globalBalanceProvider);
+    }
   }
 
   void _refresh() {

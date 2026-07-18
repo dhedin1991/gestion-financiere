@@ -60,7 +60,7 @@ class DebtRepositoryImpl implements DebtRepository {
   }
 
   @override
-  Future<void> addPayment(DebtPayment payment) async {
+  Future<void> addPayment(DebtPayment payment, Debt debt) async {
     final toCreate = DebtPayment(
       debtId: payment.debtId,
       amount: payment.amount,
@@ -68,11 +68,40 @@ class DebtRepositoryImpl implements DebtRepository {
       note: payment.note,
       createdAt: DateTime.now(),
     );
-    await _dao.insertPayment(DebtPaymentModel.toMap(toCreate));
+    final data = DebtPaymentModel.toMap(toCreate);
+
+    if (debt.accountId != null) {
+      // Dette ("je dois") : l'argent sort du compte -> montant négatif.
+      // Créance ("on me doit") : l'argent entre sur le compte -> montant positif.
+      final signedAmount = debt.type == DebtType.dette ? -payment.amount : payment.amount;
+      await _dao.insertPaymentWithBalanceUpdate(
+        data: data,
+        accountId: debt.accountId!,
+        signedAmount: signedAmount,
+      );
+    } else {
+      // Aucun compte lié : comportement historique, on enregistre juste le paiement.
+      await _dao.insertPayment(data);
+    }
   }
 
   @override
   Future<void> deletePayment(int paymentId, int debtId) async {
-    await _dao.deletePayment(paymentId);
+    final debtRow = await _dao.findById(debtId);
+    final paymentRow = await _dao.findPaymentById(paymentId);
+    final accountId = debtRow?['account_id'] as int?;
+
+    if (debtRow != null && paymentRow != null && accountId != null) {
+      final type = (debtRow['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette;
+      final amount = (paymentRow['amount'] as num).toDouble();
+      final signedAmount = type == DebtType.dette ? -amount : amount;
+      await _dao.deletePaymentWithBalanceUpdate(
+        paymentId: paymentId,
+        accountId: accountId,
+        signedAmount: signedAmount,
+      );
+    } else {
+      await _dao.deletePayment(paymentId);
+    }
   }
 }

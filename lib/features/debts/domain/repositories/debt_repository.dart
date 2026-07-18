@@ -8,6 +8,6 @@ abstract class DebtRepository {
   Future<void> deleteDebt(int id);
 
   Future<List<DebtPayment>> getPaymentsForDebt(int debtId);
-  Future<void> addPayment(DebtPayment payment);
+  Future<void> addPayment(DebtPayment payment, Debt debt);
   Future<void> deletePayment(int paymentId, int debtId);
 }

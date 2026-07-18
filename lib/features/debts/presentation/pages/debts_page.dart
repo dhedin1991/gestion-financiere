@@ -279,7 +279,11 @@ class _PaymentHistorySheet extends ConsumerWidget {
                               ),
                             );
                             if (confirmed == true && payment.id != null) {
-                              await ref.read(debtActionsProvider).deletePayment(payment.id!, debt.id!);
+                              await ref.read(debtActionsProvider).deletePayment(
+                                    payment.id!,
+                                    debt.id!,
+                                    accountId: debt.accountId,
+                                  );
                             }
                           },
                         ),
@@ -544,6 +548,49 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
             Text('Enregistrer un paiement', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text('Reste à payer : ${fmt.format(widget.debt.remainingAmount)}'),
+            const SizedBox(height: 8),
+            if (widget.debt.accountId != null)
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.sync_alt, size: 18, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.debt.type == DebtType.dette
+                            ? 'Le solde du compte lié sera automatiquement diminué de ce montant.'
+                            : 'Le solde du compte lié sera automatiquement augmenté de ce montant.',
+                        style: const TextStyle(fontSize: 12, color: Colors.green),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Aucun compte lié à cette entrée : le paiement sera enregistré ici, mais aucun solde ne sera mis à jour. Modifie l\'entrée pour lier un compte.',
+                        style: TextStyle(fontSize: 12, color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 20),
             TextFormField(
               controller: _amountController,
@@ -576,13 +623,16 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
     final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
     try {
-      await ref.read(debtActionsProvider).addPayment(DebtPayment(
-            debtId: widget.debt.id!,
-            amount: amount,
-            paymentDate: DateTime.now(),
-            note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
-            createdAt: DateTime.now(),
-          ));
+      await ref.read(debtActionsProvider).addPayment(
+            DebtPayment(
+              debtId: widget.debt.id!,
+              amount: amount,
+              paymentDate: DateTime.now(),
+              note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+              createdAt: DateTime.now(),
+            ),
+            widget.debt,
+          );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

@@ -64,4 +64,49 @@ class DebtDao {
     final db = await _appDatabase.database;
     return db.delete('debt_payments', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<Map<String, dynamic>?> findPaymentById(int id) async {
+    final db = await _appDatabase.database;
+    final rows = await db.query('debt_payments', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Enregistre un paiement ET répercute son effet sur le solde du compte lié,
+  /// dans une seule transaction SQL atomique (même mécanisme que le module
+  /// Épargne / Transactions). signedAmount est déjà orienté par l'appelant :
+  /// négatif pour un remboursement de dette (l'argent sort du compte),
+  /// positif pour un encaissement de créance (l'argent entre sur le compte).
+  Future<int> insertPaymentWithBalanceUpdate({
+    required Map<String, dynamic> data,
+    required int accountId,
+    required double signedAmount,
+  }) async {
+    final db = await _appDatabase.database;
+    final nowIso = DateTime.now().toIso8601String();
+    return db.transaction((txn) async {
+      final id = await txn.insert('debt_payments', data);
+      await txn.rawUpdate(
+        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+        [signedAmount, nowIso, accountId],
+      );
+      return id;
+    });
+  }
+
+  /// Supprime un paiement ET annule son effet sur le solde du compte lié.
+  Future<void> deletePaymentWithBalanceUpdate({
+    required int paymentId,
+    required int accountId,
+    required double signedAmount,
+  }) async {
+    final db = await _appDatabase.database;
+    final nowIso = DateTime.now().toIso8601String();
+    await db.transaction((txn) async {
+      await txn.delete('debt_payments', where: 'id = ?', whereArgs: [paymentId]);
+      await txn.rawUpdate(
+        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+        [signedAmount, nowIso, accountId],
+      );
+    });
+  }
 }
