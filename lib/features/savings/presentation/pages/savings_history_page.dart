@@ -67,7 +67,15 @@ class SavingsHistoryPage extends ConsumerWidget {
                       ),
                     );
                     if (confirmed == true) {
-                      await ref.read(savingsActionsProvider).deleteTransaction(t.id!, savings.id!);
+                      try {
+                        await ref.read(savingsActionsProvider).deleteTransaction(t.id!, savings.id!);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
                     }
                   },
                 ),

@@ -266,39 +266,55 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     final actions = ref.read(transactionActionsProvider);
     final now = DateTime.now();
 
-    if (widget.existing == null) {
-      await actions.create(FinancialTransaction(
-        accountId: _selectedAccountId!,
-        categoryId: _selectedCategoryId,
-        type: _type,
-        amount: amount,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        transactionDate: _selectedDate,
-        createdAt: now,
-        updatedAt: now,
-      ));
-    } else {
-      await actions.update(widget.existing!.copyWith(
-        accountId: _selectedAccountId!,
-        categoryId: _selectedCategoryId,
-        type: _type,
-        amount: amount,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        transactionDate: _selectedDate,
-      ));
-    }
+    try {
+      if (widget.existing == null) {
+        await actions.create(FinancialTransaction(
+          accountId: _selectedAccountId!,
+          categoryId: _selectedCategoryId,
+          type: _type,
+          amount: amount,
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
+          transactionDate: _selectedDate,
+          createdAt: now,
+          updatedAt: now,
+        ));
+      } else {
+        await actions.update(widget.existing!.copyWith(
+          accountId: _selectedAccountId!,
+          categoryId: _selectedCategoryId,
+          type: _type,
+          amount: amount,
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
+          transactionDate: _selectedDate,
+        ));
+      }
 
-    if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _delete() async {
     if (widget.existing?.id == null) return;
-    await ref.read(transactionActionsProvider).delete(widget.existing!.id!);
-    if (mounted) Navigator.of(context).pop();
+    try {
+      await ref.read(transactionActionsProvider).delete(widget.existing!.id!);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }
 
