@@ -94,19 +94,24 @@ class DebtDao {
   }
 
   /// Supprime un paiement ET annule son effet sur le solde du compte lié.
-  Future<void> deletePaymentWithBalanceUpdate({
-    required int paymentId,
+  /// Supprime une dette entière (et ses paiements, via ON DELETE CASCADE)
+  /// ET annule sur le compte lié l'effet cumulé de tous les paiements déjà
+  /// enregistrés — sans ça, supprimer une dette payée en partie laisserait
+  /// le solde du compte définitivement décalé.
+  Future<void> deleteDebtWithBalanceReversal({
+    required int debtId,
     required int accountId,
-    required double signedAmount,
+    required double reversalAmount,
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
     await db.transaction((txn) async {
-      await txn.delete('debt_payments', where: 'id = ?', whereArgs: [paymentId]);
+      await txn.delete('debts', where: 'id = ?', whereArgs: [debtId]);
       await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, accountId],
+        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+        [reversalAmount, nowIso, accountId],
       );
     });
   }
 }
+

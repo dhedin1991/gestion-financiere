@@ -50,6 +50,24 @@ class DebtRepositoryImpl implements DebtRepository {
 
   @override
   Future<void> deleteDebt(int id) async {
+    final debtRow = await _dao.findById(id);
+    final accountId = debtRow?['account_id'] as int?;
+
+    if (debtRow != null && accountId != null) {
+      final paid = await _dao.sumPaymentsForDebt(id);
+      if (paid > 0) {
+        final type = (debtRow['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette;
+        // Effet déjà appliqué au compte par les paiements passés :
+        final appliedSigned = type == DebtType.dette ? -paid : paid;
+        // On annule cet effet en appliquant le montant opposé.
+        await _dao.deleteDebtWithBalanceReversal(
+          debtId: id,
+          accountId: accountId,
+          reversalAmount: -appliedSigned,
+        );
+        return;
+      }
+    }
     await _dao.delete(id);
   }
 

@@ -56,6 +56,11 @@ class DebtActions {
   Future<void> delete(int id) async {
     await _repository.deleteDebt(id);
     _refresh();
+    // La dette pouvait être liée à un compte et avoir des paiements déjà
+    // appliqués : on rafraîchit systématiquement les comptes par sécurité.
+    _ref.invalidate(accountsListProvider);
+    _ref.invalidate(allAccountsIncludingArchivedProvider);
+    _ref.invalidate(globalBalanceProvider);
   }
 
   Future<void> addPayment(DebtPayment payment, Debt debt) async {
