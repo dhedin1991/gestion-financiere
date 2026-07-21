@@ -43,6 +43,11 @@ dependencies:
   # Synchronisation Wi-Fi locale
   http: ^1.2.0
 
+  # Export de relevés (PDF / CSV)
+  pdf: ^3.11.1
+  csv: ^6.0.0
+  share_plus: ^10.1.2
+
   # Mémorisation des préférences (thème clair/sombre)
   shared_preferences: ^2.3.2
 

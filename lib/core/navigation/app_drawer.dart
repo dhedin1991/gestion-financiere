@@ -121,6 +121,14 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.ios_share_outlined),
+              title: const Text('Exporter mes données'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/export');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('Infos application'),
               onTap: () {
