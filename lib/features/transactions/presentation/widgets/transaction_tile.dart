@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/transaction.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -52,7 +53,7 @@ class TransactionTile extends StatelessWidget {
       ),
       trailing: Text(
         '${isIncome ? '+' : '-'}${formatter.format(transaction.amount)}',
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        style: amountTextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color),
       ),
     );
   }

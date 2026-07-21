@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/navigation/app_menu_button.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/patrimoine_item.dart';
 import '../providers/patrimoine_providers.dart';
 import '../widgets/patrimoine_form_sheet.dart';
@@ -111,10 +112,10 @@ class _TotalHeader extends StatelessWidget {
             error: (err, _) => const Text('Erreur'),
             data: (total) => Text(
               fmt.format(total),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              style: amountTextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
             ),
           ),

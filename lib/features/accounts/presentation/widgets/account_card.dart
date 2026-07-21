@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/account.dart';
 
 class AccountCard extends StatelessWidget {
@@ -47,7 +48,13 @@ class AccountCard extends StatelessWidget {
               ),
               Text(
                 formatter.format(account.currentBalance),
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: amountTextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: account.currentBalance < 0
+                      ? const Color(0xFFE74C3C)
+                      : theme.textTheme.titleMedium?.color ?? theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),

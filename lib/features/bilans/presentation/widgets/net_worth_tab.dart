@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../providers/bilan_providers.dart';
 
@@ -45,10 +46,10 @@ class NetWorthTab extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       fmt.format(latest.netWorth),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      style: amountTextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                   ],

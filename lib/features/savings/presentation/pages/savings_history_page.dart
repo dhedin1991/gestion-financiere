@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
 import '../widgets/savings_movement_dialog.dart';
@@ -39,7 +40,14 @@ class SavingsHistoryPage extends ConsumerWidget {
                     color: isVersement ? Colors.green : Colors.red,
                   ),
                 ),
-                title: Text('${isVersement ? '+' : '-'}${fmt.format(t.amount)}'),
+                title: Text(
+                  '${isVersement ? '+' : '-'}${fmt.format(t.amount)}',
+                  style: amountTextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isVersement ? Colors.green : Colors.red,
+                  ),
+                ),
                 subtitle: Text(
                   '${DateFormat('dd/MM/yyyy').format(t.date)}'
                   '${t.note != null && t.note!.isNotEmpty ? ' - ${t.note}' : ''}',
