@@ -9,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
 import 'features/app_lock/presentation/pages/pin_unlock_page.dart';
 import 'features/app_lock/presentation/providers/app_lock_providers.dart';
+import 'features/reminders/presentation/providers/reminder_providers.dart';
 
 Future<void> main() async {
   // Nécessaire avant tout appel asynchrone au démarrage.
@@ -65,6 +66,7 @@ class GestionFinanciereApp extends ConsumerWidget {
     }
 
     final router = ref.watch(appRouterProvider);
+    ref.watch(reminderBootstrapProvider);
 
     return MaterialApp.router(
       title: 'Ma Gestion Financière',

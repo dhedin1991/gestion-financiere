@@ -48,6 +48,10 @@ dependencies:
   csv: ^6.0.0
   share_plus: ^7.2.2
 
+  # Rappels (échéances crédits/dettes, dépassements de budget)
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+
   # Mémorisation des préférences (thème clair/sombre)
   shared_preferences: ^2.3.2
 
