@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/app_theme.dart';
 import '../theme/theme_providers.dart';
 
 /// Menu latéral principal de l'application, listant tous les modules.
@@ -15,6 +16,7 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final themePreset = ref.watch(themePresetProvider);
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
       _DrawerItem('Comptes', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, '/accounts'),
@@ -86,6 +88,12 @@ class AppDrawer extends ConsumerWidget {
               title: const Text('Apparence'),
               subtitle: Text(_themeLabel(themeMode)),
               onTap: () => _showThemeDialog(context, ref, themeMode),
+            ),
+            ListTile(
+              leading: Icon(Icons.palette_outlined, color: themePreset.swatch),
+              title: const Text('Style'),
+              subtitle: Text(themePreset.label),
+              onTap: () => _showPresetDialog(context, ref, themePreset),
             ),
             const Divider(height: 1),
             ListTile(
@@ -161,6 +169,36 @@ class AppDrawer extends ConsumerWidget {
               },
             );
           }).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showPresetDialog(BuildContext context, WidgetRef ref, AppThemePreset current) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Style de l\'application'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: AppThemePreset.values.map((preset) {
+              return RadioListTile<AppThemePreset>(
+                value: preset,
+                groupValue: current,
+                secondary: CircleAvatar(backgroundColor: preset.swatch, radius: 14),
+                title: Text(preset.label),
+                subtitle: Text(preset.description, style: const TextStyle(fontSize: 12)),
+                onChanged: (value) {
+                  if (value != null) {
+                    ref.read(themePresetProvider.notifier).setPreset(value);
+                  }
+                  Navigator.of(dialogContext).pop();
+                },
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
