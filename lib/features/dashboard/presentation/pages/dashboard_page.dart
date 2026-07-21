@@ -7,6 +7,7 @@ import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../accounts/presentation/widgets/account_card.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -108,7 +109,7 @@ class _MonthlyIncomeExpenseRow extends ConsumerWidget {
                   error: (e, _) => const Text('—'),
                   data: (value) => Text(
                     formatter.format(value),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                    style: amountTextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color),
                   ),
                 ),
               ],
@@ -159,12 +160,13 @@ class _GlobalBalanceCard extends StatelessWidget {
               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
             ),
             error: (err, _) => const Text('—', style: TextStyle(color: Colors.white, fontSize: 32)),
-            data: (balance) => Text(
-              formatter.format(balance),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+            data: (balance) => TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: balance),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => Text(
+                formatter.format(value),
+                style: amountTextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ),

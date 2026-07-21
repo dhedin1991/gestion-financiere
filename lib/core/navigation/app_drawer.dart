@@ -97,6 +97,14 @@ class AppDrawer extends ConsumerWidget {
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('Sécurité'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/security');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.wifi_tethering),
               title: const Text('Synchronisation Wi-Fi'),
               onTap: () {

@@ -30,6 +30,13 @@ dependencies:
   # Icônes modernes
   cupertino_icons: ^1.0.6
 
+  # Typographie moderne (Inter — style fintech)
+  google_fonts: ^6.2.1
+
+  # Verrouillage par code PIN (stockage sécurisé du hash)
+  flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.5
+
   # Graphiques (Bilans)
   fl_chart: ^0.69.0
 

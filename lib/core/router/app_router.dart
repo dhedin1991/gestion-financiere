@@ -13,6 +13,7 @@ import '../../features/credits/presentation/pages/credits_page.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
 import '../../features/archives/presentation/pages/archives_page.dart';
 import '../../features/sync/presentation/pages/sync_page.dart';
+import '../../features/app_lock/presentation/pages/security_settings_page.dart';
 import '../navigation/app_drawer.dart';
 import '../navigation/scaffold_key_provider.dart';
 import 'app_info_page.dart';
@@ -74,6 +75,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/archives',
             builder: (context, state) => const ArchivesPage(),
+          ),
+          GoRoute(
+            path: '/security',
+            builder: (context, state) => const SecuritySettingsPage(),
           ),
           // Les futurs modules s'ajouteront ici, un par un.
         ],

@@ -7,6 +7,8 @@ import 'core/database/database_initializer.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
+import 'features/app_lock/presentation/pages/pin_unlock_page.dart';
+import 'features/app_lock/presentation/providers/app_lock_providers.dart';
 
 Future<void> main() async {
   // Nécessaire avant tout appel asynchrone au démarrage.
@@ -34,9 +36,35 @@ class GestionFinanciereApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final themePreset = ref.watch(themePresetProvider);
+    final lockPhase = ref.watch(appLockControllerProvider).phase;
+
+    // Tant que le verrouillage n'a pas tranché (chargement, code à saisir,
+    // ou création du premier code), on affiche un MaterialApp minimal
+    // dédié à cet écran — le vrai contenu financier (router, dashboard...)
+    // n'est jamais construit avant que l'utilisateur soit authentifié.
+    if (lockPhase == AppLockPhase.loading) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(themePreset),
+        darkTheme: AppTheme.dark(themePreset),
+        themeMode: themeMode,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    if (lockPhase == AppLockPhase.locked) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(themePreset),
+        darkTheme: AppTheme.dark(themePreset),
+        themeMode: themeMode,
+        home: const PinUnlockPage(),
+      );
+    }
+
+    final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
       title: 'Ma Gestion Financière',

@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Les différents styles visuels proposés à l'utilisateur, indépendants
 /// du mode clair/sombre (qui reste géré séparément par ThemeModeController).
@@ -121,6 +124,7 @@ class AppTheme {
 
   static ThemeData light(AppThemePreset preset) {
     final c = _palettes[preset]!;
+    final baseTextTheme = GoogleFonts.interTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -137,9 +141,15 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 0),
       ),
@@ -147,15 +157,16 @@ class AppTheme {
         backgroundColor: c.accent,
         foregroundColor: Colors.white,
       ),
-      textTheme: const TextTheme(
-        headlineMedium: TextStyle(fontWeight: FontWeight.bold),
-        titleLarge: TextStyle(fontWeight: FontWeight.w600),
+      textTheme: baseTextTheme.copyWith(
+        headlineMedium: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        titleLarge: GoogleFonts.inter(fontWeight: FontWeight.w600),
       ),
     );
   }
 
   static ThemeData dark(AppThemePreset preset) {
     final c = _palettes[preset]!;
+    final baseTextTheme = GoogleFonts.interTextTheme(ThemeData(brightness: Brightness.dark).textTheme);
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -172,12 +183,37 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: c.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+      textTheme: baseTextTheme,
     );
   }
+}
+
+/// Style de texte à utiliser pour tout affichage de montant, avec des
+/// chiffres à chasse fixe (tabular figures) : dans une liste de
+/// transactions ou un tableau, les montants s'alignent verticalement au
+/// lieu de "danser" à cause de la largeur variable des chiffres normaux.
+/// Usage : Text(montant, style: amountTextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green))
+
+TextStyle amountTextStyle({
+  required double fontSize,
+  required FontWeight fontWeight,
+  required Color color,
+}) {
+  return GoogleFonts.inter(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    color: color,
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
 }
