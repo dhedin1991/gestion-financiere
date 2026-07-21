@@ -36,12 +36,13 @@ class GestionFinanciereApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final themePreset = ref.watch(themePresetProvider);
 
     return MaterialApp.router(
       title: 'Ma Gestion Financière',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.light(themePreset),
+      darkTheme: AppTheme.dark(themePreset),
       themeMode: themeMode,
       routerConfig: router,
       locale: const Locale('fr', 'FR'),
