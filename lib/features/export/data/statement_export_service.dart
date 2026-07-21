@@ -55,11 +55,9 @@ class StatementExportService {
       csvContent,
     );
 
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        subject: 'Export transactions',
-      ),
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      subject: 'Export transactions',
     );
   }
 
@@ -178,11 +176,9 @@ class StatementExportService {
       await doc.save(),
     );
 
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        subject: 'Relevé de transactions',
-      ),
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      subject: 'Relevé de transactions',
     );
   }
 
