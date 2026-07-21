@@ -19,6 +19,20 @@ jobs:
       - run: flutter create --platforms=android --project-name gestion_financiere .
       - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
       - run: sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
+      - name: Activer le core library desugaring (requis par flutter_local_notifications)
+        run: |
+          cat >> android/app/build.gradle.kts << 'EOF'
+
+          android {
+              compileOptions {
+                  isCoreLibraryDesugaringEnabled = true
+              }
+          }
+
+          dependencies {
+              coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+          }
+          EOF
       - name: Ajout permission Internet et autorisation Wi-Fi local (synchronisation)
         run: |
           sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
