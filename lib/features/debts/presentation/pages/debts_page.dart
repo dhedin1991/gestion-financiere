@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/navigation/app_menu_button.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/debt.dart';
 import '../providers/debt_providers.dart';
@@ -245,7 +246,10 @@ class _PaymentHistorySheet extends ConsumerWidget {
                 error: (err, _) => Center(child: Text('Erreur : $err')),
                 data: (payments) {
                   if (payments.isEmpty) {
-                    return const Center(child: Text('Aucun paiement enregistré'));
+                    return const EmptyState(
+                      icon: Icons.receipt_long_outlined,
+                      message: 'Aucun paiement enregistré',
+                    );
                   }
                   return ListView.separated(
                     itemCount: payments.length,

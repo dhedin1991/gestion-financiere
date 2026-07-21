@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
 import '../widgets/savings_movement_dialog.dart';
@@ -23,7 +24,11 @@ class SavingsHistoryPage extends ConsumerWidget {
         error: (err, _) => Center(child: Text('Erreur : $err')),
         data: (transactions) {
           if (transactions.isEmpty) {
-            return const Center(child: Text('Aucun mouvement enregistré'));
+            return const EmptyState(
+              icon: Icons.savings_outlined,
+              message: 'Aucun mouvement enregistré',
+              subtitle: 'Tes versements et retraits sur cette épargne apparaîtront ici.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),

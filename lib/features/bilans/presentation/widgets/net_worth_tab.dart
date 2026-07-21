@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../providers/bilan_providers.dart';
 
@@ -20,7 +21,11 @@ class NetWorthTab extends ConsumerWidget {
       error: (err, _) => Center(child: Text('Erreur : $err')),
       data: (history) {
         if (history.isEmpty) {
-          return const Center(child: Text('Aucune donnée disponible pour le moment'));
+          return const EmptyState(
+            icon: Icons.show_chart,
+            message: 'Aucune donnée disponible',
+            subtitle: 'Ton patrimoine net apparaîtra ici dès le premier bilan enregistré.',
+          );
         }
 
         final latest = history.last;

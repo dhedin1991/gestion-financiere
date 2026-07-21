@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/widgets/empty_state.dart';
 import '../providers/bilan_providers.dart';
 
 class RevenueExpenseTab extends ConsumerStatefulWidget {
@@ -79,7 +80,10 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
             error: (err, _) => Center(child: Text('Erreur : $err')),
             data: (periods) {
               if (periods.isEmpty || periods.every((p) => p.totalRevenue == 0 && p.totalExpense == 0)) {
-                return const Center(child: Text('Aucune transaction sur cette période'));
+                return const EmptyState(
+                  icon: Icons.bar_chart,
+                  message: 'Aucune transaction sur cette période',
+                );
               }
 
               final maxY = periods

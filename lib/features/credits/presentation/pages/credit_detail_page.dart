@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/credit.dart';
 import '../../domain/entities/credit_installment.dart';
 import '../providers/credit_providers.dart';
@@ -97,7 +98,10 @@ class CreditDetailPage extends ConsumerWidget {
               error: (err, _) => Center(child: Text('Erreur : $err')),
               data: (installments) {
                 if (installments.isEmpty) {
-                  return const Center(child: Text('Aucune échéance'));
+                  return const EmptyState(
+                    icon: Icons.event_note_outlined,
+                    message: 'Aucune échéance',
+                  );
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
