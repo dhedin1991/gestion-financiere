@@ -9,22 +9,26 @@ enum SyncStatus { idle, serverRunning, connecting, syncing, success, error }
 class SyncState {
   final SyncStatus status;
   final String? serverIpAddress;
+  final String? serverPin;
   final String? errorMessage;
 
   const SyncState({
     this.status = SyncStatus.idle,
     this.serverIpAddress,
+    this.serverPin,
     this.errorMessage,
   });
 
   SyncState copyWith({
     SyncStatus? status,
     String? serverIpAddress,
+    String? serverPin,
     String? errorMessage,
   }) {
     return SyncState(
       status: status ?? this.status,
       serverIpAddress: serverIpAddress ?? this.serverIpAddress,
+      serverPin: serverPin ?? this.serverPin,
       errorMessage: errorMessage,
     );
   }
@@ -55,7 +59,7 @@ class SyncController extends StateNotifier<SyncState> {
     try {
       final server = _ref.read(syncServerServiceProvider);
       final ip = await server.start();
-      state = state.copyWith(status: SyncStatus.serverRunning, serverIpAddress: ip);
+      state = state.copyWith(status: SyncStatus.serverRunning, serverIpAddress: ip, serverPin: server.pin);
     } catch (e) {
       state = state.copyWith(status: SyncStatus.error, errorMessage: e.toString());
     }
@@ -68,8 +72,9 @@ class SyncController extends StateNotifier<SyncState> {
   }
 
   /// Se connecte à l'appareil serveur indiqué et remplace toutes les
-  /// données locales par celles de cet appareil.
-  Future<void> syncFromServer(String ipAddress) async {
+  /// données locales par celles de cet appareil. [pin] doit être le code
+  /// affiché sur l'appareil qui partage.
+  Future<void> syncFromServer(String ipAddress, String pin) async {
     state = state.copyWith(status: SyncStatus.connecting, errorMessage: null);
 
     final client = _ref.read(syncClientServiceProvider);
@@ -94,7 +99,7 @@ class SyncController extends StateNotifier<SyncState> {
       // son fichier, pour éviter toute corruption.
       await appDatabase.close();
 
-      await client.downloadAndReplace(ipAddress, appDatabase);
+      await client.downloadAndReplace(ipAddress, pin, appDatabase);
 
       // Force tous les providers de l'app à recréer une nouvelle connexion
       // vers le fichier fraîchement remplacé.

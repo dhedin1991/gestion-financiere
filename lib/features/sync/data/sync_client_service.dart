@@ -26,10 +26,16 @@ class SyncClientService {
   /// doit avoir été fermée (via AppDatabase.close()) AVANT d'appeler cette
   /// méthode, sinon le remplacement du fichier peut échouer ou corrompre
   /// les données.
-  Future<void> downloadAndReplace(String ipAddress, AppDatabase appDatabase) async {
-    final uri = Uri.parse('http://$ipAddress:$port/database');
+  ///
+  /// [pin] doit correspondre au code affiché sur l'appareil qui partage ;
+  /// sans lui (ou s'il est faux), le serveur refuse la requête (401).
+  Future<void> downloadAndReplace(String ipAddress, String pin, AppDatabase appDatabase) async {
+    final uri = Uri.parse('http://$ipAddress:$port/database?pin=$pin');
     final response = await http.get(uri).timeout(const Duration(seconds: 30));
 
+    if (response.statusCode == 401) {
+      throw Exception('Code PIN incorrect. Vérifie le code affiché sur l\'appareil qui partage.');
+    }
     if (response.statusCode != 200) {
       throw Exception('L\'appareil distant n\'a pas pu envoyer la base de données (code ${response.statusCode})');
     }

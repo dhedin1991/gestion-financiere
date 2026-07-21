@@ -12,10 +12,12 @@ class SyncPage extends ConsumerStatefulWidget {
 
 class _SyncPageState extends ConsumerState<SyncPage> {
   final _ipController = TextEditingController();
+  final _pinController = TextEditingController();
 
   @override
   void dispose() {
     _ipController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -82,6 +84,13 @@ class _SyncPageState extends ConsumerState<SyncPage> {
                       syncState.serverIpAddress ?? 'Adresse introuvable',
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 12),
+                    const Text('...et ce code (ne le communique qu\'à cet appareil) :'),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      syncState.serverPin ?? '----',
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 4),
+                    ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       onPressed: controller.stopServer,
@@ -121,6 +130,17 @@ class _SyncPageState extends ConsumerState<SyncPage> {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _pinController,
+            decoration: const InputDecoration(
+              labelText: 'Code PIN affiché sur l\'autre appareil',
+              hintText: 'ex: 0427',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+            maxLength: 4,
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -172,7 +192,14 @@ class _SyncPageState extends ConsumerState<SyncPage> {
 
   Future<void> _confirmAndSync(BuildContext context, SyncController controller) async {
     final ip = _ipController.text.trim();
+    final pin = _pinController.text.trim();
     if (ip.isEmpty) return;
+    if (pin.length != 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saisis le code PIN à 4 chiffres affiché sur l\'autre appareil.')),
+      );
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -193,7 +220,7 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     );
 
     if (confirmed == true) {
-      await controller.syncFromServer(ip);
+      await controller.syncFromServer(ip, pin);
     }
   }
 }
