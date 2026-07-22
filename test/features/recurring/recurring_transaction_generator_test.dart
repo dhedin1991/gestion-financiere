@@ -39,7 +39,25 @@ class _FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Future<List<FinancialTransaction>> getTransactions({
+    int? accountId,
+    int? categoryId,
+    TransactionType? type,
+    DateTime? from,
+    DateTime? to,
+    String? searchText,
+    int limit = 100,
+  }) async =>
+      created;
+
+  @override
+  Future<void> updateTransaction(FinancialTransaction transaction) async {}
+
+  @override
+  Future<void> deleteTransaction(int id) async {}
+
+  @override
+  Future<double> getTotalByType(TransactionType type, {DateTime? from, DateTime? to}) async => 0;
 }
 
 RecurringTransaction _make({
