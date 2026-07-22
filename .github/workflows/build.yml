@@ -38,7 +38,16 @@ jobs:
           sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/a\        android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
-      - run: flutter test
+      - name: Run tests
+        run: |
+          flutter test > /tmp/test.log 2>&1 || TEST_FAILED=1
+          if [ "$TEST_FAILED" = "1" ]; then
+            grep -B2 -iE "^\s*(Expected|Actual|which:|EXCEPTION|FAILED|Error:)" /tmp/test.log | tail -40 | while IFS= read -r line; do
+              clean=$(echo "$line" | sed 's/%/%25/g' | cut -c1-500)
+              echo "::error::$clean"
+            done
+            exit 1
+          fi
       - name: Build APK
         run: |
           flutter build apk --release > /tmp/build.log 2>&1 || BUILD_FAILED=1
