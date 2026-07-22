@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_menu_button.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/domain/entities/category.dart';
@@ -10,13 +11,38 @@ import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/transaction_tile.dart';
 
-class TransactionsPage extends ConsumerWidget {
+class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
 
   @override
+  ConsumerState<TransactionsPage> createState() => _TransactionsPageState();
+}
+
+class _TransactionsPageState extends ConsumerState<TransactionsPage> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    ref.read(transactionFiltersProvider.notifier).update((f) => f.copyWith(search: value));
+  }
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final filters = ref.watch(transactionFiltersProvider);
+    final transactionsAsync = ref.watch(filteredTransactionsProvider);
     final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
+    final categoriesAsync = ref.watch(allCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -28,42 +54,154 @@ class TransactionsPage extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Ajouter'),
       ),
-      body: transactionsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
-        data: (transactions) {
-          if (transactions.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'Aucune transaction pour le moment.\nAjoute ton premier revenu ou dépense avec le bouton +',
-                  textAlign: TextAlign.center,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Rechercher une transaction...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: filters.search.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
               ),
-            );
-          }
+            ),
+          ),
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              children: [
+                _typeFilterChip(context, filters, TransactionType.depense, 'Dépenses'),
+                const SizedBox(width: 8),
+                _typeFilterChip(context, filters, TransactionType.revenu, 'Revenus'),
+                const SizedBox(width: 8),
+                ...accountsAsync.valueOrNull?.map(
+                      (a) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _accountFilterChip(context, filters, a),
+                      ),
+                    ) ??
+                    [],
+                ...categoriesAsync.valueOrNull?.map(
+                      (c) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _categoryFilterChip(context, filters, c),
+                      ),
+                    ) ??
+                    [],
+                if (filters.isActive)
+                  ActionChip(
+                    label: const Text('Réinitialiser'),
+                    avatar: const Icon(Icons.clear, size: 16),
+                    onPressed: () {
+                      _searchController.clear();
+                      ref.read(transactionFiltersProvider.notifier).state =
+                          const TransactionFilters();
+                    },
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: transactionsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Erreur : $err')),
+              data: (transactions) {
+                if (transactions.isEmpty) {
+                  return EmptyState(
+                    icon: filters.isActive ? Icons.search_off : Icons.receipt_long_outlined,
+                    message: filters.isActive
+                        ? 'Aucun résultat pour ces filtres'
+                        : 'Aucune transaction pour le moment',
+                    subtitle: filters.isActive
+                        ? null
+                        : 'Ajoute ton premier revenu ou dépense avec le bouton +',
+                  );
+                }
 
-          final accounts = accountsAsync.valueOrNull ?? <Account>[];
+                final accounts = accountsAsync.valueOrNull ?? <Account>[];
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: transactions.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final t = transactions[index];
-              final account = accounts.where((a) => a.id == t.accountId).toList();
-              final accountName = account.isNotEmpty ? account.first.name : 'Compte supprimé';
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: transactions.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final t = transactions[index];
+                    final account = accounts.where((a) => a.id == t.accountId).toList();
+                    final accountName = account.isNotEmpty ? account.first.name : 'Compte supprimé';
 
-              return TransactionTile(
-                transaction: t,
-                accountName: accountName,
-                onTap: () => _showTransactionForm(context, ref, existing: t),
-              );
-            },
-          );
-        },
+                    return TransactionTile(
+                      transaction: t,
+                      accountName: accountName,
+                      onTap: () => _showTransactionForm(context, ref, existing: t),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _typeFilterChip(
+    BuildContext context,
+    TransactionFilters filters,
+    TransactionType type,
+    String label,
+  ) {
+    final selected = filters.type == type;
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (isSelected) {
+        ref.read(transactionFiltersProvider.notifier).update(
+              (f) => f.copyWith(type: () => isSelected ? type : null),
+            );
+      },
+    );
+  }
+
+  Widget _accountFilterChip(BuildContext context, TransactionFilters filters, Account account) {
+    final selected = filters.accountId == account.id;
+    return FilterChip(
+      label: Text(account.name),
+      selected: selected,
+      onSelected: (isSelected) {
+        ref.read(transactionFiltersProvider.notifier).update(
+              (f) => f.copyWith(accountId: () => isSelected ? account.id : null),
+            );
+      },
+    );
+  }
+
+  Widget _categoryFilterChip(BuildContext context, TransactionFilters filters, AppCategory category) {
+    final selected = filters.categoryId == category.id;
+    return FilterChip(
+      label: Text(category.name),
+      selected: selected,
+      onSelected: (isSelected) {
+        ref.read(transactionFiltersProvider.notifier).update(
+              (f) => f.copyWith(categoryId: () => isSelected ? category.id : null),
+            );
+      },
     );
   }
 

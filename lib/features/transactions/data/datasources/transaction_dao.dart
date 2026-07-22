@@ -15,9 +15,11 @@ class TransactionDao {
 
   Future<List<Map<String, dynamic>>> find({
     int? accountId,
+    int? categoryId,
     String? type,
     String? fromIso,
     String? toIso,
+    String? searchText,
     int limit = 100,
   }) async {
     final db = await _appDatabase.database;
@@ -28,6 +30,10 @@ class TransactionDao {
     if (accountId != null) {
       conditions.add('account_id = ?');
       args.add(accountId);
+    }
+    if (categoryId != null) {
+      conditions.add('category_id = ?');
+      args.add(categoryId);
     }
     if (type != null) {
       conditions.add('type = ?');
@@ -40,6 +46,10 @@ class TransactionDao {
     if (toIso != null) {
       conditions.add('transaction_date <= ?');
       args.add(toIso);
+    }
+    if (searchText != null && searchText.trim().isNotEmpty) {
+      conditions.add('description LIKE ?');
+      args.add('%${searchText.trim()}%');
     }
 
     return db.query(

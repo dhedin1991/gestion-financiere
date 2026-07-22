@@ -10,16 +10,20 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<List<FinancialTransaction>> getTransactions({
     int? accountId,
+    int? categoryId,
     TransactionType? type,
     DateTime? from,
     DateTime? to,
+    String? searchText,
     int limit = 100,
   }) async {
     final rows = await _dao.find(
       accountId: accountId,
+      categoryId: categoryId,
       type: type == null ? null : (type == TransactionType.revenu ? 'revenu' : 'depense'),
       fromIso: from?.toIso8601String(),
       toIso: to?.toIso8601String(),
+      searchText: searchText,
       limit: limit,
     );
     return rows.map(TransactionModel.fromMap).toList();

@@ -3,9 +3,11 @@ import '../entities/transaction.dart';
 abstract class TransactionRepository {
   Future<List<FinancialTransaction>> getTransactions({
     int? accountId,
+    int? categoryId,
     TransactionType? type,
     DateTime? from,
     DateTime? to,
+    String? searchText,
     int limit = 100,
   });
   Future<FinancialTransaction> createTransaction(FinancialTransaction transaction);

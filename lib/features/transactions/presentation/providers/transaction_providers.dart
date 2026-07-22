@@ -23,6 +23,58 @@ final recentTransactionsProvider =
   return repository.getTransactions(limit: 100);
 });
 
+/// Critères de recherche/filtre appliqués à la liste des transactions.
+/// Tout champ null = pas de filtre sur ce critère.
+class TransactionFilters {
+  final String search;
+  final int? accountId;
+  final int? categoryId;
+  final TransactionType? type;
+
+  const TransactionFilters({
+    this.search = '',
+    this.accountId,
+    this.categoryId,
+    this.type,
+  });
+
+  bool get isActive =>
+      search.trim().isNotEmpty || accountId != null || categoryId != null || type != null;
+
+  TransactionFilters copyWith({
+    String? search,
+    int? Function()? accountId,
+    int? Function()? categoryId,
+    TransactionType? Function()? type,
+  }) {
+    return TransactionFilters(
+      search: search ?? this.search,
+      accountId: accountId != null ? accountId() : this.accountId,
+      categoryId: categoryId != null ? categoryId() : this.categoryId,
+      type: type != null ? type() : this.type,
+    );
+  }
+}
+
+final transactionFiltersProvider = StateProvider.autoDispose<TransactionFilters>((ref) {
+  return const TransactionFilters();
+});
+
+/// Transactions filtrées selon [transactionFiltersProvider]. Se
+/// recalcule automatiquement à chaque changement de filtre.
+final filteredTransactionsProvider =
+    FutureProvider.autoDispose<List<FinancialTransaction>>((ref) async {
+  final filters = ref.watch(transactionFiltersProvider);
+  final repository = ref.watch(transactionRepositoryProvider);
+  return repository.getTransactions(
+    accountId: filters.accountId,
+    categoryId: filters.categoryId,
+    type: filters.type,
+    searchText: filters.search.trim().isEmpty ? null : filters.search,
+    limit: 300,
+  );
+});
+
 /// Total des revenus du mois en cours — utile pour le Tableau de bord.
 final monthlyIncomeProvider = FutureProvider.autoDispose<double>((ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
@@ -67,6 +119,7 @@ class TransactionActions {
     // Une transaction impacte à la fois les listes de transactions
     // ET les soldes des comptes (Dashboard) -> on invalide les deux familles.
     _ref.invalidate(recentTransactionsProvider);
+    _ref.invalidate(filteredTransactionsProvider);
     _ref.invalidate(monthlyIncomeProvider);
     _ref.invalidate(monthlyExpenseProvider);
     _ref.invalidate(accountsListProvider);
