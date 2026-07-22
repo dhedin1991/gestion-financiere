@@ -1,3 +1,4 @@
+import '../../../../core/utils/debt_balance_calculator.dart';
 import '../../domain/entities/debt.dart';
 import '../../domain/repositories/debt_repository.dart';
 import '../datasources/debt_dao.dart';
@@ -58,12 +59,12 @@ class DebtRepositoryImpl implements DebtRepository {
       if (paid > 0) {
         final type = (debtRow['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette;
         // Effet déjà appliqué au compte par les paiements passés :
-        final appliedSigned = type == DebtType.dette ? -paid : paid;
+        final appliedSigned = signedDebtPaymentAmount(type: type, amount: paid);
         // On annule cet effet en appliquant le montant opposé.
         await _dao.deleteDebtWithBalanceReversal(
           debtId: id,
           accountId: accountId,
-          reversalAmount: -appliedSigned,
+          reversalAmount: reverseSignedAmount(appliedSigned),
         );
         return;
       }
@@ -91,7 +92,7 @@ class DebtRepositoryImpl implements DebtRepository {
     if (debt.accountId != null) {
       // Dette ("je dois") : l'argent sort du compte -> montant négatif.
       // Créance ("on me doit") : l'argent entre sur le compte -> montant positif.
-      final signedAmount = debt.type == DebtType.dette ? -payment.amount : payment.amount;
+      final signedAmount = signedDebtPaymentAmount(type: debt.type, amount: payment.amount);
       await _dao.insertPaymentWithBalanceUpdate(
         data: data,
         accountId: debt.accountId!,
@@ -112,7 +113,7 @@ class DebtRepositoryImpl implements DebtRepository {
     if (debtRow != null && paymentRow != null && accountId != null) {
       final type = (debtRow['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette;
       final amount = (paymentRow['amount'] as num).toDouble();
-      final signedAmount = type == DebtType.dette ? -amount : amount;
+      final signedAmount = signedDebtPaymentAmount(type: type, amount: amount);
       await _dao.deletePaymentWithBalanceUpdate(
         paymentId: paymentId,
         accountId: accountId,

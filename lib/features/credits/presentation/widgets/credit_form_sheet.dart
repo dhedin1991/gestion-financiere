@@ -1,9 +1,8 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/loan_calculator.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/credit.dart';
@@ -80,21 +79,11 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
   /// Retourne null si les champs nécessaires ne sont pas encore remplis
   /// correctement.
   double? _calculateSuggestedPayment() {
-    final principal = double.tryParse(_principalController.text.replaceAll(',', '.'));
-    final rate = double.tryParse(_interestController.text.replaceAll(',', '.'));
-    final duration = int.tryParse(_durationController.text);
-
-    if (principal == null || principal <= 0) return null;
-    if (rate == null || rate < 0) return null;
-    if (duration == null || duration <= 0) return null;
-
-    if (rate == 0) {
-      return principal / duration;
-    }
-
-    final monthlyRate = rate / 100 / 12;
-    final payment = principal * monthlyRate / (1 - math.pow(1 + monthlyRate, -duration));
-    return payment;
+    return calculateMonthlyPayment(
+      principal: double.tryParse(_principalController.text.replaceAll(',', '.')),
+      annualRatePercent: double.tryParse(_interestController.text.replaceAll(',', '.')),
+      durationMonths: int.tryParse(_durationController.text),
+    );
   }
 
   void _applySuggestedPayment() {

@@ -38,6 +38,7 @@ jobs:
           sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/a\        android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
+      - run: flutter test
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
