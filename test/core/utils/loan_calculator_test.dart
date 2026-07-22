@@ -3,15 +3,27 @@ import 'package:gestion_financiere/core/utils/loan_calculator.dart';
 
 void main() {
   group('calculateMonthlyPayment', () {
-    test('calcule correctement une mensualité avec intérêts', () {
-      // Référence : emprunt de 1 000 000 sur 12 mois à 12%/an → mensualité ≈ 88 849
+    test('la mensualité amortit exactement le capital sur la durée', () {
+      // Vérification indépendante de la formule : si on simule
+      // l'amortissement mois par mois avec la mensualité calculée,
+      // le solde restant doit tomber à ~0 à la fin de la durée.
+      const principal = 1000000.0;
+      const annualRate = 12.0;
+      const duration = 12;
+
       final payment = calculateMonthlyPayment(
-        principal: 1000000,
-        annualRatePercent: 12,
-        durationMonths: 12,
-      );
-      expect(payment, isNotNull);
-      expect(payment!, closeTo(88849, 1));
+        principal: principal,
+        annualRatePercent: annualRate,
+        durationMonths: duration,
+      )!;
+
+      final monthlyRate = annualRate / 100 / 12;
+      var balance = principal;
+      for (var i = 0; i < duration; i++) {
+        balance = balance * (1 + monthlyRate) - payment;
+      }
+
+      expect(balance, closeTo(0, 0.5));
     });
 
     test('taux à 0% : mensualité = capital / durée, sans intérêts', () {
