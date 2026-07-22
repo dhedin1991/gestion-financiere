@@ -129,6 +129,14 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.autorenew),
+              title: const Text('Transactions récurrentes'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/recurring');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('Infos application'),
               onTap: () {

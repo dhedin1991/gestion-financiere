@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 8;
+  static const int _dbVersion = 9;
 
   Database? _database;
 
@@ -88,6 +88,29 @@ class AppDatabase {
         description TEXT,
         payment_method TEXT,
         transaction_date TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // ==========================================================
+    // TABLE : recurring_transactions (modèles de transactions à
+    // régénérer automatiquement selon une fréquence)
+    // ==========================================================
+    await db.execute('''
+      CREATE TABLE recurring_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id INTEGER NOT NULL,
+        category_id INTEGER,
+        type TEXT NOT NULL,          -- 'revenu' ou 'depense'
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'XOF',
+        description TEXT,
+        frequency TEXT NOT NULL,     -- 'hebdomadaire' | 'mensuelle' | 'annuelle'
+        next_due_date TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
@@ -418,6 +441,31 @@ CREATE TABLE budgets (
           'ALTER TABLE net_worth_snapshots ADD COLUMN total_receivables REAL NOT NULL DEFAULT 0',
         );
       }
+    }
+
+    if (oldVersion < 9) {
+      // Migration non destructive : ne touche à aucune table existante,
+      // se contente de créer la nouvelle table si elle n'existe pas déjà
+      // (le IF NOT EXISTS protège un utilisateur qui aurait déjà cette
+      // version par un autre chemin, sans jamais toucher ses données).
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS recurring_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          account_id INTEGER NOT NULL,
+          category_id INTEGER,
+          type TEXT NOT NULL,
+          amount REAL NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'XOF',
+          description TEXT,
+          frequency TEXT NOT NULL,
+          next_due_date TEXT NOT NULL,
+          active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
+          FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        )
+      ''');
     }
   }
   

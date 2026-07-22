@@ -15,6 +15,7 @@ import '../../features/archives/presentation/pages/archives_page.dart';
 import '../../features/sync/presentation/pages/sync_page.dart';
 import '../../features/app_lock/presentation/pages/security_settings_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
+import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
 import '../navigation/app_drawer.dart';
 import '../navigation/scaffold_key_provider.dart';
 import 'app_info_page.dart';
@@ -84,6 +85,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/export',
             builder: (context, state) => const ExportPage(),
+          ),
+          GoRoute(
+            path: '/recurring',
+            builder: (context, state) => const RecurringTransactionsPage(),
           ),
           // Les futurs modules s'ajouteront ici, un par un.
         ],
