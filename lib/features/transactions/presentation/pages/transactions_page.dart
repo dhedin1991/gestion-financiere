@@ -38,7 +38,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final filters = ref.watch(transactionFiltersProvider);
     final transactionsAsync = ref.watch(filteredTransactionsProvider);
     final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
