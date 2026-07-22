@@ -41,7 +41,7 @@ jobs:
       - run: flutter test
       - name: Build APK
         id: build_android
-        run: flutter build apk --release 2>&1 | tee /tmp/build.log
+        run: flutter build apk --release > /tmp/build.log 2>&1
       - name: Publier l'erreur en commentaire (si échec)
         if: failure()
         run: |
