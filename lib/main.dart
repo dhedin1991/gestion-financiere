@@ -5,9 +5,11 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/database/database_initializer.dart';
 import 'core/router/app_router.dart';
+import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
-import 'features/app_lock/presentation/pages/pin_unlock_page.dart';
+import 'features/app_lock/presentation/pages/login_page.dart';
+import 'features/app_lock/presentation/pages/password_setup_page.dart';
 import 'features/app_lock/presentation/providers/app_lock_providers.dart';
 import 'features/reminders/presentation/providers/reminder_providers.dart';
 import 'features/recurring/presentation/providers/recurring_providers.dart';
@@ -64,7 +66,17 @@ class GestionFinanciereApp extends ConsumerWidget {
         theme: AppTheme.light(themePreset),
         darkTheme: AppTheme.dark(themePreset),
         themeMode: themeMode,
-        home: const PinUnlockPage(),
+        home: const LoginPage(),
+      );
+    }
+
+    if (lockPhase == AppLockPhase.needsSetup) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(themePreset),
+        darkTheme: AppTheme.dark(themePreset),
+        themeMode: themeMode,
+        home: const PasswordSetupPage(),
       );
     }
 
@@ -93,7 +105,7 @@ class GestionFinanciereApp extends ConsumerWidget {
     ref.watch(recurringGenerationBootstrapProvider);
 
     return MaterialApp.router(
-      title: 'Ma Gestion Financière',
+      title: kAppName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(themePreset),
       darkTheme: AppTheme.dark(themePreset),

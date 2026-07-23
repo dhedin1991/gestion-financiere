@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../accounts/domain/entities/account.dart';
 import '../../categories/domain/entities/category.dart';
 import '../../transactions/domain/entities/transaction.dart';
+import '../../../core/constants/app_constants.dart';
 
 /// Génère et partage un relevé des transactions, au format CSV (pour
 /// tableur / comptable) ou PDF (pour impression / archive).
@@ -88,6 +89,15 @@ class StatementExportService {
         header: (context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            pw.Text(
+              kAppName,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blueGrey700,
+              ),
+            ),
+            pw.SizedBox(height: 4),
             pw.Text(
               'Relevé de transactions',
               style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),

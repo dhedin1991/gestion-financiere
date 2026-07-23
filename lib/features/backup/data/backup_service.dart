@@ -6,6 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/constants/app_constants.dart';
+
 /// Sauvegarde/restauration manuelle, indépendante du sync Wi-Fi : exporte
 /// une copie du fichier de base de données vers un emplacement choisi par
 /// l'utilisateur (Drive, clé USB...), et permet de la réimporter plus
@@ -33,7 +35,7 @@ class BackupService {
 
     await Share.shareXFiles(
       [XFile(backupFile.path)],
-      subject: 'Sauvegarde Ma Gestion Financière',
+      subject: 'Sauvegarde $kAppName',
       text: 'Sauvegarde de tes données — garde ce fichier en lieu sûr, il n\'est pas chiffré.',
     );
   }

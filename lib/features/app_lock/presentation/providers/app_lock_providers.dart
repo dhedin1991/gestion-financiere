@@ -1,23 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/pin_storage_service.dart';
+import '../../data/recovery_code_service.dart';
 
 final pinStorageServiceProvider = Provider<PinStorageService>((ref) {
   return PinStorageService();
 });
 
+final recoveryCodeServiceProvider = Provider<RecoveryCodeService>((ref) {
+  return RecoveryCodeService();
+});
+
 enum AppLockPhase {
-  /// Chargement initial : on vérifie si un PIN existe déjà.
+  /// Chargement initial : on vérifie si un mot de passe existe déjà.
   loading,
 
-  /// Aucun PIN configuré : on laisse l'app accessible directement (le
-  /// verrouillage est une option, pas une obligation).
-  noLockConfigured,
+  /// Aucun mot de passe configuré : premier lancement, l'utilisateur
+  /// doit en créer un avant d'accéder à l'app (connexion obligatoire).
+  needsSetup,
 
-  /// Un PIN existe et n'a pas encore été saisi lors de cette ouverture.
+  /// Un mot de passe existe et n'a pas encore été saisi lors de cette
+  /// ouverture.
   locked,
 
-  /// PIN vérifié avec succès pour cette session.
+  /// Mot de passe vérifié avec succès pour cette session.
   unlocked,
 }
 
@@ -39,33 +45,33 @@ class AppLockController extends StateNotifier<AppLockState> {
   }
 
   Future<void> _init() async {
-    final hasPin = await _pinStorage.hasPin();
+    final hasPassword = await _pinStorage.hasPin();
     state = state.copyWith(
-      phase: hasPin ? AppLockPhase.locked : AppLockPhase.noLockConfigured,
+      phase: hasPassword ? AppLockPhase.locked : AppLockPhase.needsSetup,
     );
   }
 
-  /// Appelé après une saisie de PIN réussie (création ou déverrouillage).
+  /// Appelé après une saisie réussie (création ou connexion).
   void unlock() {
     state = state.copyWith(phase: AppLockPhase.unlocked);
   }
 
-  /// Active le verrouillage en définissant un nouveau PIN.
-  Future<void> enableLock(String pin) async {
-    await _pinStorage.setPin(pin);
+  /// Définit le mot de passe (création initiale ou modification).
+  Future<void> setPassword(String password) async {
+    await _pinStorage.setPin(password);
     state = state.copyWith(phase: AppLockPhase.unlocked);
   }
 
-  /// Désactive le verrouillage (supprime le PIN).
-  Future<void> disableLock() async {
-    await _pinStorage.clearPin();
-    state = state.copyWith(phase: AppLockPhase.noLockConfigured);
-  }
-
-  Future<bool> verify(String pin) async {
-    final ok = await _pinStorage.verifyPin(pin);
+  Future<bool> verify(String password) async {
+    final ok = await _pinStorage.verifyPin(password);
     if (ok) unlock();
     return ok;
+  }
+
+  /// Reverrouille l'app (retour à l'écran de connexion) sans toucher au
+  /// mot de passe.
+  void lockAgain() {
+    state = state.copyWith(phase: AppLockPhase.locked);
   }
 }
 

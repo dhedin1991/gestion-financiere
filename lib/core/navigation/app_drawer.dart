@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_providers.dart';
 
@@ -97,8 +98,8 @@ class AppDrawer extends ConsumerWidget {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Gestion Financière',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      kAppNameShort,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

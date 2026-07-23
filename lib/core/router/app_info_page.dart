@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../constants/app_constants.dart';
 import 'app_info_providers.dart';
 import 'app_info_service.dart';
 
@@ -85,7 +86,7 @@ class AppInfoPage extends ConsumerWidget {
               const SizedBox(height: 24),
               Center(
                 child: Text(
-                  'Gestion Financière — version 0.1.0',
+                  '$kAppName — version 0.1.0',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ),

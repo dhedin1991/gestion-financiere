@@ -1,73 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/app_lock_providers.dart';
-import 'pin_setup_page.dart';
+import 'password_setup_page.dart';
 
-/// Réglages de sécurité : activer/désactiver le verrouillage par code PIN,
-/// ou modifier le code existant. Accessible uniquement une fois dans
-/// l'app (donc déjà authentifié si un verrouillage était actif).
+/// Réglages de sécurité : la connexion par mot de passe est désormais
+/// obligatoire (ce n'est plus une option qu'on peut désactiver), donc
+/// cet écran ne propose que la modification du mot de passe et un rappel
+/// du fonctionnement de la récupération.
 class SecuritySettingsPage extends ConsumerWidget {
   const SecuritySettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final phase = ref.watch(appLockControllerProvider).phase;
-    final lockEnabled = phase == AppLockPhase.unlocked || phase == AppLockPhase.locked;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Sécurité')),
       body: ListView(
         children: [
-          SwitchListTile(
-            title: const Text('Verrouillage par code PIN'),
-            subtitle: const Text('Demande un code à 4 chiffres à chaque ouverture de l\'app'),
-            value: lockEnabled,
-            onChanged: (value) async {
-              if (value) {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PinSetupPage()),
-                );
-              } else {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: const Text('Désactiver le verrouillage ?'),
-                    content: const Text(
-                      'N\'importe qui ayant accès à ton téléphone pourra ouvrir l\'app sans code.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        child: const Text('Annuler'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        child: const Text('Désactiver'),
-                      ),
-                    ],
+          const ListTile(
+            leading: Icon(Icons.lock_outline),
+            title: Text('Connexion par mot de passe'),
+            subtitle: Text('Toujours active — c\'est ce qui protège l\'accès à tes données.'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.password_outlined),
+            title: const Text('Modifier le mot de passe'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PasswordSetupPage(
+                    onCancel: () => Navigator.of(context).pop(),
                   ),
-                );
-                if (confirmed == true) {
-                  await ref.read(appLockControllerProvider.notifier).disableLock();
-                }
-              }
+                ),
+              );
             },
           ),
-          if (lockEnabled)
-            ListTile(
-              leading: const Icon(Icons.password_outlined),
-              title: const Text('Modifier le code'),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => PinSetupPage(
-                      onCancel: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                );
-              },
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'En cas d\'oubli du mot de passe, seul le code de récupération '
+              '(affiché une seule fois à la création du mot de passe) permet de '
+              'récupérer l\'accès — il n\'y a pas de serveur ni d\'e-mail pour '
+              'réinitialiser autrement.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
+          ),
         ],
       ),
     );
