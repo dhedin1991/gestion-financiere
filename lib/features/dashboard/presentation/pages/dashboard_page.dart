@@ -160,13 +160,18 @@ class _GlobalBalanceCard extends StatelessWidget {
               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
             ),
             error: (err, _) => const Text('—', style: TextStyle(color: Colors.white, fontSize: 32)),
-            data: (balance) => TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: balance),
-              duration: const Duration(milliseconds: 900),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => Text(
-                formatter.format(value),
-                style: amountTextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+            data: (balance) => Semantics(
+              label: 'Solde total : ${formatter.format(balance)}',
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: balance),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => ExcludeSemantics(
+                  child: Text(
+                    formatter.format(value),
+                    style: amountTextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ),
             ),
           ),

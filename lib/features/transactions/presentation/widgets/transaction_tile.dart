@@ -29,31 +29,41 @@ class TransactionTile extends StatelessWidget {
     );
     final dateFormatter = DateFormat('dd MMM yyyy', 'fr_FR');
 
-    return ListTile(
+    final label = transaction.description?.isNotEmpty == true
+        ? transaction.description!
+        : (categoryName ?? (isIncome ? 'Revenu' : 'Dépense'));
+
+    return Semantics(
+      label: '$label, ${isIncome ? 'crédit' : 'débit'} de ${formatter.format(transaction.amount)}, '
+          '$accountName, le ${dateFormatter.format(transaction.transactionDate)}',
+      button: onTap != null,
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.12),
-        child: Icon(
-          isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-          color: color,
-          size: 20,
+      child: ExcludeSemantics(
+        child: ListTile(
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          leading: CircleAvatar(
+            backgroundColor: color.withOpacity(0.12),
+            child: Icon(
+              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+              color: color,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '$accountName · ${dateFormatter.format(transaction.transactionDate)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          trailing: Text(
+            '${isIncome ? '+' : '-'}${formatter.format(transaction.amount)}',
+            style: amountTextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color),
+          ),
         ),
-      ),
-      title: Text(
-        transaction.description?.isNotEmpty == true
-            ? transaction.description!
-            : (categoryName ?? (isIncome ? 'Revenu' : 'Dépense')),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        '$accountName · ${dateFormatter.format(transaction.transactionDate)}',
-        style: const TextStyle(fontSize: 12),
-      ),
-      trailing: Text(
-        '${isIncome ? '+' : '-'}${formatter.format(transaction.amount)}',
-        style: amountTextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color),
       ),
     );
   }

@@ -11,6 +11,8 @@ import 'features/app_lock/presentation/pages/pin_unlock_page.dart';
 import 'features/app_lock/presentation/providers/app_lock_providers.dart';
 import 'features/reminders/presentation/providers/reminder_providers.dart';
 import 'features/recurring/presentation/providers/recurring_providers.dart';
+import 'features/onboarding/presentation/pages/onboarding_page.dart';
+import 'features/onboarding/presentation/providers/onboarding_providers.dart';
 
 Future<void> main() async {
   // Nécessaire avant tout appel asynchrone au démarrage.
@@ -63,6 +65,26 @@ class GestionFinanciereApp extends ConsumerWidget {
         darkTheme: AppTheme.dark(themePreset),
         themeMode: themeMode,
         home: const PinUnlockPage(),
+      );
+    }
+
+    final onboardingSeen = ref.watch(onboardingSeenProvider);
+    if (onboardingSeen.isLoading) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(themePreset),
+        darkTheme: AppTheme.dark(themePreset),
+        themeMode: themeMode,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+    if (onboardingSeen.valueOrNull == false) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(themePreset),
+        darkTheme: AppTheme.dark(themePreset),
+        themeMode: themeMode,
+        home: OnboardingPage(onDone: () => ref.invalidate(onboardingSeenProvider)),
       );
     }
 
