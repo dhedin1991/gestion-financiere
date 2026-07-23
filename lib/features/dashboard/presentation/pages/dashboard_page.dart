@@ -8,6 +8,9 @@ import '../../../accounts/presentation/widgets/account_card.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../debts/domain/entities/debt.dart';
+import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../savings/presentation/providers/savings_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -33,6 +36,8 @@ class DashboardPage extends ConsumerWidget {
             _GlobalBalanceCard(balanceAsync: globalBalanceAsync),
             const SizedBox(height: 16),
             const _MonthlyIncomeExpenseRow(),
+            const SizedBox(height: 12),
+            const _DebtsSavingsKpiRow(),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -124,6 +129,73 @@ class _MonthlyIncomeExpenseRow extends ConsumerWidget {
         buildTile('Revenus (mois)', incomeAsync, const Color(0xFF16A085), Icons.arrow_downward),
         const SizedBox(width: 12),
         buildTile('Dépenses (mois)', expenseAsync, const Color(0xFFE74C3C), Icons.arrow_upward),
+      ],
+    );
+  }
+}
+
+class _DebtsSavingsKpiRow extends ConsumerWidget {
+  const _DebtsSavingsKpiRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final debtsAsync = ref.watch(debtsListProvider);
+    final savingsAsync = ref.watch(savingsListProvider);
+    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'XOF', decimalDigits: 0);
+
+    final debtsRemainingAsync = debtsAsync.whenData(
+      (debts) => debts
+          .where((d) => d.type == DebtType.dette && !d.isSettled)
+          .fold<double>(0, (sum, d) => sum + d.remainingAmount),
+    );
+    final savingsTotalAsync = savingsAsync.whenData(
+      (savings) => savings.fold<double>(0, (sum, s) => sum + s.currentBalance),
+    );
+
+    Widget buildTile(String label, AsyncValue<double> asyncValue, Color color, IconData icon, String route) {
+      return Expanded(
+        child: Card(
+          child: InkWell(
+            onTap: () => context.push(route),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, color: color, size: 18),
+                      const SizedBox(width: 6),
+                      Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  asyncValue.when(
+                    loading: () => const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    error: (e, _) => const Text('—'),
+                    data: (value) => Text(
+                      formatter.format(value),
+                      style: amountTextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        buildTile('Dettes restantes', debtsRemainingAsync, const Color(0xFFE74C3C), Icons.handshake_outlined, '/debts'),
+        const SizedBox(width: 12),
+        buildTile('Épargne totale', savingsTotalAsync, const Color(0xFF2E86DE), Icons.savings_outlined, '/savings'),
       ],
     );
   }
