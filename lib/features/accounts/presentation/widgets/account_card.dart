@@ -51,7 +51,7 @@ class AccountCard extends StatelessWidget {
                 style: amountTextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: account.currentBalance < 0
+                  color: account.currentBalance < 10000
                       ? const Color(0xFFE74C3C)
                       : theme.textTheme.titleMedium?.color ?? theme.colorScheme.onSurface,
                 ),

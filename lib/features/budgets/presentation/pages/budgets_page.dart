@@ -170,10 +170,10 @@ class _BudgetCard extends ConsumerWidget {
                   final ratio = budget.amount > 0 ? (spent / budget.amount).clamp(0.0, 1.0) : 0.0;
                   final isOverBudget = spent > budget.amount;
                   final color = ratio >= 1.0
-                      ? Colors.red
+                      ? const Color(0xFFE74C3C)
                       : ratio >= 0.8
-                          ? Colors.orange
-                          : Colors.green;
+                          ? const Color(0xFFF1C40F)
+                          : const Color(0xFF16A085);
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +193,7 @@ class _BudgetCard extends ConsumerWidget {
                             ? '${fmt.format(spent)} dépensés — Budget dépassé de ${fmt.format(spent - budget.amount)} !'
                             : '${fmt.format(spent)} dépensés sur ${fmt.format(budget.amount)}',
                         style: TextStyle(
-                          color: isOverBudget ? Colors.red : Colors.grey.shade700,
+                          color: isOverBudget ? const Color(0xFFE74C3C) : Colors.grey.shade700,
                           fontWeight: isOverBudget ? FontWeight.bold : FontWeight.normal,
                           fontSize: 13,
                         ),
