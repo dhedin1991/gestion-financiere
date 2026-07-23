@@ -137,6 +137,14 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Mode d\'emploi'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/help');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.autorenew),
               title: const Text('Transactions récurrentes'),
               onTap: () {

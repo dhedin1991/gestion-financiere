@@ -17,6 +17,7 @@ import '../../features/app_lock/presentation/pages/security_settings_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
 import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
 import '../../features/backup/presentation/pages/backup_page.dart';
+import '../../features/help/presentation/pages/help_page.dart';
 import '../navigation/app_drawer.dart';
 import '../navigation/scaffold_key_provider.dart';
 import 'app_info_page.dart';
@@ -94,6 +95,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/backup',
             builder: (context, state) => const BackupPage(),
+          ),
+          GoRoute(
+            path: '/help',
+            builder: (context, state) => const HelpPage(),
           ),
           // Les futurs modules s'ajouteront ici, un par un.
         ],
