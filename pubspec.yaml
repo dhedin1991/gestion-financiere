@@ -52,6 +52,9 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   timezone: ^0.9.4
 
+  # Sauvegarde / restauration manuelle
+  file_picker: ^8.1.2
+
   # Mémorisation des préférences (thème clair/sombre)
   shared_preferences: ^2.3.2
 
