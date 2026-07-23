@@ -163,10 +163,10 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
       } else {
         await actions.update(widget.existing!.copyWith(
           accountId: _accountId,
-          categoryId: () => _categoryId,
+          categoryId: _categoryId,
           type: _type,
           amount: amount,
-          description: () => _descriptionController.text.trim().isEmpty
+          description: _descriptionController.text.trim().isEmpty
               ? null
               : _descriptionController.text.trim(),
           frequency: _frequency,
