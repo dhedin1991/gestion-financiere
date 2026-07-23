@@ -1,7 +1,7 @@
-import '../../../transactions/domain/entities/transaction.dart';
-import '../../../transactions/domain/repositories/transaction_repository.dart';
-import '../../domain/entities/recurring_transaction.dart';
-import '../../domain/repositories/recurring_transaction_repository.dart';
+import '../../transactions/domain/entities/transaction.dart';
+import '../../transactions/domain/repositories/transaction_repository.dart';
+import '../domain/entities/recurring_transaction.dart';
+import '../domain/repositories/recurring_transaction_repository.dart';
 
 /// Génère les vraies transactions correspondant aux récurrences actives
 /// dont l'échéance est passée, puis avance leur prochaine échéance.
