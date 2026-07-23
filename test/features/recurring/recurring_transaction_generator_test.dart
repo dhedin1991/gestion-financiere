@@ -122,10 +122,13 @@ void main() {
     });
 
     test('rattrape plusieurs échéances hebdomadaires manquées', () async {
+      // 20 jours (pas un multiple exact de 7) pour éviter l'ambiguïté de
+      // bord : à exactement 21 jours (3×7), la 3e avance retombe pile sur
+      // "maintenant", ce qui déclenche légitimement une 4e occurrence.
       final recurringRepo = _FakeRecurringRepository([
         _make(
           frequency: RecurrenceFrequency.hebdomadaire,
-          nextDueDate: DateTime.now().subtract(const Duration(days: 21)),
+          nextDueDate: DateTime.now().subtract(const Duration(days: 20)),
         ),
       ]);
       final txRepo = _FakeTransactionRepository();
