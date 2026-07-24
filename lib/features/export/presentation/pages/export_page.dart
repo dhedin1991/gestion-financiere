@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -104,6 +107,51 @@ class _ExportPageState extends ConsumerState<ExportPage> {
     }
   }
 
+  Future<void> _importCsv() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+      dialogTitle: 'Choisir un fichier CSV à importer',
+    );
+    if (result == null || result.files.single.path == null) return;
+
+    setState(() => _exporting = true);
+    try {
+      final accounts = await ref.read(allAccountsIncludingArchivedProvider.future);
+      final categories = await ref.read(allCategoriesProvider.future);
+      final service = ref.read(statementImportServiceProvider);
+
+      final importResult = await service.importCsv(
+        file: File(result.files.single.path!),
+        accounts: accounts,
+        categories: categories,
+      );
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Import terminé'),
+            content: Text(
+              '${importResult.imported} transaction(s) importée(s), '
+              '${importResult.skipped} ignorée(s).'
+              '${importResult.errors.isNotEmpty ? '\n\n${importResult.errors.take(5).join('\n')}' : ''}',
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de l\'import : $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   String _periodLabel(_Period p) {
     switch (p) {
       case _Period.moisEnCours:
@@ -161,6 +209,20 @@ class _ExportPageState extends ConsumerState<ExportPage> {
               onPressed: () => _export(asPdf: false),
               icon: const Icon(Icons.table_chart_outlined),
               label: const Text('Exporter en CSV (pour tableur / comptable)'),
+            ),
+            const SizedBox(height: 24),
+            Text('Import', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            const Text(
+              'Importe des transactions depuis un fichier CSV au même format que l\'export '
+              '(les comptes et catégories doivent déjà exister dans l\'app).',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _importCsv,
+              icon: const Icon(Icons.file_upload_outlined),
+              label: const Text('Importer depuis un CSV'),
             ),
           ],
         ],
