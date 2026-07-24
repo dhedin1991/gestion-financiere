@@ -31,10 +31,10 @@ final accountsListProvider = FutureProvider.autoDispose<List<Account>>((ref) asy
   return repository.getAllAccounts(entityId: entityId);
 });
 
-/// Solde global (somme de tous les comptes) — utilisé par le Dashboard.
+/// Solde global (somme des comptes de l'entité active) — utilisé par le Dashboard.
 final globalBalanceProvider = FutureProvider.autoDispose<double>((ref) async {
-  final repository = ref.watch(accountRepositoryProvider);
-  return repository.getGlobalBalance();
+  final accounts = await ref.watch(accountsListProvider.future);
+  return accounts.fold<double>(0, (sum, a) => sum + a.currentBalance);
 });
 
 /// Liste des comptes archivés — utilisée par la page Archives.

@@ -21,7 +21,10 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 final recentTransactionsProvider =
     FutureProvider.autoDispose<List<FinancialTransaction>>((ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
-  return repository.getTransactions(limit: 100);
+  final accounts = await ref.watch(accountsListProvider.future);
+  final accountIds = accounts.map((a) => a.id).toSet();
+  final all = await repository.getTransactions(limit: 300);
+  return all.where((t) => accountIds.contains(t.accountId)).take(100).toList();
 });
 
 /// Critères de recherche/filtre appliqués à la liste des transactions.
@@ -67,13 +70,17 @@ final filteredTransactionsProvider =
     FutureProvider.autoDispose<List<FinancialTransaction>>((ref) async {
   final filters = ref.watch(transactionFiltersProvider);
   final repository = ref.watch(transactionRepositoryProvider);
-  return repository.getTransactions(
+  final accounts = await ref.watch(accountsListProvider.future);
+  final accountIds = accounts.map((a) => a.id).toSet();
+
+  final results = await repository.getTransactions(
     accountId: filters.accountId,
     categoryId: filters.categoryId,
     type: filters.type,
     searchText: filters.search.trim().isEmpty ? null : filters.search,
-    limit: 300,
+    limit: 1000,
   );
+  return results.where((t) => accountIds.contains(t.accountId)).take(300).toList();
 });
 
 /// Total des revenus du mois en cours — utile pour le Tableau de bord.
