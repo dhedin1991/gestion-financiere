@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 9;
+  static const int _dbVersion = 10;
 
   Database? _database;
 
@@ -464,6 +464,25 @@ CREATE TABLE budgets (
           updated_at TEXT NOT NULL,
           FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
           FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        )
+      ''');
+    }
+    if (oldVersion < 10) {
+      // history_log existait déjà dans _onCreate mais avait été oubliée
+      // ici : les installations mises à niveau depuis une version
+      // antérieure ne l'avaient donc jamais reçue. IF NOT EXISTS protège
+      // les quelques installations qui l'auraient déjà (fraîchement
+      // créées) sans toucher à aucune donnée existante.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS history_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_type TEXT NOT NULL,
+          entity_id INTEGER NOT NULL,
+          action TEXT NOT NULL,
+          old_value TEXT,
+          new_value TEXT,
+          date TEXT NOT NULL,
+          time TEXT NOT NULL
         )
       ''');
     }

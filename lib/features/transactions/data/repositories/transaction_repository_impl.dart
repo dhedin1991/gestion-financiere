@@ -1,3 +1,4 @@
+import '../../../audit_log/data/audit_log_dao.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../datasources/transaction_dao.dart';
@@ -5,7 +6,8 @@ import '../models/transaction_model.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
   final TransactionDao _dao;
-  TransactionRepositoryImpl(this._dao);
+  final AuditLogDao? _auditLog;
+  TransactionRepositoryImpl(this._dao, [this._auditLog]);
 
   @override
   Future<List<FinancialTransaction>> getTransactions({
@@ -37,6 +39,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
       TransactionModel.toMap(toCreate),
       toCreate.signedAmount,
     );
+    await _auditLog?.log(
+      entityType: 'transaction',
+      entityId: id,
+      action: 'create',
+      newValue: '${toCreate.type == TransactionType.revenu ? '+' : '-'}${toCreate.amount} ${toCreate.currency}'
+          '${toCreate.description != null ? ' — ${toCreate.description}' : ''}',
+    );
     return toCreate.copyWith(id: id);
   }
 
@@ -60,6 +69,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
       newAccountId: updated.accountId,
       newSignedAmount: updated.signedAmount,
     );
+    await _auditLog?.log(
+      entityType: 'transaction',
+      entityId: transaction.id!,
+      action: 'update',
+      oldValue: '${old.amount} ${old.currency}',
+      newValue: '${updated.amount} ${updated.currency}',
+    );
   }
 
   @override
@@ -68,6 +84,12 @@ class TransactionRepositoryImpl implements TransactionRepository {
     if (row == null) return;
     final t = TransactionModel.fromMap(row);
     await _dao.deleteWithBalanceUpdate(id, t.accountId, t.signedAmount);
+    await _auditLog?.log(
+      entityType: 'transaction',
+      entityId: id,
+      action: 'delete',
+      oldValue: '${t.amount} ${t.currency}${t.description != null ? ' — ${t.description}' : ''}',
+    );
   }
 
   @override

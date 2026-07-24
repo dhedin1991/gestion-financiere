@@ -39,6 +39,7 @@ class AppDrawer extends ConsumerWidget {
       _DrawerItem('Sauvegarde & restauration', Icons.backup_outlined, Icons.backup, '/backup'),
       _DrawerItem('Synchronisation Wi-Fi', Icons.wifi_tethering, Icons.wifi_tethering, '/sync'),
       _DrawerItem('Archives', Icons.archive_outlined, Icons.archive, '/archives'),
+      _DrawerItem('Journal des actions', Icons.history, Icons.history, '/audit-log'),
     ];
 
     Widget buildItem(_DrawerItem item) {

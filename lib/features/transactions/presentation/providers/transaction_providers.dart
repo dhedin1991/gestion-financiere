@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
+import '../../../audit_log/presentation/providers/audit_log_providers.dart';
 import '../../data/datasources/transaction_dao.dart';
 import '../../data/repositories/transaction_repository_impl.dart';
 import '../../domain/entities/transaction.dart';
@@ -12,7 +13,7 @@ final transactionDaoProvider = Provider<TransactionDao>((ref) {
 });
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
-  return TransactionRepositoryImpl(ref.watch(transactionDaoProvider));
+  return TransactionRepositoryImpl(ref.watch(transactionDaoProvider), ref.watch(auditLogDaoProvider));
 });
 
 /// Les 100 dernières transactions, toutes confondues (utilisé par l'écran
