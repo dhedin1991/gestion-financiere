@@ -13,8 +13,8 @@ class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl(this._dao);
 
   @override
-  Future<List<Account>> getAllAccounts({bool includeArchived = false}) async {
-    final rows = await _dao.findAll(includeArchived: includeArchived);
+  Future<List<Account>> getAllAccounts({bool includeArchived = false, int? entityId}) async {
+    final rows = await _dao.findAll(includeArchived: includeArchived, entityId: entityId);
     return rows.map(AccountModel.fromMap).toList();
   }
 

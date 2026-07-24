@@ -7,7 +7,7 @@ import '../entities/account.dart';
 /// C'est ce qui permettra, plus tard, de brancher une source Cloud
 /// sans rien changer ici.
 abstract class AccountRepository {
-  Future<List<Account>> getAllAccounts({bool includeArchived = false});
+  Future<List<Account>> getAllAccounts({bool includeArchived = false, int? entityId});
   Future<Account?> getAccountById(int id);
   Future<double> getGlobalBalance();
   Future<Account> createAccount(Account account);

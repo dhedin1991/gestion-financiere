@@ -10,12 +10,22 @@ class AccountDao {
 
   AccountDao(this._appDatabase);
 
-  Future<List<Map<String, dynamic>>> findAll({bool includeArchived = false}) async {
+  Future<List<Map<String, dynamic>>> findAll({bool includeArchived = false, int? entityId}) async {
     final db = await _appDatabase.database;
+    final conditions = <String>[];
+    final args = <Object?>[];
+    if (!includeArchived) {
+      conditions.add('is_archived = ?');
+      args.add(0);
+    }
+    if (entityId != null) {
+      conditions.add('entity_id = ?');
+      args.add(entityId);
+    }
     return db.query(
       'accounts',
-      where: includeArchived ? null : 'is_archived = ?',
-      whereArgs: includeArchived ? null : [0],
+      where: conditions.isEmpty ? null : conditions.join(' AND '),
+      whereArgs: conditions.isEmpty ? null : args,
       orderBy: 'name ASC',
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_menu_button.dart';
+import '../../../entities/presentation/widgets/entity_selector_bar.dart';
 import '../../domain/entities/account.dart';
 import '../providers/account_providers.dart';
 import '../widgets/account_card.dart';
@@ -33,26 +34,33 @@ class AccountsPage extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Nouveau compte'),
       ),
-      body: accountsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Erreur : $err')),
-        data: (accounts) {
-          if (accounts.isEmpty) {
-            return const _EmptyState();
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: accounts.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 4),
-            itemBuilder: (context, index) {
-              final account = accounts[index];
-              return AccountCard(
-                account: account,
-                onTap: () => _showAccountForm(context, ref, existing: account),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          const EntitySelectorBar(),
+          Expanded(
+            child: accountsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Erreur : $err')),
+              data: (accounts) {
+                if (accounts.isEmpty) {
+                  return const _EmptyState();
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: accounts.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 4),
+                  itemBuilder: (context, index) {
+                    final account = accounts[index];
+                    return AccountCard(
+                      account: account,
+                      onTap: () => _showAccountForm(context, ref, existing: account),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

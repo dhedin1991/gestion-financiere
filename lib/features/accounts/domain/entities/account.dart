@@ -19,6 +19,7 @@ class Account {
   final int? color;
   final String? icon;
   final bool isArchived;
+  final int? entityId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -33,6 +34,7 @@ class Account {
     this.color,
     this.icon,
     this.isArchived = false,
+    this.entityId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,6 +50,7 @@ class Account {
     int? color,
     String? icon,
     bool? isArchived,
+    int? entityId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -62,6 +65,7 @@ class Account {
       color: color ?? this.color,
       icon: icon ?? this.icon,
       isArchived: isArchived ?? this.isArchived,
+      entityId: entityId ?? this.entityId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );

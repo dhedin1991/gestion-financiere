@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 10;
+  static const int _dbVersion = 11;
 
   Database? _database;
 
@@ -53,6 +53,7 @@ class AppDatabase {
         color INTEGER,
         icon TEXT,
         is_archived INTEGER NOT NULL DEFAULT 0,
+        entity_id INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -299,6 +300,20 @@ CREATE TABLE budgets (
 
     await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
 
+    await db.execute('''
+      CREATE TABLE business_entities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'personnel',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.insert('business_entities', {
+      'name': 'Personnel',
+      'type': 'personnel',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
     await _seedDefaultCategories(db);
   }
 
@@ -485,6 +500,43 @@ CREATE TABLE budgets (
           time TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 11) {
+      // Base du multi-entités (Personnel / Société A / Société B...).
+      // Migration non destructive : crée une entité "Personnel" par
+      // défaut et y rattache tous les comptes déjà existants — rien
+      // n'est perdu, rien ne devient orphelin.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS business_entities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'personnel',
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      final existing = await db.query('business_entities', limit: 1);
+      int defaultEntityId;
+      if (existing.isEmpty) {
+        defaultEntityId = await db.insert('business_entities', {
+          'name': 'Personnel',
+          'type': 'personnel',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        defaultEntityId = existing.first['id'] as int;
+      }
+
+      final columns = await db.rawQuery("PRAGMA table_info(accounts)");
+      final hasEntityId = columns.any((c) => c['name'] == 'entity_id');
+      if (!hasEntityId) {
+        await db.execute('ALTER TABLE accounts ADD COLUMN entity_id INTEGER');
+        await db.update(
+          'accounts',
+          {'entity_id': defaultEntityId},
+          where: 'entity_id IS NULL',
+        );
+      }
     }
   }
   

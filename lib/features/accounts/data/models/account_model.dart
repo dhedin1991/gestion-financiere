@@ -17,6 +17,7 @@ class AccountModel {
       color: map['color'] as int?,
       icon: map['icon'] as String?,
       isArchived: (map['is_archived'] as int) == 1,
+      entityId: map['entity_id'] as int?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -34,6 +35,7 @@ class AccountModel {
       'color': account.color,
       'icon': account.icon,
       'is_archived': account.isArchived ? 1 : 0,
+      'entity_id': account.entityId,
       'created_at': account.createdAt.toIso8601String(),
       'updated_at': account.updatedAt.toIso8601String(),
     };

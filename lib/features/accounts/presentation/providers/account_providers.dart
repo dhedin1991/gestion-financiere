@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../entities/presentation/providers/entity_providers.dart';
 import '../../data/datasources/account_dao.dart';
 import '../../data/repositories/account_repository_impl.dart';
 import '../../domain/entities/account.dart';
@@ -26,7 +27,8 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
 /// après toute création/modification/suppression via `ref.invalidate`.
 final accountsListProvider = FutureProvider.autoDispose<List<Account>>((ref) async {
   final repository = ref.watch(accountRepositoryProvider);
-  return repository.getAllAccounts();
+  final entityId = ref.watch(currentEntityIdProvider);
+  return repository.getAllAccounts(entityId: entityId);
 });
 
 /// Solde global (somme de tous les comptes) — utilisé par le Dashboard.
@@ -65,7 +67,8 @@ class AccountActions {
   AccountActions(this._ref, this._repository);
 
   Future<void> create(Account account) async {
-    await _repository.createAccount(account);
+    final entityId = account.entityId ?? _ref.read(currentEntityIdProvider);
+    await _repository.createAccount(account.copyWith(entityId: entityId));
     _refresh();
   }
 
