@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../data/datasources/savings_dao.dart';
 import '../../data/repositories/savings_repository_impl.dart';
 import '../../domain/entities/savings.dart';
@@ -20,7 +21,10 @@ final savingsRepositoryProvider = Provider<SavingsRepository>((ref) {
 /// toute création/modification/suppression via 'ref.invalidate'.
 final savingsListProvider = FutureProvider.autoDispose<List<Savings>>((ref) async {
   final repository = ref.watch(savingsRepositoryProvider);
-  return repository.getAllSavings();
+  final accounts = await ref.watch(accountsListProvider.future);
+  final accountIds = accounts.map((a) => a.id).toSet();
+  final all = await repository.getAllSavings();
+  return all.where((s) => accountIds.contains(s.accountId)).toList();
 });
 
 /// Historique des mouvements (versements/retraits) d'une épargne précise

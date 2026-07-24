@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../data/datasources/credit_dao.dart';
 import '../../data/repositories/credit_repository_impl.dart';
 import '../../domain/entities/credit.dart';
@@ -21,7 +22,10 @@ final creditRepositoryProvider = Provider<CreditRepository>((ref) {
 /// création/modification/suppression via 'ref.invalidate'.
 final creditsListProvider = FutureProvider.autoDispose<List<Credit>>((ref) async {
   final repository = ref.watch(creditRepositoryProvider);
-  return repository.getAllCredits();
+  final accounts = await ref.watch(accountsListProvider.future);
+  final accountIds = accounts.map((a) => a.id).toSet();
+  final all = await repository.getAllCredits();
+  return all.where((c) => c.accountId == null || accountIds.contains(c.accountId)).toList();
 });
 
 /// Échéancier complet d'un crédit précis (paramétré par son id).

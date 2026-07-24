@@ -21,7 +21,12 @@ final debtRepositoryProvider = Provider<DebtRepository>((ref) {
 /// après toute création/modification/suppression via 'ref.invalidate'.
 final debtsListProvider = FutureProvider.autoDispose<List<Debt>>((ref) async {
   final repository = ref.watch(debtRepositoryProvider);
-  return repository.getAllDebts();
+  final accounts = await ref.watch(accountsListProvider.future);
+  final accountIds = accounts.map((a) => a.id).toSet();
+  final all = await repository.getAllDebts();
+  // Une dette sans compte lié reste visible partout (rien à filtrer) ;
+  // sinon, seulement si le compte appartient à l'entité active.
+  return all.where((d) => d.accountId == null || accountIds.contains(d.accountId)).toList();
 });
 
 /// Liste des paiements pour une dette précise (paramétré par l'id).
