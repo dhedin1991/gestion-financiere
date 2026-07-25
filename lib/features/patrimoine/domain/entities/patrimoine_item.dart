@@ -14,6 +14,7 @@ class PatrimoineItem {
   final DateTime? dateAcquisition;
   final String? description;
   final String? localisation;
+  final int? entityId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -26,6 +27,7 @@ class PatrimoineItem {
     this.dateAcquisition,
     this.description,
     this.localisation,
+    this.entityId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -39,6 +41,7 @@ class PatrimoineItem {
     DateTime? dateAcquisition,
     String? description,
     String? localisation,
+    int? entityId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -51,6 +54,7 @@ class PatrimoineItem {
       dateAcquisition: dateAcquisition ?? this.dateAcquisition,
       description: description ?? this.description,
       localisation: localisation ?? this.localisation,
+      entityId: entityId ?? this.entityId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

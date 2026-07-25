@@ -28,9 +28,14 @@ class BudgetDao {
     return db.delete('budgets', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<List<BudgetModel>> getAll() async {
+  Future<List<BudgetModel>> getAll({int? entityId}) async {
     final db = await _appDatabase.database;
-    final rows = await db.query('budgets', orderBy: 'start_date DESC');
+    final rows = await db.query(
+      'budgets',
+      where: entityId != null ? 'entity_id = ?' : null,
+      whereArgs: entityId != null ? [entityId] : null,
+      orderBy: 'start_date DESC',
+    );
     return rows.map((row) => BudgetModel.fromMap(row)).toList();
   }
 

@@ -13,7 +13,7 @@ abstract class PatrimoineRepository {
 
   Future<PatrimoineItem?> getItemById(int id);
 
-  Future<List<PatrimoineItem>> getAllItems();
+  Future<List<PatrimoineItem>> getAllItems({int? entityId});
 
   Future<List<PatrimoineItem>> getItemsByCategory(PatrimoineCategory category);
 

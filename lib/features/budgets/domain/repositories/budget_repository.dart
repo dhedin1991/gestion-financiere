@@ -6,7 +6,7 @@ abstract class BudgetRepository {
   Future<int> createBudget(Budget budget);
   Future<int> updateBudget(Budget budget);
   Future<int> deleteBudget(int id);
-  Future<List<Budget>> getAllBudgets();
+  Future<List<Budget>> getAllBudgets({int? entityId});
   Future<Budget?> getBudgetById(int id);
 
   /// Retourne le montant déjà dépensé pour un budget donné.

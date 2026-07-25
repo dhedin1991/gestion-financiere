@@ -31,8 +31,8 @@ class PatrimoineRepositoryImpl implements PatrimoineRepository {
   }
 
   @override
-  Future<List<PatrimoineItem>> getAllItems() async {
-    return dao.getAll();
+  Future<List<PatrimoineItem>> getAllItems({int? entityId}) async {
+    return dao.getAll(entityId: entityId);
   }
 
   @override

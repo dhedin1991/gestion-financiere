@@ -10,6 +10,7 @@ class PatrimoineItemModel extends PatrimoineItem {
     super.dateAcquisition,
     super.description,
     super.localisation,
+    super.entityId,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -29,6 +30,7 @@ class PatrimoineItemModel extends PatrimoineItem {
           : null,
       description: map['description'] as String?,
       localisation: map['location'] as String?,
+      entityId: map['entity_id'] as int?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -44,6 +46,7 @@ class PatrimoineItemModel extends PatrimoineItem {
       'acquisition_date': dateAcquisition?.toIso8601String(),
       'description': description,
       'location': localisation,
+      'entity_id': entityId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -59,6 +62,7 @@ class PatrimoineItemModel extends PatrimoineItem {
       dateAcquisition: item.dateAcquisition,
       description: item.description,
       localisation: item.localisation,
+      entityId: item.entityId,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     );

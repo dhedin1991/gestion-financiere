@@ -11,6 +11,7 @@ class BudgetModel extends Budget {
     required super.period,
     required super.startDate,
     super.currency,
+    super.entityId,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -25,6 +26,7 @@ class BudgetModel extends Budget {
       period: _periodFromString(map['period'] as String),
       startDate: DateTime.parse(map['start_date'] as String),
       currency: map['currency'] as String? ?? 'XOF',
+      entityId: map['entity_id'] as int?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -40,6 +42,7 @@ class BudgetModel extends Budget {
       'period': _periodToString(period),
       'start_date': startDate.toIso8601String(),
       'currency': currency,
+      'entity_id': entityId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -55,6 +58,7 @@ class BudgetModel extends Budget {
       period: budget.period,
       startDate: budget.startDate,
       currency: budget.currency,
+      entityId: budget.entityId,
       createdAt: budget.createdAt,
       updatedAt: budget.updatedAt,
     );

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../entities/presentation/providers/entity_providers.dart';
 import '../../data/datasources/budget_dao.dart';
 import '../../data/repositories/budget_repository_impl.dart';
 import '../../domain/entities/budget.dart';
@@ -20,7 +21,8 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
 /// toute création/modification/suppression via 'ref.invalidate'.
 final budgetsListProvider = FutureProvider.autoDispose<List<Budget>>((ref) async {
   final repository = ref.watch(budgetRepositoryProvider);
-  return repository.getAllBudgets();
+  final entityId = ref.watch(currentEntityIdProvider);
+  return repository.getAllBudgets(entityId: entityId);
 });
 
 /// Montant déjà dépensé pour un budget précis (paramétré par son id).
@@ -46,7 +48,8 @@ class BudgetActions {
   BudgetActions(this._ref, this._repository);
 
   Future<void> create(Budget budget) async {
-    await _repository.createBudget(budget);
+    final entityId = budget.entityId ?? _ref.read(currentEntityIdProvider);
+    await _repository.createBudget(budget.copyWith(entityId: entityId));
     _refresh();
   }
 

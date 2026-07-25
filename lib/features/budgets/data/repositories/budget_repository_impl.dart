@@ -26,8 +26,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
   }
 
   @override
-  Future<List<Budget>> getAllBudgets() {
-    return dao.getAll();
+  Future<List<Budget>> getAllBudgets({int? entityId}) {
+    return dao.getAll(entityId: entityId);
   }
 
   @override

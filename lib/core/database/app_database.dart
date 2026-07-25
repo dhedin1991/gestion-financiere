@@ -11,7 +11,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 11;
+  static const int _dbVersion = 12;
 
   Database? _database;
 
@@ -182,6 +182,7 @@ CREATE TABLE budgets (
   period TEXT NOT NULL,
   start_date TEXT NOT NULL,
   currency TEXT NOT NULL DEFAULT 'XOF',
+  entity_id INTEGER,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
@@ -232,6 +233,7 @@ CREATE TABLE budgets (
         acquisition_date TEXT,
         description TEXT,
         location TEXT,
+        entity_id INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -536,6 +538,34 @@ CREATE TABLE budgets (
           {'entity_id': defaultEntityId},
           where: 'entity_id IS NULL',
         );
+      }
+    }
+    if (oldVersion < 12) {
+      // Étend le multi-entités à Budgets et Patrimoine (jusqu'ici
+      // partagés entre toutes les entités faute de lien vers un compte).
+      // Même logique non destructive que la migration précédente : une
+      // entité par défaut existe forcément déjà (créée en v11), on s'y
+      // rattache simplement.
+      final entities = await db.query('business_entities', limit: 1);
+      final defaultEntityId = entities.isNotEmpty
+          ? entities.first['id'] as int
+          : await db.insert('business_entities', {
+              'name': 'Personnel',
+              'type': 'personnel',
+              'created_at': DateTime.now().toIso8601String(),
+            });
+
+      for (final table in ['budgets', 'patrimoine_items']) {
+        final columns = await db.rawQuery("PRAGMA table_info($table)");
+        final hasEntityId = columns.any((c) => c['name'] == 'entity_id');
+        if (!hasEntityId) {
+          await db.execute('ALTER TABLE $table ADD COLUMN entity_id INTEGER');
+          await db.update(
+            table,
+            {'entity_id': defaultEntityId},
+            where: 'entity_id IS NULL',
+          );
+        }
       }
     }
   }

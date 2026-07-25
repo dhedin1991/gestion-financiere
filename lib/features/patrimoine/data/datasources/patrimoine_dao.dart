@@ -48,9 +48,14 @@ class PatrimoineDao {
     return PatrimoineItemModel.fromMap(results.first);
   }
 
-  Future<List<PatrimoineItemModel>> getAll() async {
+  Future<List<PatrimoineItemModel>> getAll({int? entityId}) async {
     final db = await appDatabase.database;
-    final results = await db.query(_table, orderBy: 'name ASC');
+    final results = await db.query(
+      _table,
+      where: entityId != null ? 'entity_id = ?' : null,
+      whereArgs: entityId != null ? [entityId] : null,
+      orderBy: 'name ASC',
+    );
     return results.map((map) => PatrimoineItemModel.fromMap(map)).toList();
   }
 

@@ -18,6 +18,7 @@ class Budget {
   final BudgetPeriod period;
   final DateTime startDate;
   final String currency;
+  final int? entityId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +30,7 @@ class Budget {
     required this.period,
     required this.startDate,
     this.currency = 'XOF',
+    this.entityId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -44,6 +46,7 @@ class Budget {
     BudgetPeriod? period,
     DateTime? startDate,
     String? currency,
+    int? entityId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -55,6 +58,7 @@ class Budget {
       period: period ?? this.period,
       startDate: startDate ?? this.startDate,
       currency: currency ?? this.currency,
+      entityId: entityId ?? this.entityId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
