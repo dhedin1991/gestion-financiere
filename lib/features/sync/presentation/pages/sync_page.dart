@@ -129,7 +129,7 @@ class _SyncPageState extends ConsumerState<SyncPage> {
               hintText: 'ex: 192.168.1.25',
               border: OutlineInputBorder(),
             ),
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
