@@ -1,0 +1,20 @@
+Copyright (c) 2026 — Tous droits réservés.
+
+Ce logiciel et sa documentation associée (le « Logiciel ») sont la propriété
+de leur auteur. Sauf autorisation écrite préalable de l'auteur :
+
+  - toute reproduction, modification, distribution ou usage commercial du
+    Logiciel est interdite ;
+  - l'usage personnel et privé du Logiciel, tel que distribué, est autorisé.
+
+LE LOGICIEL EST FOURNI "EN L'ÉTAT", SANS GARANTIE D'AUCUNE SORTE, EXPRESSE
+OU IMPLICITE, Y COMPRIS MAIS SANS S'Y LIMITER LES GARANTIES DE QUALITÉ
+MARCHANDE, D'ADÉQUATION À UN USAGE PARTICULIER ET D'ABSENCE DE CONTREFAÇON.
+EN AUCUN CAS L'AUTEUR NE POURRA ÊTRE TENU RESPONSABLE DE TOUT DOMMAGE
+RÉSULTANT DE L'UTILISATION DU LOGICIEL.
+
+---
+Note : ce fichier est un point de départ volontairement restrictif (usage
+personnel uniquement). Si tu comptes un jour publier ce projet en open
+source, remplace ce texte par une licence standard (MIT, Apache-2.0, etc.)
+via https://choosealicense.com.

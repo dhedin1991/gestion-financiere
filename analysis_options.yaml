@@ -1,0 +1,32 @@
+# Active les règles recommandées par l'équipe Flutter. `flutter_lints` était
+# déjà déclaré dans pubspec.yaml mais n'était jamais activé faute de ce
+# fichier : `flutter analyze` ne remontait donc aucune règle de style ou de
+# bonne pratique jusqu'ici. Voir https://dart.dev/tools/analysis
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # NOTE : `strict-casts`/`strict-inference` sont volontairement omis pour
+  # l'instant. Le code accède à SQLite via des `Map<String, dynamic>` bruts
+  # (sqflite) à de nombreux endroits ; activer ce mode strict ferait
+  # remonter un grand nombre d'avertissements d'un coup. Recommandé comme
+  # chantier séparé, une fois les DAO migrés vers des modèles typés
+  # (voir suggestion "freezed / json_serializable" de l'audit).
+  errors:
+    # Une dépendance déclarée mais jamais importée doit être visible.
+    unused_import: warning
+    # Empêche les fuites silencieuses d'exceptions (cf. audit sécurité :
+    # plusieurs `catch (_) {}` avalaient des erreurs sans trace).
+    empty_catches: warning
+
+linter:
+  rules:
+    # Règles additionnelles, choisies pour être peu susceptibles de générer
+    # une avalanche d'avertissements sur le code existant. À enrichir
+    # progressivement (voir note ci-dessus sur strict-casts).
+    - avoid_print
+    - cancel_subscriptions
+    - close_sinks
+    - avoid_slow_async_io
+    - throw_in_finally
+    - valid_regexps

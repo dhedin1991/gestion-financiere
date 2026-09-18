@@ -1,54 +1,64 @@
-# Ma Gestion Financière — Guide de démarrage (spécial connexion lente)
+# Ma Gestion Financière
 
-Ce guide t'explique comment obtenir ton application **sans télécharger le SDK Flutter (1 Go)** sur ton PC. La compilation se fera gratuitement sur les serveurs de GitHub.
+Application Flutter de gestion financière personnelle et professionnelle
+(comptes, transactions, budgets, épargne, crédits, dettes & créances,
+patrimoine, bilans), pensée pour fonctionner **100 % hors-ligne** — aucune
+donnée n'est envoyée à un serveur.
 
-## Ce dont tu as besoin
-- Un compte GitHub (gratuit) → https://github.com/signup
-- Une connexion internet, même lente (on ne télécharge presque rien de lourd)
+[![Build](https://github.com/dhedin1991/gestion-financiere/actions/workflows/build.yml/badge.svg)](../../actions/workflows/build.yml)
 
----
+## Fonctionnalités
+- **Comptabilité** : comptes multiples, transactions, transactions
+  récurrentes, budgets par catégorie.
+- **Patrimoine** : épargne (avec objectifs), crédits (échéancier),
+  dettes & créances, biens (patrimoine), bilans (revenus/dépenses,
+  patrimoine net dans le temps).
+- **Multi-entités** : sépare les données personnelles et professionnelles.
+- **Sécurité** : verrouillage par mot de passe (PBKDF2), verrouillage
+  automatique, code de récupération local.
+- **Données** : export CSV/PDF, sauvegarde/restauration manuelle,
+  synchronisation Wi-Fi locale entre deux appareils (sans serveur).
+- **Journal d'audit** : trace des créations/modifications/suppressions.
 
-## Étape 1 — Créer un dépôt GitHub
+## Stack technique
+- **Flutter** (Dart), architecture **feature-first / Clean Architecture**
+  (voir [CONTRIBUTING.md](CONTRIBUTING.md) pour le détail des couches).
+- **Riverpod** pour la gestion d'état.
+- **sqflite** (SQLite) pour le stockage local.
+- **go_router** pour la navigation.
 
-1. Connecte-toi sur https://github.com
-2. Clique sur le **+** en haut à droite → **"New repository"**
-3. Nom du dépôt : `gestion-financiere`
-4. Laisse-le en **Public** (nécessaire pour la compilation gratuite)
-5. Clique sur **"Create repository"**
+## Démarrer en local
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
+Prérequis et détails d'architecture : voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Étape 2 — Envoyer les fichiers (sans ligne de commande)
+## Compiler sans installer Flutter (via GitHub Actions)
+Si tu ne veux pas installer le SDK Flutter sur ton PC, un guide pas-à-pas
+pour compiler l'APK directement depuis le navigateur (via GitHub Actions)
+est disponible dans
+[docs/GUIDE_COMPILATION_GITHUB.md](docs/GUIDE_COMPILATION_GITHUB.md).
 
-1. Sur la page de ton nouveau dépôt vide, clique sur le lien **"uploading an existing file"**
-2. **Glisse-dépose tout le dossier** `gestion_financiere` que je t'ai donné (ou son contenu) dans la zone d'upload de GitHub
-   - ⚠️ Assure-toi que le dossier `.github` (avec le fichier `build.yml` dedans) est bien inclus — c'est lui qui déclenche la compilation automatique
-3. En bas de page, clique sur **"Commit changes"**
+## Sécurité et confidentialité
+- Toutes les données restent **en local** sur l'appareil (fichier SQLite),
+  aucun compte ni serveur externe.
+- Le mot de passe est haché (PBKDF2-HMAC-SHA256) et stocké via le
+  Keystore Android / Keychain iOS (`flutter_secure_storage`), jamais en
+  clair.
+- La base de données elle-même n'est **pas chiffrée au repos** — c'est un
+  choix technique assumé et documenté, voir [CHANGELOG.md](CHANGELOG.md)
+  pour le contexte et la recommandation de migration vers SQLCipher.
+- La synchronisation Wi-Fi entre appareils utilise HTTP local (non
+  chiffré), protégé par un code à 6 chiffres à usage limité dans le temps
+  — à réserver à un réseau Wi-Fi de confiance.
 
-## Étape 3 — Laisser GitHub compiler l'application
+## Licence
+Voir [LICENSE](LICENSE) — usage personnel, tous droits réservés par défaut.
 
-1. Va dans l'onglet **"Actions"** en haut de la page de ton dépôt
-2. Tu devrais voir un workflow **"Compiler l'application (cloud)"** en train de tourner (rond jaune/orange qui tourne)
-3. Attends 3 à 8 minutes — c'est GitHub qui télécharge Flutter et compile, pas toi
-4. Quand le rond devient **vert ✅**, clique dessus
-
-## Étape 4 — Télécharger ton application (.apk)
-
-1. Toujours sur la page du workflow terminé, descends jusqu'à la section **"Artifacts"**
-2. Clique sur **"application-android"** — ça télécharge un fichier `.zip` léger (quelques dizaines de Mo, pas 1 Go)
-3. Décompresse-le : tu obtiens un fichier `app-release.apk`
-4. Transfère ce fichier sur ton téléphone Android (par câble USB, ou en te l'envoyant via WhatsApp/e-mail à toi-même)
-5. Sur le téléphone, ouvre le fichier `.apk` pour l'installer
-   - Android va peut-être demander d'autoriser "l'installation depuis une source inconnue" → accepte, c'est normal pour une app qui n'est pas encore sur le Play Store
-
----
-
-## Et pour la version Windows ?
-
-On l'ajoutera une fois que le cœur de l'application (les modules) sera plus avancé — la compilation Windows demande un peu plus de configuration. On y viendra ensemble.
-
-## Et après ?
-
-Reviens me voir avec :
-- Une capture d'écran si quelque chose ne fonctionne pas (l'onglet Actions affiche les erreurs en détail)
-- Ou simplement "ça marche !" pour qu'on passe au module suivant (Revenus & Dépenses)
-
-Je continuerai à coder les modules un par un : à chaque fois, tu n'auras qu'à renvoyer les nouveaux fichiers sur GitHub (même méthode qu'à l'étape 2) et relancer une compilation.
+## Contribuer
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour la structure du projet et les
+règles avant une Pull Request. Historique des changements :
+[CHANGELOG.md](CHANGELOG.md).
