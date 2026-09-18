@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/domain/entities/account.dart';
@@ -46,8 +48,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Revenus & Dépenses'),
+        actions: const [AppMenuButton()],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTransactionForm(context, ref),
@@ -121,7 +124,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           Expanded(
             child: transactionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text('Erreur : $err')),
+              error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
               data: (transactions) {
                 if (transactions.isEmpty) {
                   return EmptyState(
@@ -312,7 +315,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
               const SizedBox(height: 12),
               accountsAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Erreur comptes : $e'),
+                error: (e, _) => Text(AppErrorMessage.friendly(e)),
                 data: (accounts) {
                   // On ne propose pas les comptes archivés pour une NOUVELLE
                   // transaction, mais on garde celui actuellement sélectionné
@@ -345,7 +348,7 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
               const SizedBox(height: 12),
               categoriesAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Erreur catégories : $e'),
+                error: (e, _) => Text(AppErrorMessage.friendly(e)),
                 data: (categories) => DropdownButtonFormField<int>(
                   value: categories.any((c) => c.id == _selectedCategoryId)
                       ? _selectedCategoryId
@@ -434,23 +437,33 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }
 
   Future<void> _delete() async {
     if (widget.existing?.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer cette transaction ?'),
+        content: const Text('Cette action est définitive et ajustera le solde du compte concerné.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       await ref.read(transactionActionsProvider).delete(widget.existing!.id!);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }

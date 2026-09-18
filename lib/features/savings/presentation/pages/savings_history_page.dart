@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/savings.dart';
@@ -18,10 +20,13 @@ class SavingsHistoryPage extends ConsumerWidget {
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: savings.currency, decimalDigits: 0);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Historique - ${savings.name}')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: Text('Historique - ${savings.name}'),
+      ),
       body: transactionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (transactions) {
           if (transactions.isEmpty) {
             return const EmptyState(
@@ -84,9 +89,7 @@ class SavingsHistoryPage extends ConsumerWidget {
                         await ref.read(savingsActionsProvider).deleteTransaction(t.id!, savings.id!);
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-                          );
+                          AppErrorMessage.showSnackBar(context, e);
                         }
                       }
                     }

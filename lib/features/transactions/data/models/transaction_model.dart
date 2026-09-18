@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/transaction.dart';
 
 class TransactionModel {
@@ -7,7 +8,7 @@ class TransactionModel {
       accountId: map['account_id'] as int,
       categoryId: map['category_id'] as int?,
       type: (map['type'] as String) == 'revenu' ? TransactionType.revenu : TransactionType.depense,
-      amount: (map['amount'] as num).toDouble(),
+      amount: Money.fromCents((map['amount'] as num).toInt()),
       currency: map['currency'] as String? ?? 'XOF',
       description: map['description'] as String?,
       paymentMethod: map['payment_method'] as String?,
@@ -23,7 +24,7 @@ class TransactionModel {
       'account_id': t.accountId,
       'category_id': t.categoryId,
       'type': t.type == TransactionType.revenu ? 'revenu' : 'depense',
-      'amount': t.amount,
+      'amount': Money.toCents(t.amount),
       'currency': t.currency,
       'description': t.description,
       'payment_method': t.paymentMethod,

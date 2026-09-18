@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../domain/entities/patrimoine_item.dart';
 import '../providers/patrimoine_providers.dart';
 
@@ -120,9 +121,7 @@ class _PatrimoineFormSheetState extends ConsumerState<PatrimoineFormSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'enregistrement : $e')),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

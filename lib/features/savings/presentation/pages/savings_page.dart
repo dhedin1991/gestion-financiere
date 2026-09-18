@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
@@ -20,9 +22,10 @@ class SavingsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Épargne'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -37,7 +40,7 @@ class SavingsPage extends ConsumerWidget {
       ),
       body: savingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (savingsList) {
           if (savingsList.isEmpty) {
             return const _EmptyState();

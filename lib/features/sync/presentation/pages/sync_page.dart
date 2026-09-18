@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
 import '../providers/sync_providers.dart';
 
 class SyncPage extends ConsumerStatefulWidget {
@@ -28,7 +30,9 @@ class _SyncPageState extends ConsumerState<SyncPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Synchronisation Wi-Fi'),
+        actions: const [AppMenuButton()],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -45,7 +49,10 @@ class _SyncPageState extends ConsumerState<SyncPage> {
                     child: Text(
                       'La synchronisation remplace TOUTES les données de l\'appareil '
                       'qui reçoit par celles de l\'appareil qui partage. Assure-toi de '
-                      'partager depuis l\'appareil qui a les données les plus à jour.',
+                      'partager depuis l\'appareil qui a les données les plus à jour.\n\n'
+                      'Le partage n\'est actif que 10 minutes et n\'utilise pas de '
+                      'chiffrement : ne l\'utilise que sur un réseau Wi-Fi de confiance '
+                      '(domicile, bureau), pas sur un Wi-Fi public.',
                       style: TextStyle(fontSize: 13),
                     ),
                   ),
@@ -135,12 +142,12 @@ class _SyncPageState extends ConsumerState<SyncPage> {
           TextField(
             controller: _pinController,
             decoration: const InputDecoration(
-              labelText: 'Code PIN affiché sur l\'autre appareil',
-              hintText: 'ex: 0427',
+              labelText: 'Code affiché sur l\'autre appareil',
+              hintText: 'ex: 042712',
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
-            maxLength: 4,
+            maxLength: 6,
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -194,9 +201,9 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     final ip = _ipController.text.trim();
     final pin = _pinController.text.trim();
     if (ip.isEmpty) return;
-    if (pin.length != 4) {
+    if (pin.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saisis le code PIN à 4 chiffres affiché sur l\'autre appareil.')),
+        const SnackBar(content: Text('Saisis le code à 6 chiffres affiché sur l\'autre appareil.')),
       );
       return;
     }

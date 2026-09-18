@@ -1,9 +1,17 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 
 /// Data Access Object : seule classe autorisée à écrire du SQL brut
 /// pour les tables `debts` et `debt_payments`.
+///
+/// Les colonnes monétaires (`amount`, `current_balance`...) sont stockées
+/// en base en **centimes entiers** (voir `core/utils/money.dart`), mais
+/// ce DAO garde une interface publique en unités normales (double) :
+/// toute la conversion cents <-> unités se fait ici, à la frontière SQL,
+/// pour que les couches au-dessus (repository, domaine, UI) n'aient
+/// jamais à s'en soucier.
 class DebtDao {
   final AppDatabase _appDatabase;
 
@@ -35,14 +43,16 @@ class DebtDao {
     return db.delete('debts', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Somme des paiements déjà effectués pour une dette donnée.
+  /// Somme des paiements déjà effectués pour une dette donnée, en unités
+  /// normales (la colonne `amount` est stockée en centimes en base).
   Future<double> sumPaymentsForDebt(int debtId) async {
     final db = await _appDatabase.database;
     final result = await db.rawQuery(
       'SELECT COALESCE(SUM(amount), 0) as total FROM debt_payments WHERE debt_id = ?',
       [debtId],
     );
-    return (result.first['total'] as num).toDouble();
+    final totalCents = (result.first['total'] as num).toInt();
+    return Money.fromCents(totalCents);
   }
 
   Future<List<Map<String, dynamic>>> findPaymentsByDebt(int debtId) async {
@@ -73,9 +83,10 @@ class DebtDao {
 
   /// Enregistre un paiement ET répercute son effet sur le solde du compte lié,
   /// dans une seule transaction SQL atomique (même mécanisme que le module
-  /// Épargne / Transactions). signedAmount est déjà orienté par l'appelant :
-  /// négatif pour un remboursement de dette (l'argent sort du compte),
-  /// positif pour un encaissement de créance (l'argent entre sur le compte).
+  /// Épargne / Transactions). [signedAmount] est en unités normales, déjà
+  /// orienté par l'appelant : négatif pour un remboursement de dette
+  /// (l'argent sort du compte), positif pour un encaissement de créance
+  /// (l'argent entre sur le compte).
   Future<int> insertPaymentWithBalanceUpdate({
     required Map<String, dynamic> data,
     required int accountId,
@@ -83,11 +94,12 @@ class DebtDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
+    final signedCents = Money.toCents(signedAmount);
     return db.transaction((txn) async {
       final id = await txn.insert('debt_payments', data);
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, accountId],
+        [signedCents, nowIso, accountId],
       );
       return id;
     });
@@ -101,11 +113,12 @@ class DebtDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
+    final signedCents = Money.toCents(signedAmount);
     await db.transaction((txn) async {
       await txn.delete('debt_payments', where: 'id = ?', whereArgs: [paymentId]);
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, accountId],
+        [signedCents, nowIso, accountId],
       );
     });
   }
@@ -121,11 +134,12 @@ class DebtDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
+    final reversalCents = Money.toCents(reversalAmount);
     await db.transaction((txn) async {
       await txn.delete('debts', where: 'id = ?', whereArgs: [debtId]);
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [reversalAmount, nowIso, accountId],
+        [reversalCents, nowIso, accountId],
       );
     });
   }

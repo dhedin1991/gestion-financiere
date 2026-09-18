@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 import '../models/patrimoine_item_model.dart';
 
 /// Accès direct à la table `patrimoine_items` de la base SQLite.
@@ -78,6 +79,6 @@ class PatrimoineDao {
     );
     final total = result.first['total'];
     if (total == null) return 0.0;
-    return (total as num).toDouble();
+    return Money.fromCents((total as num).toInt());
   }
 }

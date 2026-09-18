@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
@@ -65,7 +66,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
               const SizedBox(height: 12),
               accountsAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Erreur comptes : $e'),
+                error: (e, _) => Text(AppErrorMessage.friendly(e)),
                 data: (accounts) {
                   final selectable = accounts
                       .where((a) => !a.isArchived || a.id == _selectedAccountId)
@@ -163,9 +164,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }
@@ -189,9 +188,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-          );
+          AppErrorMessage.showSnackBar(context, e);
         }
       }
     }

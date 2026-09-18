@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../accounts/presentation/widgets/account_card.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -22,8 +24,9 @@ class DashboardPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Tableau de bord'),
+        actions: const [AppMenuButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -55,7 +58,7 @@ class DashboardPage extends ConsumerWidget {
                 padding: EdgeInsets.all(24),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (err, _) => Text('Erreur : $err'),
+              error: (err, _) => Text(AppErrorMessage.friendly(err)),
               data: (accounts) {
                 if (accounts.isEmpty) {
                   return _DashboardEmptyState(

@@ -1,4 +1,5 @@
 import '../../../../core/utils/debt_balance_calculator.dart';
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/debt.dart';
 import '../../domain/repositories/debt_repository.dart';
 import '../datasources/debt_dao.dart';
@@ -112,7 +113,7 @@ class DebtRepositoryImpl implements DebtRepository {
 
     if (debtRow != null && paymentRow != null && accountId != null) {
       final type = (debtRow['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette;
-      final amount = (paymentRow['amount'] as num).toDouble();
+      final amount = Money.fromCents((paymentRow['amount'] as num).toInt());
       final signedAmount = signedDebtPaymentAmount(type: type, amount: amount);
       await _dao.deletePaymentWithBalanceUpdate(
         paymentId: paymentId,

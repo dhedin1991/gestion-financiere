@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/patrimoine_item.dart';
 
 class PatrimoineItemModel extends PatrimoineItem {
@@ -23,7 +24,7 @@ class PatrimoineItemModel extends PatrimoineItem {
         (e) => e.name == map['category'],
         orElse: () => PatrimoineCategory.autre,
       ),
-      valeurEstimee: (map['estimated_value'] as num).toDouble(),
+      valeurEstimee: Money.fromCents((map['estimated_value'] as num).toInt()),
       devise: map['currency'] as String,
       dateAcquisition: map['acquisition_date'] != null
           ? DateTime.parse(map['acquisition_date'] as String)
@@ -41,7 +42,7 @@ class PatrimoineItemModel extends PatrimoineItem {
       if (id != null) 'id': id,
       'name': nom,
       'category': categorie.name,
-      'estimated_value': valeurEstimee,
+      'estimated_value': Money.toCents(valeurEstimee),
       'currency': devise,
       'acquisition_date': dateAcquisition?.toIso8601String(),
       'description': description,

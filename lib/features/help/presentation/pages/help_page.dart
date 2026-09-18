@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
+
 class _HelpSection {
   final IconData icon;
   final String title;
@@ -97,7 +100,11 @@ class HelpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mode d\'emploi')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Mode d\'emploi'),
+        actions: const [AppMenuButton()],
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _sections.length,

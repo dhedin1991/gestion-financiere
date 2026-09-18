@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/debt.dart';
 
 /// Convertit Debt <-> Map SQLite.
@@ -10,7 +11,7 @@ class DebtModel {
       type: (map['type'] as String) == 'creance' ? DebtType.creance : DebtType.dette,
       personName: map['person_name'] as String,
       description: map['description'] as String?,
-      totalAmount: (map['total_amount'] as num).toDouble(),
+      totalAmount: Money.fromCents((map['total_amount'] as num).toInt()),
       currency: map['currency'] as String? ?? 'XOF',
       accountId: map['account_id'] as int?,
       dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'] as String) : null,
@@ -26,7 +27,7 @@ class DebtModel {
       'type': debt.type == DebtType.creance ? 'creance' : 'dette',
       'person_name': debt.personName,
       'description': debt.description,
-      'total_amount': debt.totalAmount,
+      'total_amount': Money.toCents(debt.totalAmount),
       'currency': debt.currency,
       'account_id': debt.accountId,
       'due_date': debt.dueDate?.toIso8601String(),
@@ -41,7 +42,7 @@ class DebtPaymentModel {
     return DebtPayment(
       id: map['id'] as int?,
       debtId: map['debt_id'] as int,
-      amount: (map['amount'] as num).toDouble(),
+      amount: Money.fromCents((map['amount'] as num).toInt()),
       paymentDate: DateTime.parse(map['payment_date'] as String),
       note: map['note'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
@@ -52,7 +53,7 @@ class DebtPaymentModel {
     return {
       if (payment.id != null) 'id': payment.id,
       'debt_id': payment.debtId,
-      'amount': payment.amount,
+      'amount': Money.toCents(payment.amount),
       'payment_date': payment.paymentDate.toIso8601String(),
       'note': payment.note,
       'created_at': payment.createdAt.toIso8601String(),

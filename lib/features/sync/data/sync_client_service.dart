@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/app_logger.dart';
 
 class SyncClientService {
   static const int port = 8085;
@@ -16,7 +17,10 @@ class SyncClientService {
       final uri = Uri.parse('http://$ipAddress:$port/ping');
       final response = await http.get(uri).timeout(const Duration(seconds: 5));
       return response.statusCode == 200 && response.body.contains('gestion_financiere');
-    } catch (_) {
+    } catch (e) {
+      // Cas fréquent et attendu (mauvais réseau, appareil éteint...),
+      // pas une vraie erreur applicative : log en debug uniquement.
+      AppLogger.debug('Connexion au serveur de sync impossible : $e', name: 'sync_client');
       return false;
     }
   }

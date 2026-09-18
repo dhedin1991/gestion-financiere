@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 
 /// DAO Transactions.
 ///
@@ -77,18 +78,27 @@ class TransactionDao {
       'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE ${conditions.join(' AND ')}',
       args,
     );
-    return (result.first['total'] as num).toDouble();
+    final totalCents = (result.first['total'] as num).toInt();
+    return Money.fromCents(totalCents);
   }
 
   /// Crée une transaction ET applique son effet sur le solde du compte,
   /// dans une seule transaction SQL atomique.
   Future<int> insertWithBalanceUpdate(Map<String, dynamic> data, double signedAmount) async {
     final db = await _appDatabase.database;
+    final safeData = Map<String, dynamic>.from(data);
+    if (safeData['amount'] != null) {
+      // Filet de sécurité : garantit un entier même si un appelant a
+      // fourni un montant encore en double au lieu de passer par
+      // TransactionModel.toMap() (qui convertit déjà en centimes).
+      safeData['amount'] = (safeData['amount'] as num).round();
+    }
+    final signedCents = Money.toCents(signedAmount);
     return db.transaction((txn) async {
-      final id = await txn.insert('transactions', data);
+      final id = await txn.insert('transactions', safeData);
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedAmount, DateTime.now().toIso8601String(), data['account_id']],
+        [signedCents, DateTime.now().toIso8601String(), data['account_id']],
       );
       return id;
     });
@@ -97,11 +107,12 @@ class TransactionDao {
   /// Supprime une transaction ET annule son effet sur le solde du compte.
   Future<void> deleteWithBalanceUpdate(int id, int accountId, double signedAmount) async {
     final db = await _appDatabase.database;
+    final signedCents = Money.toCents(signedAmount);
     await db.transaction((txn) async {
       await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedAmount, DateTime.now().toIso8601String(), accountId],
+        [signedCents, DateTime.now().toIso8601String(), accountId],
       );
     });
   }
@@ -118,18 +129,24 @@ class TransactionDao {
     required double newSignedAmount,
   }) async {
     final db = await _appDatabase.database;
+    final safeNewData = Map<String, dynamic>.from(newData);
+    if (safeNewData['amount'] != null) {
+      safeNewData['amount'] = (safeNewData['amount'] as num).round();
+    }
+    final oldSignedCents = Money.toCents(oldSignedAmount);
+    final newSignedCents = Money.toCents(newSignedAmount);
     await db.transaction((txn) async {
-      await txn.update('transactions', newData, where: 'id = ?', whereArgs: [id]);
+      await txn.update('transactions', safeNewData, where: 'id = ?', whereArgs: [id]);
 
       // Annule l'ancien effet sur l'ancien compte.
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [oldSignedAmount, DateTime.now().toIso8601String(), oldAccountId],
+        [oldSignedCents, DateTime.now().toIso8601String(), oldAccountId],
       );
       // Applique le nouvel effet sur le nouveau compte.
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [newSignedAmount, DateTime.now().toIso8601String(), newAccountId],
+        [newSignedCents, DateTime.now().toIso8601String(), newAccountId],
       );
     });
   }

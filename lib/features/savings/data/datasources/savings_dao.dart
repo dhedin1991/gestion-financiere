@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 
 /// DAO Épargne.
 ///
@@ -7,6 +8,10 @@ import '../../../../core/database/app_database.dart';
 /// On utilise `db.transaction()` pour garantir que les trois écritures
 /// (mouvement + solde épargne + solde compte) se font ensemble ou pas
 /// du tout (atomicité), exactement comme pour le module Transactions.
+///
+/// Les montants transitent en unités normales (double) dans l'API
+/// publique de ce DAO ; la conversion vers/depuis les centimes entiers
+/// stockés en base se fait ici, juste avant/après chaque requête SQL.
 class SavingsDao {
   final AppDatabase _appDatabase;
   SavingsDao(this._appDatabase);
@@ -61,19 +66,20 @@ class SavingsDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
+    final signedCents = Money.toCents(signedAmount);
     return db.transaction((txn) async {
       final id = await txn.insert('savings_transactions', data);
 
       // Le solde de l'épargne évolue dans le même sens que le mouvement.
       await txn.rawUpdate(
         'UPDATE savings SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, savingsId],
+        [signedCents, nowIso, savingsId],
       );
 
       // Le solde du compte évolue en sens inverse (un versement sort de l'argent du compte).
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, accountId],
+        [signedCents, nowIso, accountId],
       );
 
       return id;
@@ -94,7 +100,10 @@ class SavingsDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
-    final delta = newSignedAmount - oldSignedAmount;
+    // Le delta est calculé en centimes directement (différence de deux
+    // valeurs déjà converties) pour éviter tout écart d'arrondi entre
+    // deux conversions séparées.
+    final deltaCents = Money.toCents(newSignedAmount) - Money.toCents(oldSignedAmount);
 
     await db.transaction((txn) async {
       await txn.update(
@@ -106,12 +115,12 @@ class SavingsDao {
 
       await txn.rawUpdate(
         'UPDATE savings SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [delta, nowIso, savingsId],
+        [deltaCents, nowIso, savingsId],
       );
 
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [delta, nowIso, accountId],
+        [deltaCents, nowIso, accountId],
       );
     });
   }
@@ -125,17 +134,18 @@ class SavingsDao {
   }) async {
     final db = await _appDatabase.database;
     final nowIso = DateTime.now().toIso8601String();
+    final signedCents = Money.toCents(signedAmount);
     await db.transaction((txn) async {
       await txn.delete('savings_transactions', where: 'id = ?', whereArgs: [transactionId]);
 
       await txn.rawUpdate(
         'UPDATE savings SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, savingsId],
+        [signedCents, nowIso, savingsId],
       );
 
       await txn.rawUpdate(
         'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedAmount, nowIso, accountId],
+        [signedCents, nowIso, accountId],
       );
     });
   }

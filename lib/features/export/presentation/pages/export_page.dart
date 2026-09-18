@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
+import '../../../../core/utils/app_error_message.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
@@ -98,9 +101,7 @@ class _ExportPageState extends ConsumerState<ExportPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'export : $e')),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -145,7 +146,7 @@ class _ExportPageState extends ConsumerState<ExportPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de l\'import : $e')));
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -170,7 +171,11 @@ class _ExportPageState extends ConsumerState<ExportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Exporter mes données')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Exporter mes données'),
+        actions: const [AppMenuButton()],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

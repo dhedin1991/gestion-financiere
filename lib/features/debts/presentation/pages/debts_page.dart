@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
@@ -17,9 +19,10 @@ class DebtsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Dettes & Créances'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -34,7 +37,7 @@ class DebtsPage extends ConsumerWidget {
       ),
       body: debtsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (debts) {
           if (debts.isEmpty) {
             return const _EmptyState();
@@ -207,9 +210,7 @@ class _DebtCard extends ConsumerWidget {
           }
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erreur : $e')),
-            );
+            AppErrorMessage.showSnackBar(context, e);
           }
         }
       }
@@ -243,7 +244,7 @@ class _PaymentHistorySheet extends ConsumerWidget {
               height: 320,
               child: paymentsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, _) => Center(child: Text('Erreur : $err')),
+                error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
                 data: (payments) {
                   if (payments.isEmpty) {
                     return const EmptyState(
@@ -484,9 +485,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }
@@ -510,9 +509,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-          );
+          AppErrorMessage.showSnackBar(context, e);
         }
       }
     }
@@ -640,9 +637,7 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }

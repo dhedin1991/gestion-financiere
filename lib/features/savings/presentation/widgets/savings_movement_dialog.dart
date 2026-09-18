@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
 
@@ -166,9 +167,7 @@ class _SavingsMovementDialogState extends ConsumerState<SavingsMovementDialog> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }

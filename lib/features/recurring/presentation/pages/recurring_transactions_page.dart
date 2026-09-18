@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/domain/entities/account.dart';
@@ -22,8 +24,9 @@ class RecurringTransactionsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Transactions récurrentes'),
+        actions: const [AppMenuButton()],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showForm(context),
@@ -32,7 +35,7 @@ class RecurringTransactionsPage extends ConsumerWidget {
       ),
       body: recurringAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (items) {
           if (items.isEmpty) {
             return const EmptyState(
@@ -178,9 +181,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -189,6 +190,23 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
 
   Future<void> _delete() async {
     if (widget.existing?.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer cette transaction récurrente ?'),
+        content: const Text(
+          'Cette action est définitive. Les transactions déjà générées dans '
+          'l\'historique ne seront pas supprimées, seule la règle de récurrence le sera.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Supprimer')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     await ref.read(recurringActionsProvider).delete(widget.existing!.id!);
     if (mounted) Navigator.of(context).pop();
   }

@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../domain/entities/recurring_transaction.dart';
 
@@ -22,7 +23,7 @@ class RecurringTransactionModel {
       accountId: map['account_id'] as int,
       categoryId: map['category_id'] as int?,
       type: (map['type'] as String) == 'revenu' ? TransactionType.revenu : TransactionType.depense,
-      amount: (map['amount'] as num).toDouble(),
+      amount: Money.fromCents((map['amount'] as num).toInt()),
       currency: map['currency'] as String? ?? 'XOF',
       description: map['description'] as String?,
       frequency: _frequencyFromString(map['frequency'] as String),
@@ -39,7 +40,7 @@ class RecurringTransactionModel {
       'account_id': r.accountId,
       'category_id': r.categoryId,
       'type': r.type == TransactionType.revenu ? 'revenu' : 'depense',
-      'amount': r.amount,
+      'amount': Money.toCents(r.amount),
       'currency': r.currency,
       'description': r.description,
       'frequency': _frequencyToString(r.frequency),
