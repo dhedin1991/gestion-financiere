@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/navigation/app_back_button.dart';
 import '../providers/app_lock_providers.dart';
 import 'password_setup_page.dart';
 
@@ -30,13 +31,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       _error = null;
     });
 
-    final valid = await ref.read(recoveryCodeServiceProvider).verify(_codeController.text);
+    final result = await ref.read(recoveryCodeServiceProvider).verify(_codeController.text);
 
     if (!mounted) return;
     setState(() => _busy = false);
 
-    if (!valid) {
-      setState(() => _error = 'Code de récupération incorrect.');
+    if (!result.success) {
+      setState(() => _error = result.lockedOut
+          ? 'Trop de tentatives. Réessaie dans ${_formatDuration(result.lockoutRemainingSeconds)}.'
+          : 'Code de récupération incorrect.');
       return;
     }
 
@@ -49,10 +52,19 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     );
   }
 
+  String _formatDuration(int seconds) {
+    if (seconds < 60) return '$seconds s';
+    final minutes = (seconds / 60).ceil();
+    return '$minutes min';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mot de passe oublié')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Mot de passe oublié'),
+      ),
       body: SafeArea(
         child: Center(
           child: Padding(

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 
@@ -18,8 +21,10 @@ class ArchivesPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Archives'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -29,7 +34,7 @@ class ArchivesPage extends ConsumerWidget {
       ),
       body: archivedAccountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (accounts) {
           if (accounts.isEmpty) {
             return const _EmptyState();
@@ -141,9 +146,7 @@ class _ArchivedAccountTile extends ConsumerWidget {
           }
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erreur : $e')),
-            );
+            AppErrorMessage.showSnackBar(context, e);
           }
         }
       }

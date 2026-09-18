@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../providers/audit_log_providers.dart';
 
@@ -40,10 +43,14 @@ class AuditLogPage extends ConsumerWidget {
     final dateFmt = DateFormat('dd/MM/yyyy à HH:mm');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Journal des actions')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Journal des actions'),
+        actions: const [AppMenuButton()],
+      ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur : $e')),
+        error: (e, _) => Center(child: Text(AppErrorMessage.friendly(e))),
         data: (entries) {
           if (entries.isEmpty) {
             return const EmptyState(

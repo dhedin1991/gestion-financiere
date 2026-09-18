@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../providers/bilan_providers.dart';
 
@@ -77,7 +78,7 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
         Expanded(
           child: summaryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, _) => Center(child: Text('Erreur : $err')),
+            error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
             data: (periods) {
               if (periods.isEmpty || periods.every((p) => p.totalRevenue == 0 && p.totalExpense == 0)) {
                 return const EmptyState(

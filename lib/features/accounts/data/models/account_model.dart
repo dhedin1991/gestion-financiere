@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/account.dart';
 
 /// Modèle "brut" qui sait se convertir en Map SQLite et inversement.
@@ -12,8 +13,8 @@ class AccountModel {
       bankName: map['bank_name'] as String?,
       type: _typeFromString(map['account_type'] as String),
       currency: map['currency'] as String? ?? 'XOF',
-      initialBalance: (map['initial_balance'] as num).toDouble(),
-      currentBalance: (map['current_balance'] as num).toDouble(),
+      initialBalance: Money.fromCents((map['initial_balance'] as num).toInt()),
+      currentBalance: Money.fromCents((map['current_balance'] as num).toInt()),
       color: map['color'] as int?,
       icon: map['icon'] as String?,
       isArchived: (map['is_archived'] as int) == 1,
@@ -30,8 +31,8 @@ class AccountModel {
       'bank_name': account.bankName,
       'account_type': account.type.name,
       'currency': account.currency,
-      'initial_balance': account.initialBalance,
-      'current_balance': account.currentBalance,
+      'initial_balance': Money.toCents(account.initialBalance),
+      'current_balance': Money.toCents(account.currentBalance),
       'color': account.color,
       'icon': account.icon,
       'is_archived': account.isArchived ? 1 : 0,

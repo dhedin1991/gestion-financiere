@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/credit_installment.dart';
 
 class CreditInstallmentModel extends CreditInstallment {
@@ -40,7 +41,7 @@ class CreditInstallmentModel extends CreditInstallment {
       id: map['id'] as int?,
       creditId: map['credit_id'] as int,
       dueDate: DateTime.parse(map['due_date'] as String),
-      amount: (map['amount'] as num).toDouble(),
+      amount: Money.fromCents((map['amount'] as num).toInt()),
       status: _statusFromString(map['status'] as String),
       paymentDate: map['payment_date'] != null
           ? DateTime.parse(map['payment_date'] as String)
@@ -55,7 +56,7 @@ class CreditInstallmentModel extends CreditInstallment {
       if (id != null) 'id': id,
       'credit_id': creditId,
       'due_date': dueDate.toIso8601String(),
-      'amount': amount,
+      'amount': Money.toCents(amount),
       'status': _statusToString(status),
       'payment_date': paymentDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),

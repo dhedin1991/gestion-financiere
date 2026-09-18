@@ -1,9 +1,16 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 import '../models/net_worth_snapshot_model.dart';
 
 /// Requêtes d'agrégation pour le module Bilans : calcul du patrimoine net
 /// (comptes + épargne + biens + créances - dettes - crédits restants) et
 /// données brutes pour les graphiques Revenus/Dépenses.
+///
+/// Toutes les colonnes sommées ici (`current_balance`, `estimated_value`,
+/// `total_amount`, `amount`) sont stockées en base en **centimes entiers**
+/// (voir `core/utils/money.dart`) : chaque somme SQL brute est donc
+/// reconvertie en unités normales via [Money.fromCents] avant d'être
+/// utilisée par le reste de l'application.
 class BilanDao {
   final AppDatabase appDatabase;
 
@@ -14,19 +21,19 @@ class BilanDao {
   Future<double> _getTotalAccountsBalance() async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM accounts');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   Future<double> _getTotalSavingsBalance() async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM savings');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   Future<double> _getTotalPatrimoineValue() async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('SELECT SUM(estimated_value) as total FROM patrimoine_items');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des créances restantes (argent qu'on te doit).
@@ -40,7 +47,7 @@ class BilanDao {
       ) p ON p.debt_id = d.id
       WHERE d.type = 'creance'
     ''');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des dettes restantes (argent que tu dois).
@@ -54,7 +61,7 @@ class BilanDao {
       ) p ON p.debt_id = d.id
       WHERE d.type = 'dette'
     ''');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des échéances de crédit pas encore payées (capital restant dû approximatif).
@@ -63,7 +70,7 @@ class BilanDao {
     final result = await db.rawQuery('''
       SELECT SUM(amount) as total FROM credit_installments WHERE status != 'payee'
     ''');
-    return ((result.first['total'] as num?) ?? 0).toDouble();
+    return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Calcule le patrimoine net actuel (sans le sauvegarder).

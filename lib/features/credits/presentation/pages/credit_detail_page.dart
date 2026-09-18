@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/credit.dart';
 import '../../domain/entities/credit_installment.dart';
@@ -20,6 +22,7 @@ class CreditDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: Text(credit.name),
         actions: [
           IconButton(
@@ -95,7 +98,7 @@ class CreditDetailPage extends ConsumerWidget {
           Expanded(
             child: installmentsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text('Erreur : $err')),
+              error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
               data: (installments) {
                 if (installments.isEmpty) {
                   return const EmptyState(
@@ -150,9 +153,7 @@ class CreditDetailPage extends ConsumerWidget {
           }
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erreur lors de la suppression : $e')),
-            );
+            AppErrorMessage.showSnackBar(context, e);
           }
         }
       }
@@ -185,9 +186,7 @@ class _InstallmentTile extends ConsumerWidget {
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur : $e')),
-              );
+              AppErrorMessage.showSnackBar(context, e);
             }
           }
         },

@@ -54,13 +54,15 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
       _error = null;
     });
 
-    final ok = await ref.read(appLockControllerProvider.notifier).verify(_passwordController.text);
+    final result = await ref.read(appLockControllerProvider.notifier).verify(_passwordController.text);
 
-    if (!ok) {
+    if (!result.success) {
       if (mounted) {
         setState(() {
           _checking = false;
-          _error = 'Mot de passe incorrect.';
+          _error = result.lockedOut
+              ? 'Trop de tentatives. Réessaie dans ${_formatDuration(result.lockoutRemainingSeconds)}.'
+              : 'Mot de passe incorrect.';
         });
       }
       return;
@@ -74,6 +76,12 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
 
   void _quit() {
     SystemNavigator.pop();
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds < 60) return '$seconds s';
+    final minutes = (seconds / 60).ceil();
+    return '$minutes min';
   }
 
   @override

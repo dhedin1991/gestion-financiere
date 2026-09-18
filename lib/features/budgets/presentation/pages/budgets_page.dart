@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../categories/domain/entities/category.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
@@ -17,9 +19,10 @@ class BudgetsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Budgets'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -34,7 +37,7 @@ class BudgetsPage extends ConsumerWidget {
       ),
       body: budgetsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (budgets) {
           if (budgets.isEmpty) {
             return const _EmptyState();
@@ -165,7 +168,7 @@ class _BudgetCard extends ConsumerWidget {
               const SizedBox(height: 12),
               spentAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Erreur : $e'),
+                error: (e, _) => Text(AppErrorMessage.friendly(e)),
                 data: (spent) {
                   final ratio = budget.amount > 0 ? (spent / budget.amount).clamp(0.0, 1.0) : 0.0;
                   final isOverBudget = spent > budget.amount;
@@ -289,7 +292,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               const SizedBox(height: 12),
               categoriesAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Erreur catégories : $e'),
+                error: (e, _) => Text(AppErrorMessage.friendly(e)),
                 data: (categories) => DropdownButtonFormField<int?>(
                   value: _selectedCategoryId,
                   decoration: const InputDecoration(
@@ -392,9 +395,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     }
   }
@@ -418,9 +419,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-          );
+          AppErrorMessage.showSnackBar(context, e);
         }
       }
     }

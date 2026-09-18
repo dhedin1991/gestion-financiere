@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/budget.dart';
 
 /// Modèle de données pour Budget : sait se convertir vers/depuis
@@ -22,7 +23,7 @@ class BudgetModel extends Budget {
       id: map['id'] as int?,
       name: map['name'] as String?,
       categoryId: map['category_id'] as int?,
-      amount: (map['amount'] as num).toDouble(),
+      amount: Money.fromCents((map['amount'] as num).toInt()),
       period: _periodFromString(map['period'] as String),
       startDate: DateTime.parse(map['start_date'] as String),
       currency: map['currency'] as String? ?? 'XOF',
@@ -38,7 +39,7 @@ class BudgetModel extends Budget {
       if (id != null) 'id': id,
       'name': name,
       'category_id': categoryId,
-      'amount': amount,
+      'amount': Money.toCents(amount),
       'period': _periodToString(period),
       'start_date': startDate.toIso8601String(),
       'currency': currency,

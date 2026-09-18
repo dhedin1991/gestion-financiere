@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 import '../models/credit_installment_model.dart';
 import '../models/credit_model.dart';
 
@@ -32,7 +33,7 @@ class CreditDao {
         await txn.insert(_installmentsTable, {
           'credit_id': creditId,
           'due_date': dueDate.toIso8601String(),
-          'amount': credit.monthlyPayment,
+          'amount': Money.toCents(credit.monthlyPayment),
           'status': 'en_attente',
           'payment_date': null,
           'created_at': now,
@@ -121,6 +122,6 @@ class CreditDao {
     );
     final total = result.first['total'];
     if (total == null) return 0.0;
-    return (total as num).toDouble();
+    return Money.fromCents((total as num).toInt());
   }
 }

@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/credit.dart';
 
 class CreditModel extends Credit {
@@ -42,11 +43,11 @@ class CreditModel extends Credit {
       id: map['id'] as int?,
       name: map['name'] as String,
       contractNumber: map['contract_number'] as String?,
-      principalAmount: (map['principal_amount'] as num).toDouble(),
+      principalAmount: Money.fromCents((map['principal_amount'] as num).toInt()),
       interestRate: (map['interest_rate'] as num).toDouble(),
       startDate: DateTime.parse(map['start_date'] as String),
       durationMonths: map['duration_months'] as int,
-      monthlyPayment: (map['monthly_payment'] as num).toDouble(),
+      monthlyPayment: Money.fromCents((map['monthly_payment'] as num).toInt()),
       accountId: map['account_id'] as int?,
       currency: map['currency'] as String,
       status: _statusFromString(map['status'] as String),
@@ -61,11 +62,11 @@ class CreditModel extends Credit {
       if (id != null) 'id': id,
       'name': name,
       'contract_number': contractNumber,
-      'principal_amount': principalAmount,
+      'principal_amount': Money.toCents(principalAmount),
       'interest_rate': interestRate,
       'start_date': startDate.toIso8601String(),
       'duration_months': durationMonths,
-      'monthly_payment': monthlyPayment,
+      'monthly_payment': Money.toCents(monthlyPayment),
       'account_id': accountId,
       'currency': currency,
       'status': _statusToString(status),

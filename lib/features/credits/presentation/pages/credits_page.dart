@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../domain/entities/credit.dart';
 import '../providers/credit_providers.dart';
@@ -17,9 +19,10 @@ class CreditsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const AppMenuButton(),
+        leading: const AppBackButton(),
         title: const Text('Crédits'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -34,7 +37,7 @@ class CreditsPage extends ConsumerWidget {
       ),
       body: creditsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (credits) {
           if (credits.isEmpty) {
             return const _EmptyState();

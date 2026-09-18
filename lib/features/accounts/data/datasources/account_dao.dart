@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 
 /// Data Access Object : seule classe autorisée à écrire du SQL brut
 /// pour la table `accounts`. Le reste de l'application ne voit jamais
@@ -41,7 +42,7 @@ class AccountDao {
     final result = await db.rawQuery(
       'SELECT COALESCE(SUM(current_balance), 0) as total FROM accounts WHERE is_archived = 0',
     );
-    return (result.first['total'] as num).toDouble();
+    return Money.fromCents((result.first['total'] as num).toInt());
   }
 
   Future<int> insert(Map<String, dynamic> data) async {

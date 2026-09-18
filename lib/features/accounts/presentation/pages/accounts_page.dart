@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../entities/presentation/widgets/entity_selector_bar.dart';
 import '../../domain/entities/account.dart';
@@ -16,9 +18,10 @@ class AccountsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-  leading: const AppMenuButton(),
+  leading: const AppBackButton(),
   title: const Text('Mes Comptes'),
   actions: [
+    const AppMenuButton(),
     IconButton(
       icon: const Icon(Icons.refresh),
       tooltip: 'Actualiser',
@@ -40,7 +43,7 @@ class AccountsPage extends ConsumerWidget {
           Expanded(
             child: accountsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Erreur : $err')),
+              error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
               data: (accounts) {
                 if (accounts.isEmpty) {
                   return const _EmptyState();
@@ -300,9 +303,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     if (mounted) Navigator.of(context).pop();
   } catch (e) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-      );
+      AppErrorMessage.showSnackBar(context, e);
     }
   }
 }
@@ -339,9 +340,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
           if (mounted) Navigator.of(context).pop();
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-            );
+            AppErrorMessage.showSnackBar(context, e);
           }
         }
       }
@@ -366,9 +365,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
-          );
+          AppErrorMessage.showSnackBar(context, e);
         }
       }
     }

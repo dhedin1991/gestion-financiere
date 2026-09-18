@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/budget.dart';
 import '../models/budget_model.dart';
 
@@ -95,6 +96,6 @@ class BudgetDao {
 
     final total = result.first['total'];
     if (total == null) return 0.0;
-    return (total as num).toDouble();
+    return Money.fromCents((total as num).toInt());
   }
 }

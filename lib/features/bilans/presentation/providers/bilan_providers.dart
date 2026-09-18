@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_providers.dart';
+import '../../../../core/utils/money.dart';
 import '../../data/datasources/bilan_dao.dart';
 import '../../data/repositories/bilan_repository_impl.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
@@ -129,7 +130,7 @@ final revenueExpenseSummaryProvider =
     for (final tx in transactions) {
       final txDate = DateTime.parse(tx['transaction_date'] as String);
       if (!txDate.isBefore(cursor) && txDate.isBefore(periodEnd)) {
-        final amount = (tx['amount'] as num).toDouble();
+        final amount = Money.fromCents((tx['amount'] as num).toInt());
         if (tx['type'] == 'revenu') {
           revenue += amount;
         } else if (tx['type'] == 'depense') {

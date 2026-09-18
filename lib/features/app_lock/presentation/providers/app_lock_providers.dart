@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/pin_storage_service.dart';
 import '../../data/recovery_code_service.dart';
+import '../../data/verification_result.dart';
 
 final pinStorageServiceProvider = Provider<PinStorageService>((ref) {
   return PinStorageService();
@@ -62,10 +63,10 @@ class AppLockController extends StateNotifier<AppLockState> {
     state = state.copyWith(phase: AppLockPhase.unlocked);
   }
 
-  Future<bool> verify(String password) async {
-    final ok = await _pinStorage.verifyPin(password);
-    if (ok) unlock();
-    return ok;
+  Future<VerificationResult> verify(String password) async {
+    final result = await _pinStorage.verifyPin(password);
+    if (result.success) unlock();
+    return result;
   }
 
   /// Reverrouille l'app (retour à l'écran de connexion) sans toucher au

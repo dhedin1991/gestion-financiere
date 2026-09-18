@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/utils/loan_calculator.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
@@ -160,9 +161,7 @@ class _CreditFormSheetState extends ConsumerState<CreditFormSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'enregistrement : $e')),
-        );
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/database/database_providers.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/navigation/app_back_button.dart';
+import '../../../../core/navigation/app_menu_button.dart';
 import '../providers/backup_providers.dart';
 
 class BackupPage extends ConsumerStatefulWidget {
@@ -21,8 +24,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
       await ref.read(backupServiceProvider).exportBackup();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -65,10 +67,14 @@ class _BackupPageState extends ConsumerState<BackupPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        AppErrorMessage.showSnackBar(context, e);
       }
     } finally {
+      // Que la restauration ait réussi, échoué ou été refusée (fichier
+      // invalide), on force la reconnexion à la base sur disque : sans
+      // ça, la base resterait fermée après un échec et l'app planterait
+      // à la moindre lecture tant qu'elle n'est pas redémarrée.
+      ref.invalidate(appDatabaseProvider);
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -76,7 +82,11 @@ class _BackupPageState extends ConsumerState<BackupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sauvegarde & restauration')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Sauvegarde & restauration'),
+        actions: const [AppMenuButton()],
+      ),
       body: _busy
           ? const Center(child: CircularProgressIndicator())
           : ListView(

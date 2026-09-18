@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 
 class NetWorthSnapshotModel extends NetWorthSnapshot {
@@ -18,13 +19,13 @@ class NetWorthSnapshotModel extends NetWorthSnapshot {
     return NetWorthSnapshotModel(
       id: map['id'] as int?,
       snapshotDate: DateTime.parse(map['snapshot_date'] as String),
-      totalAccounts: (map['total_accounts'] as num).toDouble(),
-      totalSavings: (map['total_savings'] as num).toDouble(),
-      totalPatrimoine: (map['total_patrimoine'] as num).toDouble(),
-      totalReceivables: (map['total_receivables'] as num).toDouble(),
-      totalDebts: (map['total_debts'] as num).toDouble(),
-      totalCreditsRemaining: (map['total_credits_remaining'] as num).toDouble(),
-      netWorth: (map['net_worth'] as num).toDouble(),
+      totalAccounts: Money.fromCents((map['total_accounts'] as num).toInt()),
+      totalSavings: Money.fromCents((map['total_savings'] as num).toInt()),
+      totalPatrimoine: Money.fromCents((map['total_patrimoine'] as num).toInt()),
+      totalReceivables: Money.fromCents((map['total_receivables'] as num).toInt()),
+      totalDebts: Money.fromCents((map['total_debts'] as num).toInt()),
+      totalCreditsRemaining: Money.fromCents((map['total_credits_remaining'] as num).toInt()),
+      netWorth: Money.fromCents((map['net_worth'] as num).toInt()),
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -33,13 +34,13 @@ class NetWorthSnapshotModel extends NetWorthSnapshot {
     return {
       if (id != null) 'id': id,
       'snapshot_date': snapshotDate.toIso8601String().split('T').first,
-      'total_accounts': totalAccounts,
-      'total_savings': totalSavings,
-      'total_patrimoine': totalPatrimoine,
-      'total_receivables': totalReceivables,
-      'total_debts': totalDebts,
-      'total_credits_remaining': totalCreditsRemaining,
-      'net_worth': netWorth,
+      'total_accounts': Money.toCents(totalAccounts),
+      'total_savings': Money.toCents(totalSavings),
+      'total_patrimoine': Money.toCents(totalPatrimoine),
+      'total_receivables': Money.toCents(totalReceivables),
+      'total_debts': Money.toCents(totalDebts),
+      'total_credits_remaining': Money.toCents(totalCreditsRemaining),
+      'net_worth': Money.toCents(netWorth),
       'created_at': createdAt.toIso8601String(),
     };
   }
