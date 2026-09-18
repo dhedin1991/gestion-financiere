@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
+import '../navigation/app_back_button.dart';
+import '../navigation/app_menu_button.dart';
+import '../utils/app_error_message.dart';
 import 'app_info_providers.dart';
 import 'app_info_service.dart';
 
@@ -14,8 +17,10 @@ class AppInfoPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Infos application'),
         actions: [
+          const AppMenuButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
@@ -25,7 +30,7 @@ class AppInfoPage extends ConsumerWidget {
       ),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur : $err')),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
         data: (stats) {
           return ListView(
             padding: const EdgeInsets.all(16),

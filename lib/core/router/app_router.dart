@@ -19,6 +19,7 @@ import '../../features/recurring/presentation/pages/recurring_transactions_page.
 import '../../features/backup/presentation/pages/backup_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
 import '../../features/audit_log/presentation/pages/audit_log_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../navigation/app_drawer.dart';
 import '../navigation/scaffold_key_provider.dart';
 import 'app_info_page.dart';
@@ -104,6 +105,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/audit-log',
             builder: (context, state) => const AuditLogPage(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsPage(),
           ),
           // Les futurs modules s'ajouteront ici, un par un.
         ],

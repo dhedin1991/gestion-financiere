@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+
+import '../utils/app_logger.dart';
 
 /// Point d'accès unique à la base de données SQLite de l'application.
 ///
@@ -11,7 +15,7 @@ import 'package:sqflite/sqflite.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 12;
+  static const int _dbVersion = 13;
 
   Database? _database;
 
@@ -21,9 +25,56 @@ class AppDatabase {
     return _database!;
   }
 
+  /// Avant d'ouvrir la base pour de bon, vérifie si une migration vers le
+  /// nouveau format de stockage des montants (centimes entiers, v13) va
+  /// avoir lieu. Si oui, copie le fichier tel quel (avant toute
+  /// modification) vers un fichier horodaté, pour permettre une
+  /// restauration manuelle via la page Sauvegarde en cas de souci — même
+  /// si la migration elle-même bénéficie déjà de la transaction implicite
+  /// que sqflite ouvre automatiquement autour de tout `onUpgrade`, et ne
+  /// devrait donc normalement jamais laisser la base dans un état
+  /// intermédiaire incohérent.
+  ///
+  /// Ne bloque jamais le démarrage de l'app : un échec de sauvegarde est
+  /// journalisé mais n'empêche pas la migration de continuer.
+  Future<void> _backupBeforeCentsMigrationIfNeeded(String path) async {
+    const centsMigrationVersion = 13;
+    final file = File(path);
+    if (!await file.exists()) return; // Première installation : rien à migrer.
+
+    try {
+      final probe = await openDatabase(path, readOnly: true);
+      final versionResult = await probe.rawQuery('PRAGMA user_version');
+      await probe.close();
+      final currentVersion = (versionResult.first['user_version'] as num?)?.toInt() ?? 0;
+
+      if (currentVersion > 0 && currentVersion < centsMigrationVersion) {
+        final timestamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+        final backupPath = join(dirname(path), 'avant_migration_centimes_$timestamp.db');
+        await file.copy(backupPath);
+        AppLogger.info(
+          'Sauvegarde de sécurité créée avant migration v$centsMigrationVersion : $backupPath',
+          name: 'db_migration',
+        );
+      }
+    } catch (e, stackTrace) {
+      // On ne bloque jamais le lancement de l'app pour une sauvegarde de
+      // confort : la vraie protection contre une migration partielle est
+      // la transaction SQL atomique dans _onUpgrade.
+      AppLogger.error(
+        'Impossible de créer la sauvegarde de sécurité avant migration',
+        name: 'db_migration',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   Future<Database> _initDatabase() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = join(directory.path, _dbName);
+
+    await _backupBeforeCentsMigrationIfNeeded(path);
 
     return openDatabase(
       path,
@@ -564,6 +615,76 @@ CREATE TABLE budgets (
             table,
             {'entity_id': defaultEntityId},
             where: 'entity_id IS NULL',
+          );
+        }
+      }
+    }
+    if (oldVersion < 13) {
+      // Migration vers le stockage des montants en centimes entiers
+      // (au lieu de flottants), pour éliminer tout risque de dérive
+      // d'arrondi sur des données financières (voir CHANGELOG). Toutes
+      // les colonnes ci-dessous passent de "1500.5" (unités, flottant) à
+      // "150050" (centimes, entier). CAST(...AS INTEGER) garantit un
+      // stockage entier propre plutôt qu'un flottant à valeur entière.
+      //
+      // Toute la transformation bénéficie de la transaction implicite déjà
+      // ouverte par sqflite pour onCreate/onUpgrade : soit toutes les
+      // colonnes sont converties, soit aucune ne l'est en cas d'erreur —
+      // jamais un état intermédiaire incohérent. Une sauvegarde de
+      // sécurité du fichier a en plus été prise juste avant l'ouverture
+      // de cette connexion (voir _backupBeforeCentsMigrationIfNeeded).
+      const centsColumnsByTable = <String, List<String>>{
+        'accounts': ['initial_balance', 'current_balance'],
+        'transactions': ['amount'],
+        'recurring_transactions': ['amount'],
+        'debts': ['total_amount'],
+        'debt_payments': ['amount'],
+        'budgets': ['amount'],
+        'savings': ['target_amount', 'current_balance'],
+        'savings_transactions': ['amount'],
+        'patrimoine_items': ['estimated_value'],
+        'credits': ['principal_amount', 'monthly_payment'],
+        'credit_installments': ['amount'],
+        'net_worth_snapshots': [
+          'total_accounts',
+          'total_savings',
+          'total_patrimoine',
+          'total_receivables',
+          'total_debts',
+          'total_credits_remaining',
+          'net_worth',
+        ],
+      };
+
+      // NOTE : pas de db.transaction() explicite ici — sqflite exécute déjà
+      // onCreate/onUpgrade dans une transaction implicite (comportement
+      // documenté du plugin), comme le confirme le fait qu'aucun des blocs
+      // de migration précédents dans ce fichier n'en utilise. Ajouter une
+      // transaction imbriquée risquerait une erreur SQL "transaction within
+      // a transaction" et casserait la migration pour tout le monde.
+      for (final entry in centsColumnsByTable.entries) {
+        final table = entry.key;
+        // Vérifie l'existence de la table avant d'y toucher : selon la
+        // version de départ de l'appareil, certaines tables plus
+        // récentes (ex: savings, credits) ont déjà été créées par les
+        // blocs de migration précédents exécutés juste au-dessus dans
+        // ce même appel, donc elles existent forcément à ce stade —
+        // cette vérification est une sécurité supplémentaire, pas une
+        // hypothèse fragile.
+        final tableExists = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+          [table],
+        );
+        if (tableExists.isEmpty) continue;
+
+        final existingColumns = await db.rawQuery('PRAGMA table_info($table)');
+        final columnNames = existingColumns.map((c) => c['name'] as String).toSet();
+
+        for (final column in entry.value) {
+          if (!columnNames.contains(column)) continue;
+          await db.execute(
+            'UPDATE $table SET $column = CAST(ROUND($column * 100) AS INTEGER) '
+            'WHERE $column IS NOT NULL',
           );
         }
       }

@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_constants.dart';
-import '../theme/app_theme.dart';
-import '../theme/theme_providers.dart';
 
 /// Menu latéral principal de l'application, listant tous les modules.
 /// Remplace l'ancienne barre de navigation du bas, devenue trop chargée
 /// avec 9 modules.
-class AppDrawer extends ConsumerWidget {
+class AppDrawer extends StatelessWidget {
   final String currentLocation;
 
   const AppDrawer({super.key, required this.currentLocation});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
-    final themePreset = ref.watch(themePresetProvider);
+  Widget build(BuildContext context) {
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
     ];
@@ -121,43 +116,11 @@ class AppDrawer extends ConsumerWidget {
                   sectionHeader('Application'),
                   ListTile(
                     dense: true,
-                    leading: const Icon(Icons.shield_outlined),
-                    title: const Text('Sécurité'),
+                    leading: const Icon(Icons.settings_outlined),
+                    title: const Text('Paramètres'),
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.push('/security');
-                    },
-                  ),
-                  ListTile(
-                    dense: true,
-                    leading: Icon(_themeIcon(themeMode)),
-                    title: const Text('Apparence'),
-                    subtitle: Text(_themeLabel(themeMode), style: const TextStyle(fontSize: 11)),
-                    onTap: () => _showThemeDialog(context, ref, themeMode),
-                  ),
-                  ListTile(
-                    dense: true,
-                    leading: Icon(Icons.palette_outlined, color: themePreset.swatch),
-                    title: const Text('Style'),
-                    subtitle: Text(themePreset.label, style: const TextStyle(fontSize: 11)),
-                    onTap: () => _showPresetDialog(context, ref, themePreset),
-                  ),
-                  ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.help_outline),
-                    title: const Text('Mode d\'emploi'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      context.push('/help');
-                    },
-                  ),
-                  ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.info_outline),
-                    title: const Text('Infos application'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      context.push('/app-info');
+                      context.push('/settings');
                     },
                   ),
                   const SizedBox(height: 8),
@@ -165,83 +128,6 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  IconData _themeIcon(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return Icons.light_mode_outlined;
-      case ThemeMode.dark:
-        return Icons.dark_mode_outlined;
-      case ThemeMode.system:
-        return Icons.brightness_auto_outlined;
-    }
-  }
-
-  String _themeLabel(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'Clair';
-      case ThemeMode.dark:
-        return 'Sombre';
-      case ThemeMode.system:
-        return 'Automatique (selon l\'appareil)';
-    }
-  }
-
-  void _showThemeDialog(BuildContext context, WidgetRef ref, ThemeMode current) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Apparence'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ThemeMode.values.map((mode) {
-            return RadioListTile<ThemeMode>(
-              value: mode,
-              groupValue: current,
-              title: Text(_themeLabel(mode)),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(themeModeProvider.notifier).setThemeMode(value);
-                }
-                Navigator.of(dialogContext).pop();
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  void _showPresetDialog(BuildContext context, WidgetRef ref, AppThemePreset current) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Style de l\'application'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: AppThemePreset.values.map((preset) {
-              return RadioListTile<AppThemePreset>(
-                value: preset,
-                groupValue: current,
-                secondary: CircleAvatar(backgroundColor: preset.swatch, radius: 14),
-                title: Text(preset.label),
-                subtitle: Text(preset.description, style: const TextStyle(fontSize: 12)),
-                onChanged: (value) {
-                  if (value != null) {
-                    ref.read(themePresetProvider.notifier).setPreset(value);
-                  }
-                  Navigator.of(dialogContext).pop();
-                },
-              );
-            }).toList(),
-          ),
         ),
       ),
     );

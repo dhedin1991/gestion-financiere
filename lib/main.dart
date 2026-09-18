@@ -11,6 +11,7 @@ import 'core/theme/theme_providers.dart';
 import 'features/app_lock/presentation/pages/login_page.dart';
 import 'features/app_lock/presentation/pages/password_setup_page.dart';
 import 'features/app_lock/presentation/providers/app_lock_providers.dart';
+import 'features/app_lock/presentation/providers/auto_lock_delay_provider.dart';
 import 'features/reminders/presentation/providers/reminder_providers.dart';
 import 'features/recurring/presentation/providers/recurring_providers.dart';
 import 'features/onboarding/presentation/pages/onboarding_page.dart';
@@ -37,11 +38,57 @@ Future<void> main() async {
   );
 }
 
-class GestionFinanciereApp extends ConsumerWidget {
+class GestionFinanciereApp extends ConsumerStatefulWidget {
   const GestionFinanciereApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GestionFinanciereApp> createState() => _GestionFinanciereAppState();
+}
+
+class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
+    with WidgetsBindingObserver {
+  DateTime? _backgroundedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Corrige l'anomalie relevée dans l'audit : `lockAgain()` existait
+    // déjà mais n'était appelé nulle part, donc l'app ne se reverrouillait
+    // jamais automatiquement en arrière-plan.
+    final lockPhase = ref.read(appLockControllerProvider).phase;
+    if (lockPhase != AppLockPhase.unlocked) return;
+
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _backgroundedAt ??= DateTime.now();
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      final backgroundedAt = _backgroundedAt;
+      _backgroundedAt = null;
+      if (backgroundedAt == null) return;
+
+      final delay = ref.read(autoLockDelayProvider).duration;
+      final elapsed = DateTime.now().difference(backgroundedAt);
+      if (elapsed >= delay) {
+        ref.read(appLockControllerProvider.notifier).lockAgain();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final themePreset = ref.watch(themePresetProvider);
     final lockPhase = ref.watch(appLockControllerProvider).phase;

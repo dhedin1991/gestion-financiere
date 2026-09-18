@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../database/app_database.dart';
+import '../utils/app_logger.dart';
 
 /// Statistiques globales de l'application (nombre d'éléments dans chaque
 /// module) et informations sur l'espace de stockage utilisé.
@@ -58,7 +59,8 @@ class AppInfoService {
         return await file.length();
       }
       return 0;
-    } catch (_) {
+    } catch (e, stackTrace) {
+      AppLogger.error('Impossible de lire la taille du fichier de base de données', name: 'app_info', error: e, stackTrace: stackTrace);
       return 0;
     }
   }
