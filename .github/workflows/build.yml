@@ -38,9 +38,17 @@ jobs:
           sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/a\        android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
+      - name: Analyse statique (flutter analyze)
+        run: |
+          flutter analyze > /tmp/analyze.log 2>&1 || ANALYZE_FAILED=1
+          cat /tmp/analyze.log
+          if [ "$ANALYZE_FAILED" = "1" ]; then
+            echo "::error::flutter analyze a détecté des problèmes — voir le log ci-dessus."
+            exit 1
+          fi
       - name: Run tests
         run: |
-          flutter test > /tmp/test.log 2>&1 || TEST_FAILED=1
+          flutter test --coverage > /tmp/test.log 2>&1 || TEST_FAILED=1
           if [ "$TEST_FAILED" = "1" ]; then
             grep -A6 -iE "^\s*(Expected|Actual|which:|EXCEPTION|FAILED|Error:|Failed to load)" /tmp/test.log | tail -60 | while IFS= read -r line; do
               clean=$(echo "$line" | sed 's/%/%25/g' | cut -c1-500)
@@ -48,7 +56,21 @@ jobs:
             done
             exit 1
           fi
+      - name: Publier la couverture de tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
       - name: Build APK
+        # NOTE (audit) : cet APK est signé avec la clé de debug par défaut
+        # de Flutter, pas une clé de release dédiée. C'est suffisant pour
+        # une installation manuelle personnelle, mais PAS pour publier sur
+        # le Play Store (qui exige une clé de release + app signing Google
+        # Play). Pour signer correctement : générer un keystore, l'ajouter
+        # en secret GitHub (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+        # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD), le décoder ici dans
+        # android/app/upload-keystore.jks, et référencer un android/key.properties
+        # dans la config Gradle avant `flutter build apk --release`.
         run: |
           flutter build apk --release > /tmp/build.log 2>&1 || BUILD_FAILED=1
           if [ "$BUILD_FAILED" = "1" ]; then
