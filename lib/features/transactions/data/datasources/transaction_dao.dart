@@ -60,10 +60,25 @@ class TransactionDao {
     );
   }
 
-  Future<double> sumByType(String type, {String? fromIso, String? toIso}) async {
+  Future<double> sumByType(
+    String type, {
+    String? fromIso,
+    String? toIso,
+    List<int>? accountIds,
+    String? currency,
+  }) async {
     final db = await _appDatabase.database;
     final conditions = <String>['type = ?'];
     final args = <Object?>[type];
+    if (accountIds != null) {
+      if (accountIds.isEmpty) return 0;
+      conditions.add('account_id IN (${List.filled(accountIds.length, '?').join(',')})');
+      args.addAll(accountIds);
+    }
+    if (currency != null) {
+      conditions.add('currency = ?');
+      args.add(currency);
+    }
     if (fromIso != null) {
       conditions.add('transaction_date >= ?');
       args.add(fromIso);

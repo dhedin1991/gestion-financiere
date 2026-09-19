@@ -204,13 +204,15 @@ class _DebtsSavingsKpiRow extends ConsumerWidget {
   }
 }
 
-class _GlobalBalanceCard extends StatelessWidget {
+class _GlobalBalanceCard extends ConsumerWidget {
   final AsyncValue<double> balanceAsync;
   const _GlobalBalanceCard({required this.balanceAsync});
 
   @override
-  Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'XOF', decimalDigits: 0);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mainCurrency = ref.watch(mainCurrencyProvider).valueOrNull ?? 'XOF';
+    final excluded = ref.watch(excludedCurrenciesProvider).valueOrNull ?? const <String>[];
+    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: mainCurrency, decimalDigits: 0);
 
     return Container(
       width: double.infinity,
@@ -250,6 +252,13 @@ class _GlobalBalanceCard extends StatelessWidget {
               ),
             ),
           ),
+          if (excluded.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Comptes en ${excluded.join(', ')} non inclus (pas de conversion de devises)',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
         ],
       ),
     );

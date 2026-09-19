@@ -18,26 +18,47 @@ class BilanDao {
 
   // ---------------- PATRIMOINE NET ----------------
 
-  Future<double> _getTotalAccountsBalance() async {
+  /// Devise principale = la plus utilisée parmi les comptes actifs (même
+  /// règle que `pickMainCurrency`, côté Dart). Les bilans n'additionnent que
+  /// cette devise pour ne jamais mélanger XOF et EUR.
+  Future<String> _mainCurrency() async {
     final db = await appDatabase.database;
-    final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM accounts WHERE is_archived = 0');
+    final rows = await db.rawQuery(
+      'SELECT currency, COUNT(*) AS c FROM accounts WHERE is_archived = 0 '
+      "GROUP BY currency ORDER BY c DESC, CASE WHEN currency = 'XOF' THEN 0 ELSE 1 END, currency LIMIT 1",
+    );
+    return rows.isEmpty ? 'XOF' : rows.first['currency'] as String;
+  }
+
+  Future<double> _getTotalAccountsBalance(String currency) async {
+    final db = await appDatabase.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(current_balance) as total FROM accounts WHERE is_archived = 0 AND currency = ?',
+      [currency],
+    );
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
-  Future<double> _getTotalSavingsBalance() async {
+  Future<double> _getTotalSavingsBalance(String currency) async {
     final db = await appDatabase.database;
-    final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM savings');
+    final result = await db.rawQuery(
+      'SELECT SUM(current_balance) as total FROM savings WHERE currency = ?',
+      [currency],
+    );
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
-  Future<double> _getTotalPatrimoineValue() async {
+  Future<double> _getTotalPatrimoineValue(String currency) async {
     final db = await appDatabase.database;
-    final result = await db.rawQuery('SELECT SUM(estimated_value) as total FROM patrimoine_items');
+    final result = await db.rawQuery(
+      'SELECT SUM(estimated_value) as total FROM patrimoine_items WHERE currency = ?',
+      [currency],
+    );
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des créances restantes (argent qu'on te doit).
-  Future<double> _getTotalReceivables() async {
+  Future<double> _getTotalReceivables(String currency) async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('''
       SELECT SUM(d.total_amount - COALESCE(p.paid, 0)) as total
@@ -45,13 +66,13 @@ class BilanDao {
       LEFT JOIN (
         SELECT debt_id, SUM(amount) as paid FROM debt_payments GROUP BY debt_id
       ) p ON p.debt_id = d.id
-      WHERE d.type = 'creance'
-    ''');
+      WHERE d.type = 'creance' AND d.currency = ?
+    ''', [currency]);
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des dettes restantes (argent que tu dois).
-  Future<double> _getTotalDebts() async {
+  Future<double> _getTotalDebts(String currency) async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('''
       SELECT SUM(d.total_amount - COALESCE(p.paid, 0)) as total
@@ -59,28 +80,32 @@ class BilanDao {
       LEFT JOIN (
         SELECT debt_id, SUM(amount) as paid FROM debt_payments GROUP BY debt_id
       ) p ON p.debt_id = d.id
-      WHERE d.type = 'dette'
-    ''');
+      WHERE d.type = 'dette' AND d.currency = ?
+    ''', [currency]);
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Somme des échéances de crédit pas encore payées (capital restant dû approximatif).
-  Future<double> _getTotalCreditsRemaining() async {
+  Future<double> _getTotalCreditsRemaining(String currency) async {
     final db = await appDatabase.database;
     final result = await db.rawQuery('''
-      SELECT SUM(amount) as total FROM credit_installments WHERE status != 'payee'
-    ''');
+      SELECT SUM(ci.amount) as total
+      FROM credit_installments ci
+      JOIN credits c ON c.id = ci.credit_id
+      WHERE ci.status != 'payee' AND c.currency = ?
+    ''', [currency]);
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 
   /// Calcule le patrimoine net actuel (sans le sauvegarder).
   Future<NetWorthSnapshotModel> computeCurrentSnapshot() async {
-    final totalAccounts = await _getTotalAccountsBalance();
-    final totalSavings = await _getTotalSavingsBalance();
-    final totalPatrimoine = await _getTotalPatrimoineValue();
-    final totalReceivables = await _getTotalReceivables();
-    final totalDebts = await _getTotalDebts();
-    final totalCreditsRemaining = await _getTotalCreditsRemaining();
+    final currency = await _mainCurrency();
+    final totalAccounts = await _getTotalAccountsBalance(currency);
+    final totalSavings = await _getTotalSavingsBalance(currency);
+    final totalPatrimoine = await _getTotalPatrimoineValue(currency);
+    final totalReceivables = await _getTotalReceivables(currency);
+    final totalDebts = await _getTotalDebts(currency);
+    final totalCreditsRemaining = await _getTotalCreditsRemaining(currency);
 
     final netWorth = totalAccounts +
         totalSavings +

@@ -57,7 +57,14 @@ class _FakeTransactionRepository implements TransactionRepository {
   Future<void> deleteTransaction(int id) async {}
 
   @override
-  Future<double> getTotalByType(TransactionType type, {DateTime? from, DateTime? to}) async => 0;
+  Future<double> getTotalByType(
+    TransactionType type, {
+    DateTime? from,
+    DateTime? to,
+    List<int>? accountIds,
+    String? currency,
+  }) async =>
+      0;
 }
 
 RecurringTransaction _make({

@@ -93,11 +93,19 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<double> getTotalByType(TransactionType type, {DateTime? from, DateTime? to}) {
+  Future<double> getTotalByType(
+    TransactionType type, {
+    DateTime? from,
+    DateTime? to,
+    List<int>? accountIds,
+    String? currency,
+  }) {
     return _dao.sumByType(
       type == TransactionType.revenu ? 'revenu' : 'depense',
       fromIso: from?.toIso8601String(),
       toIso: to?.toIso8601String(),
+      accountIds: accountIds,
+      currency: currency,
     );
   }
 }

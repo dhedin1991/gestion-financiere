@@ -13,5 +13,11 @@ abstract class TransactionRepository {
   Future<FinancialTransaction> createTransaction(FinancialTransaction transaction);
   Future<void> updateTransaction(FinancialTransaction transaction);
   Future<void> deleteTransaction(int id);
-  Future<double> getTotalByType(TransactionType type, {DateTime? from, DateTime? to});
+  Future<double> getTotalByType(
+    TransactionType type, {
+    DateTime? from,
+    DateTime? to,
+    List<int>? accountIds,
+    String? currency,
+  });
 }

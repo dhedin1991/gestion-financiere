@@ -86,17 +86,31 @@ final filteredTransactionsProvider =
 /// Total des revenus du mois en cours — utile pour le Tableau de bord.
 final monthlyIncomeProvider = FutureProvider.autoDispose<double>((ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
+  final accounts = await ref.watch(accountsListProvider.future);
+  final main = await ref.watch(mainCurrencyProvider.future);
   final now = DateTime.now();
   final start = DateTime(now.year, now.month, 1);
-  return repository.getTotalByType(TransactionType.revenu, from: start);
+  return repository.getTotalByType(
+    TransactionType.revenu,
+    from: start,
+    accountIds: accounts.where((a) => a.id != null).map((a) => a.id!).toList(),
+    currency: main,
+  );
 });
 
 /// Total des dépenses du mois en cours.
 final monthlyExpenseProvider = FutureProvider.autoDispose<double>((ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
+  final accounts = await ref.watch(accountsListProvider.future);
+  final main = await ref.watch(mainCurrencyProvider.future);
   final now = DateTime.now();
   final start = DateTime(now.year, now.month, 1);
-  return repository.getTotalByType(TransactionType.depense, from: start);
+  return repository.getTotalByType(
+    TransactionType.depense,
+    from: start,
+    accountIds: accounts.where((a) => a.id != null).map((a) => a.id!).toList(),
+    currency: main,
+  );
 });
 
 final transactionActionsProvider = Provider<TransactionActions>((ref) {

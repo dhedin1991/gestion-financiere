@@ -6,6 +6,7 @@ import '../../data/datasources/account_dao.dart';
 import '../../data/repositories/account_repository_impl.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
+import '../../../../core/utils/currency.dart';
 
 // ---------------------------------------------------------------------
 // Chaîne d'injection de dépendances : Database -> DAO -> Repository
@@ -31,10 +32,28 @@ final accountsListProvider = FutureProvider.autoDispose<List<Account>>((ref) asy
   return repository.getAllAccounts(entityId: entityId);
 });
 
-/// Solde global (somme des comptes de l'entité active) — utilisé par le Dashboard.
+/// Devise principale de l'entité active (voir [pickMainCurrency]).
+final mainCurrencyProvider = FutureProvider.autoDispose<String>((ref) async {
+  final accounts = await ref.watch(accountsListProvider.future);
+  return pickMainCurrency(accounts.map((a) => a.currency));
+});
+
+/// Devises présentes sur des comptes mais absentes des totaux (non convertibles).
+final excludedCurrenciesProvider = FutureProvider.autoDispose<List<String>>((ref) async {
+  final accounts = await ref.watch(accountsListProvider.future);
+  final main = await ref.watch(mainCurrencyProvider.future);
+  final others = accounts.map((a) => a.currency).where((c) => c != main).toSet().toList()..sort();
+  return others;
+});
+
+/// Solde global (comptes de l'entité active, dans la devise principale
+/// uniquement — jamais de mélange XOF/EUR) — utilisé par le Dashboard.
 final globalBalanceProvider = FutureProvider.autoDispose<double>((ref) async {
   final accounts = await ref.watch(accountsListProvider.future);
-  return accounts.fold<double>(0, (sum, a) => sum + a.currentBalance);
+  final main = await ref.watch(mainCurrencyProvider.future);
+  return accounts
+      .where((a) => a.currency == main)
+      .fold<double>(0, (sum, a) => sum + a.currentBalance);
 });
 
 /// Liste des comptes archivés — utilisée par la page Archives.
