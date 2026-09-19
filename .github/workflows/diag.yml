@@ -1,0 +1,39 @@
+name: Diagnostic (analyse + tests)
+
+on:
+  push:
+    branches: [ correctifs-2 ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: 'stable'
+      - run: flutter create --platforms=android --project-name gestion_financiere .
+      - run: flutter pub get
+      - name: Analyse et tests
+        run: |
+          mkdir -p /tmp/rep
+          flutter analyze > /tmp/rep/analyze.txt 2>&1 || true
+          flutter test > /tmp/rep/test.txt 2>&1 || true
+          tail -c 60000 /tmp/rep/test.txt > /tmp/rep/test_tail.txt
+          cp pubspec.lock /tmp/rep/pubspec.lock
+      - name: Publier les rapports sur la branche ci-logs
+        run: |
+          cd /tmp/rep
+          git init -q
+          git checkout -q -b ci-logs
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          echo "${{ github.sha }}" > sha.txt
+          git add .
+          git commit -q -m "rapport ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-logs
