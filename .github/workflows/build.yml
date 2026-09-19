@@ -64,6 +64,8 @@ jobs:
           PY
           grep -c "ScheduledNotificationReceiver" android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
+      - name: Bibliothèque SQLite (tests d'intégration des migrations)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsqlite3-dev
       - name: Analyse statique (flutter analyze)
         run: |
           flutter analyze --no-fatal-infos > /tmp/analyze.log 2>&1 || ANALYZE_FAILED=1

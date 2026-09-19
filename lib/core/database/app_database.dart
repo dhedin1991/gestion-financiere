@@ -15,6 +15,12 @@ import 'database_file_utils.dart';
 /// du Repository Pattern : les couches supérieures ne connaissent que
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
+  /// [directoryOverride] : dossier de la base, uniquement pour les tests
+  /// (par défaut, le dossier de documents de l'application).
+  AppDatabase({Directory? directoryOverride}) : _directoryOverride = directoryOverride;
+
+  final Directory? _directoryOverride;
+
   static const String _dbName = 'gestion_financiere.db';
   static const int _dbVersion = 14;
 
@@ -102,7 +108,7 @@ class AppDatabase {
   }
 
   Future<Database> _initDatabase() async {
-    final directory = await getApplicationDocumentsDirectory();
+    final directory = _directoryOverride ?? await getApplicationDocumentsDirectory();
     final path = join(directory.path, _dbName);
 
     await _backupBeforeCentsMigrationIfNeeded(path);
@@ -760,7 +766,7 @@ CREATE TABLE budgets (
       // Jour d'ancrage des récurrences (évite la dérive des échéances de fin
       // de mois : 31 janv. -> 28 févr. -> 31 mars). Migration non destructive.
       final cols = await db.rawQuery('PRAGMA table_info(recurring_transactions)');
-      if (!cols.any((c) => c['name'] == 'anchor_day')) {
+      if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'anchor_day')) {
         await db.execute('ALTER TABLE recurring_transactions ADD COLUMN anchor_day INTEGER');
       }
     }
