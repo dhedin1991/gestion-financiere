@@ -125,6 +125,14 @@ class AccountDao {
     );
     if (credits.isNotEmpty) return true;
 
+    final recurring = await db.query(
+      'recurring_transactions',
+      where: 'account_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (recurring.isNotEmpty) return true;
+
     return false;
   }
 }

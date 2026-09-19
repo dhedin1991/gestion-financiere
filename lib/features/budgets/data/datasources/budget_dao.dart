@@ -2,6 +2,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/money.dart';
 import '../../domain/entities/budget.dart';
 import '../models/budget_model.dart';
+import '../../../../core/utils/month_math.dart';
 
 /// Accès direct à la base SQLite pour tout ce qui concerne les budgets.
 class BudgetDao {
@@ -56,13 +57,13 @@ class BudgetDao {
       case BudgetPeriod.hebdomadaire:
         return startDate.add(const Duration(days: 7));
       case BudgetPeriod.mensuel:
-        return DateTime(startDate.year, startDate.month + 1, startDate.day);
+        return addMonthsClamped(startDate, 1);
       case BudgetPeriod.trimestriel:
-        return DateTime(startDate.year, startDate.month + 3, startDate.day);
+        return addMonthsClamped(startDate, 3);
       case BudgetPeriod.semestriel:
-        return DateTime(startDate.year, startDate.month + 6, startDate.day);
+        return addMonthsClamped(startDate, 6);
       case BudgetPeriod.annuel:
-        return DateTime(startDate.year + 1, startDate.month, startDate.day);
+        return addMonthsClamped(startDate, 12);
     }
   }
 

@@ -20,7 +20,7 @@ class BilanDao {
 
   Future<double> _getTotalAccountsBalance() async {
     final db = await appDatabase.database;
-    final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM accounts');
+    final result = await db.rawQuery('SELECT SUM(current_balance) as total FROM accounts WHERE is_archived = 0');
     return Money.fromCents((((result.first['total'] as num?) ?? 0)).toInt());
   }
 

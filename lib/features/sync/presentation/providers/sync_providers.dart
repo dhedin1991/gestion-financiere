@@ -95,10 +95,10 @@ class SyncController extends StateNotifier<SyncState> {
     try {
       final appDatabase = _ref.read(appDatabaseProvider);
 
-      // Ferme proprement la base de données locale avant de remplacer
-      // son fichier, pour éviter toute corruption.
-      await appDatabase.close();
-
+      // Le téléchargement, la vérification et la fermeture propre de la
+      // base locale (avant remplacement du fichier) sont gérés dans
+      // downloadAndReplace : si le transfert échoue, la base locale reste
+      // intacte et ouverte.
       await client.downloadAndReplace(ipAddress, pin, appDatabase);
 
       // Force tous les providers de l'app à recréer une nouvelle connexion

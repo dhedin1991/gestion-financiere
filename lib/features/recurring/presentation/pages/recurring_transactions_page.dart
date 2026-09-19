@@ -159,6 +159,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               : _descriptionController.text.trim(),
           frequency: _frequency,
           nextDueDate: _nextDueDate,
+          anchorDay: _nextDueDate.day,
           active: _active,
           createdAt: now,
           updatedAt: now,
@@ -174,6 +175,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               : _descriptionController.text.trim(),
           frequency: _frequency,
           nextDueDate: _nextDueDate,
+          anchorDay: _nextDueDate.day,
           active: _active,
           updatedAt: now,
         ));

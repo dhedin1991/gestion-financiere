@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/database/database_file_utils.dart';
 import '../../../core/utils/app_logger.dart';
 
 class SyncClientService {
@@ -25,17 +26,19 @@ class SyncClientService {
     }
   }
 
-  /// Télécharge le fichier de base de données de l'appareil serveur, et
-  /// remplace le fichier local par cette copie. La base de données locale
-  /// doit avoir été fermée (via AppDatabase.close()) AVANT d'appeler cette
-  /// méthode, sinon le remplacement du fichier peut échouer ou corrompre
-  /// les données.
+  /// Télécharge la base de données de l'appareil serveur, la VÉRIFIE, puis
+  /// remplace le fichier local (après en avoir fait une copie de sécurité).
+  ///
+  /// Ordre volontaire : téléchargement et vérification AVANT toute
+  /// modification locale. Si quoi que ce soit échoue (mauvais code, réponse
+  /// qui n'est pas une base SQLite, version trop récente...), la base locale
+  /// n'a pas été touchée et reste ouverte.
   ///
   /// [pin] doit correspondre au code affiché sur l'appareil qui partage ;
   /// sans lui (ou s'il est faux), le serveur refuse la requête (401).
   Future<void> downloadAndReplace(String ipAddress, String pin, AppDatabase appDatabase) async {
-    final uri = Uri.parse('http://$ipAddress:$port/database?pin=$pin');
-    final response = await http.get(uri).timeout(const Duration(seconds: 30));
+    final uri = Uri.parse('http://$ipAddress:$port/database?pin=${Uri.encodeQueryComponent(pin)}');
+    final response = await http.get(uri).timeout(const Duration(minutes: 2));
 
     if (response.statusCode == 401) {
       throw Exception('Code PIN incorrect. Vérifie le code affiché sur l\'appareil qui partage.');
@@ -44,21 +47,39 @@ class SyncClientService {
       throw Exception('L\'appareil distant n\'a pas pu envoyer la base de données (code ${response.statusCode})');
     }
 
+    // 1) Vérification du contenu reçu.
+    final remoteVersion = DatabaseFileUtils.userVersionFromBytes(response.bodyBytes);
+    if (remoteVersion == null || remoteVersion < 1) {
+      throw Exception('Les données reçues ne sont pas une base de données valide. Rien n\'a été modifié.');
+    }
+    if (remoteVersion > AppDatabase.schemaVersion) {
+      throw Exception(
+        'L\'autre appareil utilise une version plus récente de l\'application. '
+        'Mets d\'abord à jour cet appareil, puis recommence. Rien n\'a été modifié.',
+      );
+    }
+
     final directory = await getApplicationDocumentsDirectory();
     final dbPath = join(directory.path, 'gestion_financiere.db');
 
-    // Écrit d'abord dans un fichier temporaire, puis remplace le fichier
-    // final seulement si le téléchargement complet a réussi. Cela évite
-    // de se retrouver avec une base de données à moitié écrite en cas
-    // de coupure réseau en plein transfert.
-    final tempPath = '$dbPath.tmp';
-    final tempFile = File(tempPath);
-    await tempFile.writeAsBytes(response.bodyBytes);
+    // 2) Écriture dans un fichier temporaire (jamais directement sur la base).
+    final tempFile = File('$dbPath.tmp');
+    await tempFile.writeAsBytes(response.bodyBytes, flush: true);
+
+    // 3) Seulement maintenant : fermeture de la base locale, copie de
+    //    sécurité, nettoyage des fichiers annexes, puis remplacement.
+    await appDatabase.close();
 
     final finalFile = File(dbPath);
-    if (await finalFile.exists()) {
-      await finalFile.delete();
+    if (finalFile.existsSync()) {
+      final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+      await finalFile.copy(join(directory.path, 'avant_synchronisation_$stamp.db'));
+      finalFile.deleteSync();
     }
+    DatabaseFileUtils.deleteSidecars(dbPath);
     await tempFile.rename(dbPath);
+    DatabaseFileUtils.pruneSafetyCopies(directory);
+
+    AppLogger.info('Base remplacée par la copie de $ipAddress (v$remoteVersion)', name: 'sync_client');
   }
 }

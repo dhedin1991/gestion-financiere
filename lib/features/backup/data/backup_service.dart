@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/database/database_file_utils.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/external_activity_guard.dart';
 
@@ -77,6 +79,14 @@ class BackupService {
 
     final pickedFile = File(result.files.single.path!);
 
+    final pickedVersion = await DatabaseFileUtils.readUserVersion(pickedFile);
+    if (pickedVersion != null && pickedVersion > AppDatabase.schemaVersion) {
+      throw const InvalidBackupFileException(
+        'Cette sauvegarde vient d\'une version plus récente de l\'application. '
+        'Mets d\'abord l\'application à jour. Aucune donnée n\'a été modifiée.',
+      );
+    }
+
     if (!await _looksLikeSqliteDatabase(pickedFile)) {
       AppLogger.warning(
         'Restauration refusée : fichier choisi non reconnu comme base SQLite (${pickedFile.path})',
@@ -112,7 +122,10 @@ class BackupService {
       );
     }
 
-    await pickedFile.copy(await _dbPath());
+    final dbPath = await _dbPath();
+    DatabaseFileUtils.deleteSidecars(dbPath);
+    await pickedFile.copy(dbPath);
+    DatabaseFileUtils.pruneSafetyCopies(await getApplicationDocumentsDirectory());
     return true;
   }
 

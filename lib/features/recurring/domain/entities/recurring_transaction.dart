@@ -1,4 +1,5 @@
 import '../../../transactions/domain/entities/transaction.dart';
+import '../../../../core/utils/month_math.dart';
 
 enum RecurrenceFrequency { hebdomadaire, mensuelle, annuelle }
 
@@ -15,6 +16,10 @@ class RecurringTransaction {
   final String? description;
   final RecurrenceFrequency frequency;
   final DateTime nextDueDate;
+
+  /// Jour du mois voulu à l'origine (ex. 31). Permet de retrouver le 31
+  /// après un mois court (28 février) au lieu de rester bloqué sur le 28.
+  final int? anchorDay;
   final bool active;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -29,6 +34,7 @@ class RecurringTransaction {
     this.description,
     required this.frequency,
     required this.nextDueDate,
+    this.anchorDay,
     this.active = true,
     required this.createdAt,
     required this.updatedAt,
@@ -40,9 +46,9 @@ class RecurringTransaction {
       case RecurrenceFrequency.hebdomadaire:
         return nextDueDate.add(const Duration(days: 7));
       case RecurrenceFrequency.mensuelle:
-        return DateTime(nextDueDate.year, nextDueDate.month + 1, nextDueDate.day);
+        return addMonthsClamped(nextDueDate, 1, anchorDay: anchorDay);
       case RecurrenceFrequency.annuelle:
-        return DateTime(nextDueDate.year + 1, nextDueDate.month, nextDueDate.day);
+        return addMonthsClamped(nextDueDate, 12, anchorDay: anchorDay);
     }
   }
 
@@ -56,6 +62,7 @@ class RecurringTransaction {
     String? description,
     RecurrenceFrequency? frequency,
     DateTime? nextDueDate,
+    int? anchorDay,
     bool? active,
     DateTime? updatedAt,
   }) {
@@ -69,6 +76,7 @@ class RecurringTransaction {
       description: description ?? this.description,
       frequency: frequency ?? this.frequency,
       nextDueDate: nextDueDate ?? this.nextDueDate,
+      anchorDay: anchorDay ?? this.anchorDay,
       active: active ?? this.active,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

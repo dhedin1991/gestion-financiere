@@ -22,8 +22,21 @@ class RecurringTransactionGenerator {
   })  : _recurringRepository = recurringRepository,
         _transactionRepository = transactionRepository;
 
+  static Future<int>? _running;
+
   /// Retourne le nombre de transactions générées.
-  Future<int> generateDueTransactions() async {
+  ///
+  /// Une seule génération à la fois : des appels simultanés (démarrage +
+  /// retour au premier plan) créeraient sinon chaque transaction en double.
+  Future<int> generateDueTransactions() {
+    final running = _running;
+    if (running != null) return running;
+    final future = _generate().whenComplete(() => _running = null);
+    _running = future;
+    return future;
+  }
+
+  Future<int> _generate() async {
     final due = await _recurringRepository.getDue();
     var generatedCount = 0;
 
@@ -50,9 +63,9 @@ class RecurringTransactionGenerator {
         occurrences++;
 
         current = current.copyWith(nextDueDate: current.computeNextDueDate(), updatedAt: now);
-      }
-
-      if (occurrences > 0) {
+        // Avance l'échéance TOUT DE SUITE après chaque transaction créée :
+        // un arrêt en plein milieu ne peut plus produire qu'un doublon au
+        // pire, jamais tout un lot.
         await _recurringRepository.update(current);
       }
     }

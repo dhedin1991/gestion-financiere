@@ -77,8 +77,7 @@ class CreditActions {
       updatedAt: DateTime.now(),
     );
     await _repository.updateInstallment(updated);
-    _ref.invalidate(creditInstallmentsProvider(installment.creditId));
-    _ref.invalidate(creditPaidCountProvider(installment.creditId));
+    _invalidateInstallmentDependents(installment.creditId);
   }
 
   Future<void> markInstallmentUnpaid(CreditInstallment installment) async {
@@ -88,8 +87,16 @@ class CreditActions {
       updatedAt: DateTime.now(),
     );
     await _repository.updateInstallment(updated);
-    _ref.invalidate(creditInstallmentsProvider(installment.creditId));
-    _ref.invalidate(creditPaidCountProvider(installment.creditId));
+    _invalidateInstallmentDependents(installment.creditId);
+  }
+
+  void _invalidateInstallmentDependents(int creditId) {
+    _ref.invalidate(creditInstallmentsProvider(creditId));
+    _ref.invalidate(creditPaidCountProvider(creditId));
+    // Le solde du compte de remboursement a changé.
+    _ref.invalidate(accountsListProvider);
+    _ref.invalidate(allAccountsIncludingArchivedProvider);
+    _ref.invalidate(globalBalanceProvider);
   }
 
   void _refresh() {

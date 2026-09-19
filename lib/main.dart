@@ -135,12 +135,22 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     if (state == AppLifecycleState.resumed) {
       final backgroundedAt = _backgroundedAt;
       _backgroundedAt = null;
-      if (backgroundedAt == null) return;
 
-      final delay = ref.read(autoLockDelayProvider).duration;
-      final elapsed = DateTime.now().difference(backgroundedAt);
-      if (elapsed >= delay) {
-        ref.read(appLockControllerProvider.notifier).lockAgain();
+      if (backgroundedAt != null) {
+        final delay = ref.read(autoLockDelayProvider).duration;
+        final elapsed = DateTime.now().difference(backgroundedAt);
+        if (elapsed >= delay) {
+          ref.read(appLockControllerProvider.notifier).lockAgain();
+          return;
+        }
+      }
+
+      // Retour au premier plan sans reverrouillage : rattrape les
+      // transactions récurrentes devenues échues pendant que l'app restait
+      // ouverte en arrière-plan (sinon elles n'étaient générées qu'au
+      // prochain démarrage complet).
+      if (!ExternalActivityGuard.isActive) {
+        ref.invalidate(recurringGenerationBootstrapProvider);
       }
     }
   }

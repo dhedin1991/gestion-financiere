@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../utils/app_logger.dart';
+import 'database_file_utils.dart';
 
 /// Point d'accès unique à la base de données SQLite de l'application.
 ///
@@ -15,7 +16,10 @@ import '../utils/app_logger.dart';
 /// cette classe, jamais les détails SQL bruts.
 class AppDatabase {
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 13;
+  static const int _dbVersion = 14;
+
+  /// Version de schéma que cette version de l'app sait lire.
+  static const int schemaVersion = _dbVersion;
 
   Database? _database;
   Future<Database>? _opening;
@@ -78,6 +82,7 @@ class AppDatabase {
         final timestamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
         final backupPath = join(dirname(path), 'avant_migration_centimes_$timestamp.db');
         await file.copy(backupPath);
+        DatabaseFileUtils.pruneSafetyCopies(Directory(dirname(path)));
         AppLogger.info(
           'Sauvegarde de sécurité créée avant migration v$centsMigrationVersion : $backupPath',
           name: 'db_migration',
@@ -188,6 +193,7 @@ class AppDatabase {
         description TEXT,
         frequency TEXT NOT NULL,     -- 'hebdomadaire' | 'mensuelle' | 'annuelle'
         next_due_date TEXT NOT NULL,
+        anchor_day INTEGER,
         active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -445,6 +451,40 @@ CREATE TABLE budgets (
       ''');
       await db.execute('CREATE INDEX idx_budgets_category ON budgets (category_id)');
       await db.execute('CREATE INDEX idx_budgets_period ON budgets (period)');
+    }
+
+    if (oldVersion < 4) {
+      // Tables d'épargne : aucune migration ne les créait pour une base
+      // antérieure à la v4 (ou une très ancienne sauvegarde restaurée).
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS savings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          account_id INTEGER NOT NULL,
+          target_amount REAL,
+          target_date TEXT,
+          current_balance REAL NOT NULL DEFAULT 0,
+          currency TEXT NOT NULL DEFAULT 'XOF',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS savings_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          savings_id INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          amount REAL NOT NULL,
+          date TEXT NOT NULL,
+          note TEXT,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (savings_id) REFERENCES savings (id) ON DELETE CASCADE
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_savings_account ON savings (account_id)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_savings_transactions_savings ON savings_transactions (savings_id)');
     }
 
     if (oldVersion < 5) {
@@ -713,6 +753,15 @@ CREATE TABLE budgets (
             'WHERE $column IS NOT NULL',
           );
         }
+      }
+    }
+
+    if (oldVersion < 14) {
+      // Jour d'ancrage des récurrences (évite la dérive des échéances de fin
+      // de mois : 31 janv. -> 28 févr. -> 31 mars). Migration non destructive.
+      final cols = await db.rawQuery('PRAGMA table_info(recurring_transactions)');
+      if (!cols.any((c) => c['name'] == 'anchor_day')) {
+        await db.execute('ALTER TABLE recurring_transactions ADD COLUMN anchor_day INTEGER');
       }
     }
   }

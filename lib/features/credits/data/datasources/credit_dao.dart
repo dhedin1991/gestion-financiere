@@ -2,6 +2,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/money.dart';
 import '../models/credit_installment_model.dart';
 import '../models/credit_model.dart';
+import '../../../../core/utils/month_math.dart';
 
 /// Accès direct aux tables `credits` et `credit_installments`.
 /// Contient aussi la logique de génération automatique de l'échéancier
@@ -25,11 +26,7 @@ class CreditDao {
 
       final now = DateTime.now().toIso8601String();
       for (int i = 0; i < credit.durationMonths; i++) {
-        final dueDate = DateTime(
-          credit.startDate.year,
-          credit.startDate.month + i + 1,
-          credit.startDate.day,
-        );
+        final dueDate = addMonthsClamped(credit.startDate, i + 1);
         await txn.insert(_installmentsTable, {
           'credit_id': creditId,
           'due_date': dueDate.toIso8601String(),
@@ -95,12 +92,50 @@ class CreditDao {
       throw ArgumentError('Impossible de mettre à jour une échéance sans id');
     }
     final db = await appDatabase.database;
-    return db.update(
-      _installmentsTable,
-      installment.toMap(),
-      where: 'id = ?',
-      whereArgs: [installment.id],
-    );
+    return db.transaction((txn) async {
+      final previous = await txn.query(
+        _installmentsTable,
+        columns: ['status', 'amount', 'credit_id'],
+        where: 'id = ?',
+        whereArgs: [installment.id],
+        limit: 1,
+      );
+      final newRow = installment.toMap();
+      final rows = await txn.update(
+        _installmentsTable,
+        newRow,
+        where: 'id = ?',
+        whereArgs: [installment.id],
+      );
+
+      // Effet sur le compte de remboursement du crédit (comme pour les
+      // dettes) : payer une échéance débite le compte, l'annuler le recrédite.
+      // Déduit de la transition réelle du statut en base, donc jamais
+      // appliqué deux fois pour le même changement.
+      if (previous.isNotEmpty) {
+        final wasPaid = previous.first['status'] == 'payee';
+        final isPaid = newRow['status'] == 'payee';
+        if (wasPaid != isPaid) {
+          final creditRows = await txn.query(
+            _creditsTable,
+            columns: ['account_id'],
+            where: 'id = ?',
+            whereArgs: [previous.first['credit_id']],
+            limit: 1,
+          );
+          final accountId = creditRows.isEmpty ? null : creditRows.first['account_id'] as int?;
+          if (accountId != null) {
+            final cents = (previous.first['amount'] as num).round();
+            await txn.rawUpdate(
+              'UPDATE accounts SET current_balance = current_balance ${isPaid ? '-' : '+'} ?, '
+              'updated_at = ? WHERE id = ?',
+              [cents, DateTime.now().toIso8601String(), accountId],
+            );
+          }
+        }
+      }
+      return rows;
+    });
   }
 
   /// Nombre d'échéances déjà payées pour un crédit donné.
