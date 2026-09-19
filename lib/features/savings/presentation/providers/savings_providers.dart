@@ -6,6 +6,7 @@ import '../../data/datasources/savings_dao.dart';
 import '../../data/repositories/savings_repository_impl.dart';
 import '../../domain/entities/savings.dart';
 import '../../domain/repositories/savings_repository.dart';
+import '../../../audit_log/presentation/providers/audit_helper.dart';
 
 final savingsDaoProvider = Provider<SavingsDao>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -50,16 +51,19 @@ class SavingsActions {
 
   Future<void> create(Savings savings) async {
     await _repository.createSavings(savings);
+    logAudit(_ref, entityType: 'epargne', action: 'create', newValue: savings.name);
     _refresh();
   }
 
   Future<void> update(Savings savings) async {
     await _repository.updateSavings(savings);
+    logAudit(_ref, entityType: 'epargne', entityId: savings.id ?? 0, action: 'update', newValue: savings.name);
     _refresh();
   }
 
   Future<void> delete(int id) async {
     await _repository.deleteSavings(id);
+    logAudit(_ref, entityType: 'epargne', entityId: id, action: 'delete');
     _refresh();
   }
 

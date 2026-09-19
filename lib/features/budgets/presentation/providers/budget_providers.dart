@@ -6,6 +6,7 @@ import '../../data/datasources/budget_dao.dart';
 import '../../data/repositories/budget_repository_impl.dart';
 import '../../domain/entities/budget.dart';
 import '../../domain/repositories/budget_repository.dart';
+import '../../../audit_log/presentation/providers/audit_helper.dart';
 
 final budgetDaoProvider = Provider<BudgetDao>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -50,11 +51,13 @@ class BudgetActions {
   Future<void> create(Budget budget) async {
     final entityId = budget.entityId ?? _ref.read(currentEntityIdProvider);
     await _repository.createBudget(budget.copyWith(entityId: entityId));
+    logAudit(_ref, entityType: 'budget', action: 'create', newValue: budget.name ?? 'Budget');
     _refresh();
   }
 
   Future<void> update(Budget budget) async {
     await _repository.updateBudget(budget);
+    logAudit(_ref, entityType: 'budget', entityId: budget.id ?? 0, action: 'update', newValue: budget.name ?? 'Budget');
     _refresh();
     if (budget.id != null) {
       _ref.invalidate(budgetSpentAmountProvider(budget.id!));
@@ -63,6 +66,7 @@ class BudgetActions {
 
   Future<void> delete(int id) async {
     await _repository.deleteBudget(id);
+    logAudit(_ref, entityType: 'budget', entityId: id, action: 'delete');
     _refresh();
   }
 

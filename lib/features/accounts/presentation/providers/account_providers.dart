@@ -7,6 +7,7 @@ import '../../data/repositories/account_repository_impl.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../../../core/utils/currency.dart';
+import '../../../audit_log/presentation/providers/audit_helper.dart';
 
 // ---------------------------------------------------------------------
 // Chaîne d'injection de dépendances : Database -> DAO -> Repository
@@ -88,21 +89,25 @@ class AccountActions {
   Future<void> create(Account account) async {
     final entityId = account.entityId ?? _ref.read(currentEntityIdProvider);
     await _repository.createAccount(account.copyWith(entityId: entityId));
+    logAudit(_ref, entityType: 'compte', action: 'create', newValue: account.name);
     _refresh();
   }
 
   Future<void> update(Account account) async {
     await _repository.updateAccount(account);
+    logAudit(_ref, entityType: 'compte', entityId: account.id ?? 0, action: 'update', newValue: account.name);
     _refresh();
   }
 
   Future<void> delete(int id) async {
     await _repository.deleteAccount(id);
+    logAudit(_ref, entityType: 'compte', entityId: id, action: 'delete');
     _refresh();
   }
 
   Future<void> archive(int id) async {
     await _repository.archiveAccount(id);
+    logAudit(_ref, entityType: 'compte', entityId: id, action: 'archive');
     _refresh();
   }
 

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_file_utils.dart';
 import '../../../core/utils/app_logger.dart';
+import 'dart:convert';
 
 class SyncClientService {
   static const int port = 8085;
@@ -23,6 +24,32 @@ class SyncClientService {
       // pas une vraie erreur applicative : log en debug uniquement.
       AppLogger.debug('Connexion au serveur de sync impossible : $e', name: 'sync_client');
       return false;
+    }
+  }
+
+  /// Date de dernière modification de la base de l'appareil distant
+  /// (null si indisponible : ancienne version de l'app, réseau...).
+  Future<DateTime?> fetchRemoteModified(String ipAddress) async {
+    try {
+      final uri = Uri.parse('http://$ipAddress:$port/ping');
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) return null;
+      final data = jsonDecode(response.body);
+      final value = data is Map ? data['modified'] : null;
+      return value is String ? DateTime.tryParse(value)?.toLocal() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Date de dernière modification de la base locale.
+  Future<DateTime?> localModified() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File(join(directory.path, 'gestion_financiere.db'));
+      return file.existsSync() ? file.lastModifiedSync() : null;
+    } catch (_) {
+      return null;
     }
   }
 

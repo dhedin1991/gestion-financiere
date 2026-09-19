@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../providers/sync_providers.dart';
+import 'package:intl/intl.dart';
 
 class SyncPage extends ConsumerStatefulWidget {
   const SyncPage({super.key});
@@ -208,13 +209,31 @@ class _SyncPageState extends ConsumerState<SyncPage> {
       return;
     }
 
+    // Compare les dates de dernière modification : si CET appareil est plus
+    // à jour que l'autre, on prévient explicitement (risque de perdre des
+    // saisies récentes, la synchronisation étant un remplacement complet).
+    final client = ref.read(syncClientServiceProvider);
+    final remoteModified = await client.fetchRemoteModified(ip);
+    final localModified = await client.localModified();
+    if (!mounted) return;
+    final fmt = DateFormat('dd/MM/yyyy HH:mm');
+    final localIsNewer =
+        remoteModified != null && localModified != null && localModified.isAfter(remoteModified);
+    final warning = localIsNewer
+        ? '\n\n⚠️ ATTENTION : les données de cet appareil sont PLUS RÉCENTES '
+            '(${fmt.format(localModified)}) que celles de l\'autre appareil '
+            '(${fmt.format(remoteModified)}). Tu vas perdre les saisies faites ici depuis. '
+            'Fais plutôt la synchronisation dans l\'autre sens.'
+        : '';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirmer la synchronisation'),
         content: Text(
           'Toutes les données actuelles de CET appareil vont être remplacées '
-          'par celles de l\'appareil à l\'adresse $ip. Cette action est irréversible. Continuer ?',
+          'par celles de l\'appareil à l\'adresse $ip. Une copie de sécurité de '
+          'tes données actuelles est conservée avant le remplacement.$warning\n\nContinuer ?',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),

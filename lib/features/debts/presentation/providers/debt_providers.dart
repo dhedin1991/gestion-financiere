@@ -6,6 +6,7 @@ import '../../data/datasources/debt_dao.dart';
 import '../../data/repositories/debt_repository_impl.dart';
 import '../../domain/entities/debt.dart';
 import '../../domain/repositories/debt_repository.dart';
+import '../../../audit_log/presentation/providers/audit_helper.dart';
 
 final debtDaoProvider = Provider<DebtDao>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -50,16 +51,19 @@ class DebtActions {
 
   Future<void> create(Debt debt) async {
     await _repository.createDebt(debt);
+    logAudit(_ref, entityType: 'dette', action: 'create', newValue: '${debt.personName} — ${debt.totalAmount} ${debt.currency}');
     _refresh();
   }
 
   Future<void> update(Debt debt) async {
     await _repository.updateDebt(debt);
+    logAudit(_ref, entityType: 'dette', entityId: debt.id ?? 0, action: 'update', newValue: debt.personName);
     _refresh();
   }
 
   Future<void> delete(int id) async {
     await _repository.deleteDebt(id);
+    logAudit(_ref, entityType: 'dette', entityId: id, action: 'delete');
     _refresh();
     // La dette pouvait être liée à un compte et avoir des paiements déjà
     // appliqués : on rafraîchit systématiquement les comptes par sécurité.
@@ -70,6 +74,7 @@ class DebtActions {
 
   Future<void> addPayment(DebtPayment payment, Debt debt) async {
     await _repository.addPayment(payment, debt);
+    logAudit(_ref, entityType: 'dette', entityId: debt.id ?? 0, action: 'create', newValue: 'Paiement ${payment.amount} — ${debt.personName}');
     _ref.invalidate(debtsListProvider);
     _ref.invalidate(debtPaymentsProvider(payment.debtId));
     if (debt.accountId != null) {

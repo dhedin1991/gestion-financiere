@@ -7,6 +7,7 @@ import '../../data/repositories/credit_repository_impl.dart';
 import '../../domain/entities/credit.dart';
 import '../../domain/entities/credit_installment.dart';
 import '../../domain/repositories/credit_repository.dart';
+import '../../../audit_log/presentation/providers/audit_helper.dart';
 
 final creditDaoProvider = Provider<CreditDao>((ref) {
   final appDatabase = ref.watch(appDatabaseProvider);
@@ -57,16 +58,19 @@ class CreditActions {
 
   Future<void> create(Credit credit) async {
     await _repository.createCredit(credit);
+    logAudit(_ref, entityType: 'credit', action: 'create', newValue: credit.name);
     _refresh();
   }
 
   Future<void> update(Credit credit) async {
     await _repository.updateCredit(credit);
+    logAudit(_ref, entityType: 'credit', entityId: credit.id ?? 0, action: 'update', newValue: credit.name);
     _refresh();
   }
 
   Future<void> delete(int id) async {
     await _repository.deleteCredit(id);
+    logAudit(_ref, entityType: 'credit', entityId: id, action: 'delete');
     _refresh();
   }
 
@@ -77,6 +81,7 @@ class CreditActions {
       updatedAt: DateTime.now(),
     );
     await _repository.updateInstallment(updated);
+    logAudit(_ref, entityType: 'credit', entityId: installment.creditId, action: 'update', newValue: 'Échéance payée (${installment.amount})');
     _invalidateInstallmentDependents(installment.creditId);
   }
 
@@ -87,6 +92,7 @@ class CreditActions {
       updatedAt: DateTime.now(),
     );
     await _repository.updateInstallment(updated);
+    logAudit(_ref, entityType: 'credit', entityId: installment.creditId, action: 'update', newValue: 'Paiement d\'échéance annulé (${installment.amount})');
     _invalidateInstallmentDependents(installment.creditId);
   }
 

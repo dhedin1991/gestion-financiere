@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/utils/app_logger.dart';
+import 'dart:convert';
 
 /// Serveur HTTP local très simple qui permet à un autre appareil, sur le
 /// même réseau Wi-Fi, de télécharger une copie complète du fichier de
@@ -111,10 +112,23 @@ class SyncServerService {
         }
 
         if (request.uri.path == '/ping') {
+          // Date de dernière modification de la base : permet à l'autre
+          // appareil d'avertir si SES données sont plus récentes.
+          String? modified;
+          try {
+            final directory = await getApplicationDocumentsDirectory();
+            final dbFile = File(join(directory.path, 'gestion_financiere.db'));
+            if (dbFile.existsSync()) {
+              modified = dbFile.lastModifiedSync().toUtc().toIso8601String();
+            }
+          } catch (_) {}
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.json
-            ..write('{"app":"gestion_financiere"}');
+            ..write(jsonEncode({
+              'app': 'gestion_financiere',
+              if (modified != null) 'modified': modified,
+            }));
           await request.response.close();
         } else if (request.uri.path == '/database') {
           final blockedUntil = _blockedUntilByIp[remoteIp];
