@@ -38,6 +38,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Bilans** : comptes archivés exclus (comme le tableau de bord).
   **Budgets** : dépenses filtrées par devise et par entité.
   **Comptes** : les récurrences comptent comme données liées à la suppression.
+- **Devises** : solde global, revenus/dépenses du mois et bilans n'additionnent
+  plus que la devise principale (la plus utilisée par les comptes, XOF en cas
+  d'égalité) ; une note signale les comptes d'autres devises non inclus.
+  Revenus/dépenses du mois limités à l'entité active.
+- **Import CSV** : lecture complète avant écriture, doublons ignorés (un fichier
+  réimporté ne double plus les données), CRLF/BOM/Latin-1 et montants de type
+  « 1 500,50 » ou « 1.500,50 » acceptés.
+- **Sync Wi-Fi** : avertissement explicite si les données de l'appareil qui
+  reçoit sont plus récentes que celles de l'appareil source.
+- **Journal d'audit** étendu aux comptes, dettes, épargne, budgets et crédits.
 - Dépendances verrouillées (`pubspec.lock`), `.gitignore`, analyse CI non
   bloquante sur les simples suggestions de style.
 
