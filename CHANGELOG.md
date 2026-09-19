@@ -48,6 +48,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Sync Wi-Fi** : avertissement explicite si les données de l'appareil qui
   reçoit sont plus récentes que celles de l'appareil source.
 - **Journal d'audit** étendu aux comptes, dettes, épargne, budgets et crédits.
+- **Tests d'intégration des migrations SQLite** (installation neuve, v13 -> v14,
+  v12 -> v14 avec conversion en centimes et sauvegarde, ouvertures
+  simultanées) exécutés à chaque compilation.
 - Dépendances verrouillées (`pubspec.lock`), `.gitignore`, analyse CI non
   bloquante sur les simples suggestions de style.
 
