@@ -33,10 +33,36 @@ jobs:
               coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
           }
           EOF
-      - name: Ajout permission Internet et autorisation Wi-Fi local (synchronisation)
+      - name: Manifest Android (Internet, sync Wi-Fi, notifications programmées)
         run: |
-          sed -i '/<manifest xmlns:android/a\    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/a\        android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
+          python3 - << 'PY'
+          import re
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          perms = [
+              'android.permission.INTERNET',
+              'android.permission.RECEIVE_BOOT_COMPLETED',
+              'android.permission.VIBRATE',
+              'android.permission.POST_NOTIFICATIONS',
+          ]
+          perm_xml = ''.join('    <uses-permission android:name="%s"/>\n' % x for x in perms)
+          s = re.sub(r'(<manifest[^>]*>)', lambda m: m.group(1) + '\n' + perm_xml, s, count=1)
+          s = s.replace('<application', '<application android:usesCleartextTraffic="true"', 1)
+          receivers = """
+              <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+              <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+                  <intent-filter>
+                      <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                      <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                      <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                      <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+                  </intent-filter>
+              </receiver>
+          """
+          s = s.replace('</application>', receivers + '</application>', 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          grep -c "ScheduledNotificationReceiver" android/app/src/main/AndroidManifest.xml
       - run: flutter pub get
       - name: Analyse statique (flutter analyze)
         run: |
@@ -61,18 +87,46 @@ jobs:
         with:
           name: coverage-report
           path: coverage/lcov.info
-      - name: Build APK
-        # NOTE (audit) : cet APK est signé avec la clé de debug par défaut
-        # de Flutter, pas une clé de release dédiée. C'est suffisant pour
-        # une installation manuelle personnelle, mais PAS pour publier sur
-        # le Play Store (qui exige une clé de release + app signing Google
-        # Play). Pour signer correctement : générer un keystore, l'ajouter
-        # en secret GitHub (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
-        # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD), le décoder ici dans
-        # android/app/upload-keystore.jks, et référencer un android/key.properties
-        # dans la config Gradle avant `flutter build apk --release`.
+      - name: Signature de l'APK (clé permanente, secret ANDROID_KEYSTORE_PASSPHRASE)
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSPHRASE }}
         run: |
-          flutter build apk --release > /tmp/build.log 2>&1 || BUILD_FAILED=1
+          if [ -n "$KS_PASS" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in android-signing/release.jks.enc -out android/app/release.jks -pass env:KS_PASS
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=gestion\nstoreFile=release.jks\n' "$KS_PASS" "$KS_PASS" > android/key.properties
+            cat >> android/app/build.gradle.kts << 'EOF'
+
+          val keyPropsFile = rootProject.file("key.properties")
+          if (keyPropsFile.exists()) {
+              val keyProps = java.util.Properties()
+              keyPropsFile.inputStream().use { keyProps.load(it) }
+              android {
+                  signingConfigs {
+                      create("release") {
+                          keyAlias = keyProps.getProperty("keyAlias")
+                          keyPassword = keyProps.getProperty("keyPassword")
+                          storeFile = file(keyProps.getProperty("storeFile"))
+                          storePassword = keyProps.getProperty("storePassword")
+                      }
+                  }
+                  buildTypes {
+                      getByName("release") {
+                          signingConfig = signingConfigs.getByName("release")
+                      }
+                  }
+              }
+          }
+          EOF
+            echo "APK signé avec la clé permanente."
+          else
+            echo "::warning::Secret ANDROID_KEYSTORE_PASSPHRASE absent : APK signé avec la clé de debug. Impossible de l'installer par-dessus une version précédente (désinstallation = perte des données locales) : exporte une sauvegarde avant."
+          fi
+      - name: Build APK
+        # --no-shrink : désactive R8. Sans règles ProGuard dédiées, R8 casse
+        # les notifications programmées (flutter_local_notifications) en
+        # version release.
+        run: |
+          flutter build apk --release --no-shrink > /tmp/build.log 2>&1 || BUILD_FAILED=1
           if [ "$BUILD_FAILED" = "1" ]; then
             grep -iE "error|exception|failure" /tmp/build.log | tail -15 | while IFS= read -r line; do
               clean=$(echo "$line" | sed 's/%/%25/g' | cut -c1-500)

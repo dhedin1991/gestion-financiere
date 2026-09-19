@@ -42,6 +42,16 @@ class ReminderSyncService {
   int _creditWarnId(int installmentId) => 1000000 + installmentId * 2 + 1;
   int _debtId(int debtId) => 2000000 + debtId;
   int _budgetId(int budgetId) => 3000000 + budgetId;
+  int _debtDueId(int debtId) => 4000000 + debtId;
+
+  /// On ne programme que les rappels des 90 prochains jours : Android limite
+  /// le nombre d'alarmes par application, et un crédit long (5 ans = 60
+  /// échéances x 2 rappels) dépasserait vite cette limite. Les échéances
+  /// plus lointaines sont programmées aux ouvertures suivantes de l'app.
+  static const _horizon = Duration(days: 90);
+
+  DateTime _at9(DateTime d) => DateTime(d.year, d.month, d.day, 9);
+  bool _inHorizon(DateTime when) => when.isBefore(DateTime.now().add(_horizon));
 
   Future<void> syncAll() async {
     await _notifications.init();
@@ -67,20 +77,27 @@ class ReminderSyncService {
           continue;
         }
 
-        await _notifications.scheduleAt(
-          id: warnId,
-          title: 'Échéance de crédit dans 3 jours',
-          body: '${credit.name} — ${installment.amount.toStringAsFixed(0)} ${credit.currency} '
-              'à régler le ${_fmt(installment.dueDate)}',
-          when: installment.dueDate.subtract(const Duration(days: 3)),
-        );
-        await _notifications.scheduleAt(
-          id: dueId,
-          title: 'Échéance de crédit aujourd\'hui',
-          body: '${credit.name} — ${installment.amount.toStringAsFixed(0)} ${credit.currency}',
-          when: DateTime(installment.dueDate.year, installment.dueDate.month,
-              installment.dueDate.day, 9),
-        );
+        // Rappel J-3 à 9h (et non à minuit, heure de la date brute).
+        final warnAt = _at9(installment.dueDate.subtract(const Duration(days: 3)));
+        final dueAt = _at9(installment.dueDate);
+
+        if (_inHorizon(warnAt)) {
+          await _notifications.scheduleAt(
+            id: warnId,
+            title: 'Échéance de crédit dans 3 jours',
+            body: '${credit.name} — ${installment.amount.toStringAsFixed(0)} ${credit.currency} '
+                'à régler le ${_fmt(installment.dueDate)}',
+            when: warnAt,
+          );
+        }
+        if (_inHorizon(dueAt)) {
+          await _notifications.scheduleAt(
+            id: dueId,
+            title: 'Échéance de crédit aujourd\'hui',
+            body: '${credit.name} — ${installment.amount.toStringAsFixed(0)} ${credit.currency}',
+            when: dueAt,
+          );
+        }
       }
     }
   }
@@ -92,17 +109,34 @@ class ReminderSyncService {
       final id = _debtId(debt.id!);
 
       if (debt.isSettled || debt.dueDate == null) {
-        await _notifications.cancel(id);
+        await _notifications.cancelRange([id, _debtDueId(debt.id!)]);
         continue;
       }
 
       final label = debt.type == DebtType.dette ? 'à rembourser à' : 'à récupérer auprès de';
-      await _notifications.scheduleAt(
-        id: id,
-        title: 'Échéance de dette dans 3 jours',
-        body: '${debt.remainingAmount.toStringAsFixed(0)} ${debt.currency} $label ${debt.personName}',
-        when: debt.dueDate!.subtract(const Duration(days: 3)),
-      );
+      final amountText =
+          '${debt.remainingAmount.toStringAsFixed(0)} ${debt.currency} $label ${debt.personName}';
+      final warnAt = _at9(debt.dueDate!.subtract(const Duration(days: 3)));
+      final dueAt = _at9(debt.dueDate!);
+
+      if (_inHorizon(warnAt)) {
+        await _notifications.scheduleAt(
+          id: id,
+          title: 'Échéance de dette dans 3 jours',
+          body: amountText,
+          when: warnAt,
+        );
+      }
+      // Rappel le jour même : couvre aussi les dettes créées à moins de
+      // 3 jours de l'échéance (le rappel J-3 serait déjà passé).
+      if (_inHorizon(dueAt)) {
+        await _notifications.scheduleAt(
+          id: _debtDueId(debt.id!),
+          title: 'Échéance de dette aujourd\'hui',
+          body: amountText,
+          when: dueAt,
+        );
+      }
     }
   }
 
@@ -119,14 +153,18 @@ class ReminderSyncService {
     for (final budget in budgets) {
       if (budget.id == null) continue;
       final spent = await _budgetRepository.getSpentAmount(budget);
-      if (spent < budget.amount) continue;
+      if (budget.amount <= 0) continue;
 
-      final prefsKey = 'budget_alert_${budget.id}_$todayKey';
+      final exceeded = spent >= budget.amount;
+      final nearLimit = !exceeded && spent >= budget.amount * 0.8;
+      if (!exceeded && !nearLimit) continue;
+
+      final prefsKey = '${exceeded ? 'budget_alert' : 'budget_warn'}_${budget.id}_$todayKey';
       if (prefs.getBool(prefsKey) == true) continue;
 
       await _notifications.showNow(
-        id: _budgetId(budget.id!),
-        title: 'Budget dépassé',
+        id: _budgetId(budget.id!) + (exceeded ? 0 : 2000000),
+        title: exceeded ? 'Budget dépassé' : 'Budget bientôt atteint (80 %)',
         body:
             '${budget.name ?? 'Budget'} : ${spent.toStringAsFixed(0)} / ${budget.amount.toStringAsFixed(0)} ${budget.currency}',
       );
