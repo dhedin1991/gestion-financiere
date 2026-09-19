@@ -5,6 +5,42 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### 🛠️ Correctifs de stabilité (audit général de septembre 2026)
+- **Plantages / écrans blancs au démarrage** : l'ouverture de la base de
+  données n'est plus lancée en double au démarrage (une connexion « de test »
+  pouvait fermer la vraie base) ; la version de la base est lue directement
+  dans l'en-tête du fichier.
+- **Reverrouillage intempestif** : l'app ne se reverrouille plus à une simple
+  perte de focus (clic hors de la fenêtre, notification, boîte système) mais
+  seulement quand elle passe réellement en arrière-plan. Les sélecteurs de
+  fichier et feuilles de partage de l'app sont ignorés.
+- **Journal d'erreurs** (`journal_erreurs.log`, dossier de l'app) et capture
+  globale des erreurs ; écran de repli lisible à la place de l'écran gris.
+- **Polices natives** : plus de téléchargement de police au démarrage
+  (`google_fonts` retiré) — texte net, indépendant du réseau.
+- **Rappels** : manifest Android complet (receivers, redémarrage), mode
+  d'alarme sans permission exacte, rappels J-3 à 9 h (et non minuit), rappel
+  le jour même pour les dettes, horizon de 90 jours, alerte budget à 80 %,
+  désactivés proprement sur Windows (non pris en charge).
+- **Signature APK permanente** (clé chiffrée + secret
+  `ANDROID_KEYSTORE_PASSPHRASE`) : permet d'installer une nouvelle version
+  par-dessus l'ancienne sans perdre les données. Build sans R8.
+- **Sync Wi-Fi / restauration** : fichier vérifié avant remplacement, copie
+  de sécurité, nettoyage des fichiers annexes SQLite, refus d'une base d'une
+  version plus récente, purge des anciennes copies de sécurité.
+- **Dates de fin de mois** : plus de saut de mois (31 janv. -> 3 mars) pour les
+  récurrences, l'échéancier des crédits et les périodes de budget
+  (schéma v14 : colonne `anchor_day`).
+- **Récurrences** : génération sérialisée, état enregistré après chaque
+  occurrence, rattrapage aussi au retour au premier plan.
+- **Crédits** : payer/annuler une échéance débite/recrédite le compte de
+  remboursement ; migration de la table d'épargne pour les très anciennes bases.
+- **Bilans** : comptes archivés exclus (comme le tableau de bord).
+  **Budgets** : dépenses filtrées par devise et par entité.
+  **Comptes** : les récurrences comptent comme données liées à la suppression.
+- Dépendances verrouillées (`pubspec.lock`), `.gitignore`, analyse CI non
+  bloquante sur les simples suggestions de style.
+
 ### 🔒 Sécurité et intégrité des données
 - **Migration complète des montants vers les centimes entiers** (schéma
   v13) : élimine définitivement le risque de dérive d'arrondi en virgule

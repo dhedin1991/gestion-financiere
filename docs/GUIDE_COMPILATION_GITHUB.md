@@ -52,3 +52,18 @@ Reviens me voir avec :
 - Ou simplement "ça marche !" pour qu'on passe au module suivant (Revenus & Dépenses)
 
 Je continuerai à coder les modules un par un : à chaque fois, tu n'auras qu'à renvoyer les nouveaux fichiers sur GitHub (même méthode qu'à l'étape 2) et relancer une compilation.
+
+
+## Signature de l'APK (une seule fois)
+
+Pour pouvoir installer chaque nouvelle version PAR-DESSUS l'ancienne sans
+perdre tes données, l'APK doit toujours être signé avec la même clé :
+
+1. Sur GitHub : **Settings** > **Secrets and variables** > **Actions** >
+   **New repository secret**.
+2. Nom : `ANDROID_KEYSTORE_PASSPHRASE` — valeur : le mot de passe de la clé
+   (fourni séparément, à garder en lieu sûr).
+3. Relance la compilation. Attention : le TOUT PREMIER APK signé ainsi ne
+   s'installe pas par-dessus une version signée autrement — exporte d'abord
+   une sauvegarde (Paramètres > Sauvegarde), désinstalle, installe, puis
+   restaure. Ensuite, les mises à jour se feront directement par-dessus.
