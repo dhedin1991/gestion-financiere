@@ -1,0 +1,23 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+coverage/
+*.iml
+.idea/
+.vscode/
+
+# Dossiers plateforme : générés à chaque build par la CI (flutter create)
+/android/
+/windows/
+/ios/
+/linux/
+/macos/
+/web/
+.metadata
+
+# Ne jamais versionner de clé de signature en clair
+*.jks
+*.keystore
+key.properties
+!android-signing/release.jks.enc

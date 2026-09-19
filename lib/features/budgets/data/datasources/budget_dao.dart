@@ -90,6 +90,16 @@ class BudgetDao {
       whereArgs.add(budget.categoryId);
     }
 
+    // Un budget en EUR ne doit pas additionner des dépenses en XOF, et un
+    // budget d'une entité ne doit compter que les dépenses des comptes de
+    // cette entité (sinon il absorbe aussi les dépenses des autres entités).
+    whereClauses.add('currency = ?');
+    whereArgs.add(budget.currency);
+    if (budget.entityId != null) {
+      whereClauses.add('account_id IN (SELECT id FROM accounts WHERE entity_id = ?)');
+      whereArgs.add(budget.entityId);
+    }
+
     final result = await db.rawQuery(
       'SELECT SUM(amount) as total FROM transactions WHERE ${whereClauses.join(' AND ')}',
       whereArgs,
