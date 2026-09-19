@@ -21,6 +21,7 @@ dependencies:
   # Base de données locale
   sqflite: ^2.3.3
   sqflite_common_ffi: ^2.3.3     # nécessaire pour Windows/Linux/macOS
+  sqlite3: ^2.4.0                # chargement de la bibliothèque SQLite sous Windows
   path: ^1.9.0
   path_provider: ^2.1.3
 

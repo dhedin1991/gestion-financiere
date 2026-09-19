@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Windows / dettes
+- **Windows** : l'app retombe sur la bibliothèque SQLite intégrée à Windows
+  (`winsqlite3.dll`) si aucun `sqlite3.dll` n'est fourni à côté de l'exécutable
+  (sinon plantage à la première lecture de la base, juste après la connexion).
+- **Dettes** : un paiement ne peut plus dépasser le reste dû.
+
 ### 🛠️ Correctifs de stabilité (audit général de septembre 2026)
 - **Plantages / écrans blancs au démarrage** : l'ouverture de la base de
   données n'est plus lancée en double au démarrage (une connexion « de test »

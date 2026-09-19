@@ -602,6 +602,12 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
                 final val = double.tryParse(v.replaceAll(',', '.'));
                 if (val == null) return 'Nombre invalide';
                 if (val <= 0) return 'Doit être supérieur à 0';
+                // Un paiement ne peut pas dépasser ce qui reste dû : sinon le
+                // reste deviendrait négatif et fausserait les bilans.
+                final remaining = widget.debt.remainingAmount;
+                if (val - remaining > 0.005) {
+                  return 'Dépasse le reste dû (${remaining.toStringAsFixed(0)} ${widget.debt.currency})';
+                }
                 return null;
               },
             ),
