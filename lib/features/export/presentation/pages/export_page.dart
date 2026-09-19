@@ -12,6 +12,7 @@ import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../providers/export_providers.dart';
+import '../../../../core/utils/external_activity_guard.dart';
 
 enum _Period { moisEnCours, trenteJours, tout, personnalise }
 
@@ -109,11 +110,11 @@ class _ExportPageState extends ConsumerState<ExportPage> {
   }
 
   Future<void> _importCsv() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await ExternalActivityGuard.run(() => FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
       dialogTitle: 'Choisir un fichier CSV à importer',
-    );
+    ));
     if (result == null || result.files.single.path == null) return;
 
     setState(() => _exporting = true);

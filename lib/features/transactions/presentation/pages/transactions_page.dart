@@ -468,9 +468,3 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     }
   }
 }
-
-// Petit utilitaire pour lire une valeur AsyncValue de façon synchrone
-// sans provoquer d'erreur si elle n'est pas encore chargée.
-extension _AsyncValueX<T> on AsyncValue<T> {
-  AsyncData<T>? get asData => whenOrNull(data: (d) => AsyncData(d)) as AsyncData<T>?;
-}

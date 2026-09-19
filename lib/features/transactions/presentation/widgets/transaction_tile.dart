@@ -43,7 +43,7 @@ class TransactionTile extends StatelessWidget {
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           leading: CircleAvatar(
-            backgroundColor: color.withOpacity(0.12),
+            backgroundColor: color.withValues(alpha: 0.12),
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
               color: color,

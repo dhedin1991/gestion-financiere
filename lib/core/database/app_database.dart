@@ -18,11 +18,26 @@ class AppDatabase {
   static const int _dbVersion = 13;
 
   Database? _database;
+  Future<Database>? _opening;
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+  /// Une seule ouverture à la fois : tous les appels simultanés au
+  /// démarrage (comptes, tableau de bord, récurrences, rappels...) attendent
+  /// la même ouverture au lieu d'en lancer chacun une.
+  Future<Database> get database {
+    final existing = _database;
+    if (existing != null) return Future.value(existing);
+    return _opening ??= _openOnce();
+  }
+
+  Future<Database> _openOnce() async {
+    try {
+      final db = await _initDatabase();
+      _database = db;
+      return db;
+    } catch (_) {
+      _opening = null; // permet de réessayer après un échec
+      rethrow;
+    }
   }
 
   /// Avant d'ouvrir la base pour de bon, vérifie si une migration vers le
@@ -43,10 +58,21 @@ class AppDatabase {
     if (!await file.exists()) return; // Première installation : rien à migrer.
 
     try {
-      final probe = await openDatabase(path, readOnly: true);
-      final versionResult = await probe.rawQuery('PRAGMA user_version');
-      await probe.close();
-      final currentVersion = (versionResult.first['user_version'] as num?)?.toInt() ?? 0;
+      // Lecture directe de la version dans l'en-tête du fichier SQLite
+      // (octets 60 à 63) : aucune seconde connexion n'est ouverte, donc
+      // aucun risque de fermer la vraie base en cours d'utilisation.
+      var currentVersion = 0;
+      final raf = await file.open();
+      try {
+        await raf.setPosition(60);
+        final bytes = await raf.read(4);
+        if (bytes.length == 4) {
+          currentVersion =
+              (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+        }
+      } finally {
+        await raf.close();
+      }
 
       if (currentVersion > 0 && currentVersion < centsMigrationVersion) {
         final timestamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
@@ -718,6 +744,13 @@ CREATE TABLE budgets (
   }
 
   Future<void> close() async {
+    final pending = _opening;
+    _opening = null;
+    if (pending != null) {
+      try {
+        await pending;
+      } catch (_) {}
+    }
     final db = _database;
     if (db != null) {
       await db.close();

@@ -1,6 +1,5 @@
 import '../../transactions/domain/entities/transaction.dart';
 import '../../transactions/domain/repositories/transaction_repository.dart';
-import '../domain/entities/recurring_transaction.dart';
 import '../domain/repositories/recurring_transaction_repository.dart';
 
 /// Génère les vraies transactions correspondant aux récurrences actives

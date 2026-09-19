@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// État vide soigné (icône + message + sous-texte optionnel), à utiliser
 /// partout où une liste n'a rien à afficher, plutôt qu'un simple Text nu.
@@ -27,7 +26,7 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withOpacity(0.5),
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 36, color: scheme.onSurfaceVariant),
@@ -36,7 +35,7 @@ class EmptyState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
@@ -47,7 +46,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 13, color: scheme.onSurfaceVariant),
+                style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
               ),
             ],
           ],

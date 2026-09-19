@@ -44,7 +44,7 @@ class SavingsHistoryPage extends ConsumerWidget {
               final isVersement = t.type == SavingsTransactionType.versement;
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: (isVersement ? Colors.green : Colors.red).withOpacity(0.15),
+                  backgroundColor: (isVersement ? Colors.green : Colors.red).withValues(alpha: 0.15),
                   child: Icon(
                     isVersement ? Icons.add : Icons.remove,
                     color: isVersement ? Colors.green : Colors.red,

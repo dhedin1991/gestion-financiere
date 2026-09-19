@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/navigation/app_back_button.dart';
 import '../providers/app_lock_providers.dart';
@@ -79,7 +78,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   Text(
                     'Entre ton code de récupération',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(

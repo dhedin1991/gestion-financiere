@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/database/database_initializer.dart';
+import 'core/utils/app_logger.dart';
+import 'core/utils/external_activity_guard.dart';
 import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
@@ -21,13 +23,36 @@ Future<void> main() async {
   // Nécessaire avant tout appel asynchrone au démarrage.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Charge les formats de date/montant en français (obligatoire pour
-  // que NumberFormat/DateFormat locale 'fr_FR' fonctionnent, sinon crash).
-  await initializeDateFormatting('fr_FR', null);
+  // Journal d'erreurs persistant + capture de toutes les erreurs non
+  // gérées : sans cela, une erreur en version release donne un écran
+  // blanc/gris sans aucune trace exploitable.
+  await AppLogger.initFileLogging();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    AppLogger.error(
+      'Erreur Flutter : ${details.exceptionAsString()}',
+      name: 'flutter',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    AppLogger.error('Erreur non interceptée', name: 'platform', error: error, stackTrace: stack);
+    return true;
+  };
+  ErrorWidget.builder = (details) => const _ErrorFallback();
 
-  // Initialise SQLite correctement selon la plateforme
-  // (mobile natif vs Windows/desktop qui a besoin de sqflite_common_ffi).
-  await DatabaseInitializer.initialize();
+  try {
+    // Charge les formats de date/montant en français (obligatoire pour
+    // que NumberFormat/DateFormat locale 'fr_FR' fonctionnent, sinon crash).
+    await initializeDateFormatting('fr_FR', null);
+
+    // Initialise SQLite correctement selon la plateforme
+    // (mobile natif vs Windows/desktop qui a besoin de sqflite_common_ffi).
+    await DatabaseInitializer.initialize();
+  } catch (e, st) {
+    AppLogger.error('Échec de l\'initialisation au démarrage', name: 'main', error: e, stackTrace: st);
+  }
 
   runApp(
     // ProviderScope = racine Riverpod, indispensable pour que
@@ -36,6 +61,32 @@ Future<void> main() async {
       child: GestionFinanciereApp(),
     ),
   );
+}
+
+/// Remplace l'écran gris/blanc par défaut de Flutter quand un widget plante
+/// à l'affichage : message lisible, et le reste de l'écran reste utilisable.
+class _ErrorFallback extends StatelessWidget {
+  const _ErrorFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Directionality(
+      textDirection: TextDirection.ltr,
+      child: ColoredBox(
+        color: Color(0xFFFFF3E0),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Cette zone n\'a pas pu s\'afficher. Reviens en arrière ou relance l\'app.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF5D4037), fontSize: 14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class GestionFinanciereApp extends ConsumerStatefulWidget {
@@ -69,7 +120,14 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     final lockPhase = ref.read(appLockControllerProvider).phase;
     if (lockPhase != AppLockPhase.unlocked) return;
 
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    // `inactive` = simple perte de focus (clic hors de la fenêtre sous
+    // Windows, barre de notifications, boîte de dialogue système sous
+    // Android) : ce n'est PAS une sortie de l'app. Seuls `paused` et
+    // `hidden` (app réellement passée en arrière-plan / réduite) comptent.
+    // Les sélecteurs de fichier et feuilles de partage de l'app elle-même
+    // sont aussi ignorés (voir ExternalActivityGuard).
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      if (ExternalActivityGuard.isActive) return;
       _backgroundedAt ??= DateTime.now();
       return;
     }

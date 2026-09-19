@@ -54,7 +54,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ),
         selected: isSelected,
-        selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+        selectedTileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
         onTap: () {
           Navigator.of(context).pop();
           if (item.route != currentLocation) context.go(item.route);

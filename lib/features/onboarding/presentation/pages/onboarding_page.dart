@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/onboarding_providers.dart';
 
@@ -98,13 +97,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           slide.description,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 14, color: scheme.onSurfaceVariant),
+                          style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),

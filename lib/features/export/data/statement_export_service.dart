@@ -11,6 +11,7 @@ import '../../accounts/domain/entities/account.dart';
 import '../../categories/domain/entities/category.dart';
 import '../../transactions/domain/entities/transaction.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/external_activity_guard.dart';
 
 /// Génère et partage un relevé des transactions, au format CSV (pour
 /// tableur / comptable) ou PDF (pour impression / archive).
@@ -56,10 +57,10 @@ class StatementExportService {
       csvContent,
     );
 
-    await Share.shareXFiles(
+    await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Export transactions',
-    );
+    ));
   }
 
   Future<void> exportPdf({
@@ -186,10 +187,10 @@ class StatementExportService {
       await doc.save(),
     );
 
-    await Share.shareXFiles(
+    await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Relevé de transactions',
-    );
+    ));
   }
 
   pw.Widget _summaryBox(String label, String value, PdfColor color) {

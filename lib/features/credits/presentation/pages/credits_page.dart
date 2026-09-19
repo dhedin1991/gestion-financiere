@@ -131,8 +131,8 @@ class _CreditCard extends ConsumerWidget {
                   Chip(
                     label: Text(isSolde ? 'Soldé' : 'Actif'),
                     backgroundColor: isSolde
-                        ? Colors.green.withOpacity(0.15)
-                        : Colors.blue.withOpacity(0.15),
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : Colors.blue.withValues(alpha: 0.15),
                     labelStyle: TextStyle(
                       color: isSolde ? Colors.green.shade800 : Colors.blue.shade800,
                       fontSize: 12,

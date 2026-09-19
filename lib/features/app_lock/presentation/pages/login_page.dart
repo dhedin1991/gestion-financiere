@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -94,7 +93,7 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [scheme.primary.withOpacity(0.08), scheme.surface],
+            colors: [scheme.primary.withValues(alpha: 0.08), scheme.surface],
           ),
         ),
         child: SafeArea(
@@ -113,13 +112,13 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
                       Text(
                         kAppName,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(fontSize: 19, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Bienvenue — connecte-toi pour continuer',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(fontSize: 13, color: scheme.onSurfaceVariant),
+                        style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 32),
                       TextField(

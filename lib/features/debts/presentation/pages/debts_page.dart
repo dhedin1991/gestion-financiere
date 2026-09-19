@@ -130,7 +130,7 @@ class _DebtCard extends ConsumerWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.15),
+          backgroundColor: color.withValues(alpha: 0.15),
           child: Icon(isDette ? Icons.arrow_upward : Icons.arrow_downward, color: color),
         ),
         title: Text(debt.personName, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -554,7 +554,7 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -576,7 +576,7 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

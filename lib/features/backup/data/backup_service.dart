@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/external_activity_guard.dart';
 
 /// En-tête binaire présent en début de tout fichier SQLite valide
 /// ("SQLite format 3\0"), utilisé pour vérifier qu'un fichier choisi par
@@ -50,11 +51,11 @@ class BackupService {
         'sauvegarde_gestion_financiere_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.db';
     final backupFile = await dbFile.copy(p.join(tempDir.path, backupName));
 
-    await Share.shareXFiles(
+    await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(backupFile.path)],
       subject: 'Sauvegarde $kAppName',
       text: 'Sauvegarde de tes données — garde ce fichier en lieu sûr, il n\'est pas chiffré.',
-    );
+    ));
   }
 
   /// Ouvre le sélecteur de fichier, valide qu'il s'agit bien d'une base
@@ -67,11 +68,11 @@ class BackupService {
   /// Lève [InvalidBackupFileException] si le fichier choisi n'est pas une
   /// base de données SQLite valide — dans ce cas, rien n'est modifié.
   Future<bool> restoreBackup() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await ExternalActivityGuard.run(() => FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['db'],
       dialogTitle: 'Choisir un fichier de sauvegarde (.db)',
-    );
+    ));
     if (result == null || result.files.single.path == null) return false;
 
     final pickedFile = File(result.files.single.path!);

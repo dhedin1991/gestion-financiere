@@ -6,7 +6,6 @@ import '../navigation/app_back_button.dart';
 import '../navigation/app_menu_button.dart';
 import '../utils/app_error_message.dart';
 import 'app_info_providers.dart';
-import 'app_info_service.dart';
 
 class AppInfoPage extends ConsumerWidget {
   const AppInfoPage({super.key});
@@ -71,7 +70,7 @@ class AppInfoPage extends ConsumerWidget {
                     Text(
                       'Taille du fichier de base de données sur cet appareil',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                         fontSize: 12,
                       ),
                     ),

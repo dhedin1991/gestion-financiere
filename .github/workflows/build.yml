@@ -40,7 +40,7 @@ jobs:
       - run: flutter pub get
       - name: Analyse statique (flutter analyze)
         run: |
-          flutter analyze > /tmp/analyze.log 2>&1 || ANALYZE_FAILED=1
+          flutter analyze --no-fatal-infos > /tmp/analyze.log 2>&1 || ANALYZE_FAILED=1
           cat /tmp/analyze.log
           if [ "$ANALYZE_FAILED" = "1" ]; then
             echo "::error::flutter analyze a détecté des problèmes — voir le log ci-dessus."

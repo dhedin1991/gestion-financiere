@@ -160,7 +160,7 @@ class _SavingsCard extends ConsumerWidget {
                   child: LinearProgressIndicator(
                     value: savings.progress,
                     minHeight: 10,
-                    backgroundColor: gaugeColor(savings.progress!).withOpacity(0.15),
+                    backgroundColor: gaugeColor(savings.progress!).withValues(alpha: 0.15),
                     valueColor: AlwaysStoppedAnimation(gaugeColor(savings.progress!)),
                   ),
                 ),

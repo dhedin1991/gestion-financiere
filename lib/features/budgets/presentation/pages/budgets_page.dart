@@ -186,7 +186,7 @@ class _BudgetCard extends ConsumerWidget {
                         child: LinearProgressIndicator(
                           value: ratio,
                           minHeight: 10,
-                          backgroundColor: color.withOpacity(0.15),
+                          backgroundColor: color.withValues(alpha: 0.15),
                           valueColor: AlwaysStoppedAnimation(color),
                         ),
                       ),

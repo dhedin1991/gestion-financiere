@@ -1,5 +1,3 @@
-import 'package:sqflite/sqflite.dart';
-
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/money.dart';
 

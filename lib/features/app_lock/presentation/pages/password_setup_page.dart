@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_logo.dart';
@@ -104,7 +103,7 @@ class _PasswordSetupPageState extends ConsumerState<PasswordSetupPage> {
                         Text(
                           widget.onCancel != null ? 'Modifier le mot de passe' : 'Créer ton mot de passe',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -112,7 +111,7 @@ class _PasswordSetupPageState extends ConsumerState<PasswordSetupPage> {
                               ? 'Choisis un nouveau mot de passe pour $kAppNameShort'
                               : 'Ce mot de passe protégera l\'accès à $kAppNameShort',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 13, color: scheme.onSurfaceVariant),
+                          style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 28),
                         TextField(
@@ -201,7 +200,7 @@ class _RecoveryCodeRevealPageState extends State<_RecoveryCodeRevealPage> {
                   const SizedBox(height: 16),
                   Text(
                     'Ton code de récupération',
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -214,7 +213,7 @@ class _RecoveryCodeRevealPageState extends State<_RecoveryCodeRevealPage> {
                   SelectableText(
                     widget.code,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
                   ),
                   const SizedBox(height: 24),
                   CheckboxListTile(

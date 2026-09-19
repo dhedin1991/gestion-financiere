@@ -40,7 +40,7 @@ class RecurringTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.15),
+          backgroundColor: color.withValues(alpha: 0.15),
           child: Icon(Icons.autorenew, color: color, size: 20),
         ),
         title: Text(recurring.description?.isNotEmpty == true ? recurring.description! : accountName),
