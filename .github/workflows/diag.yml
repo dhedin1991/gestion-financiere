@@ -26,6 +26,9 @@ jobs:
           flutter analyze --no-fatal-infos > /tmp/rep/analyze.txt 2>&1 || true
           flutter test > /tmp/rep/test.txt 2>&1 || true
           tail -c 60000 /tmp/rep/test.txt > /tmp/rep/test_tail.txt
+          flutter build apk --release --no-shrink > /tmp/rep/build_full.txt 2>&1 || true
+          tail -c 20000 /tmp/rep/build_full.txt > /tmp/rep/build_tail.txt
+          rm /tmp/rep/build_full.txt
       - name: Publier les rapports sur la branche ci-logs
         run: |
           cd /tmp/rep
