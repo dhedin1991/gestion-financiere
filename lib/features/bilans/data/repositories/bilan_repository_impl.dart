@@ -8,19 +8,20 @@ class BilanRepositoryImpl implements BilanRepository {
   BilanRepositoryImpl(this.dao);
 
   @override
-  Future<NetWorthSnapshot> refreshTodaySnapshot() async {
-    final snapshot = await dao.computeCurrentSnapshot();
-    await dao.upsertTodaySnapshot(snapshot);
+  Future<NetWorthSnapshot> refreshTodaySnapshot({int? entityId}) async {
+    final snapshot = await dao.computeCurrentSnapshot(entityId: entityId);
+    await dao.upsertTodaySnapshot(snapshot, entityId: entityId);
     return snapshot;
   }
 
   @override
-  Future<List<NetWorthSnapshot>> getNetWorthHistory() async {
-    return dao.getAllSnapshots();
+  Future<List<NetWorthSnapshot>> getNetWorthHistory({int? entityId}) async {
+    return dao.getAllSnapshots(entityId: entityId);
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getTransactionsBetween(DateTime start, DateTime end) async {
-    return dao.getTransactionsBetween(start, end);
+  Future<List<Map<String, dynamic>>> getTransactionsBetween(DateTime start, DateTime end,
+      {int? entityId}) async {
+    return dao.getTransactionsBetween(start, end, entityId: entityId);
   }
 }

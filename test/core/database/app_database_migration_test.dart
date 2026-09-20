@@ -30,13 +30,13 @@ void main() {
     return openDatabase(dbPath(), version: version, onCreate: (db, _) => onCreate(db));
   }
 
-  test('installation neuve : schéma v14 complet', () async {
+  test('installation neuve : schéma v15 complet', () async {
     final appDb = AppDatabase(directoryOverride: dir);
     final db = await appDb.database;
 
     final version = (await db.rawQuery('PRAGMA user_version')).first.values.first;
     expect(version, AppDatabase.schemaVersion);
-    expect(AppDatabase.schemaVersion, 14);
+    expect(AppDatabase.schemaVersion, 15);
 
     final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
         .map((r) => r['name'] as String)
@@ -67,7 +67,7 @@ void main() {
     await appDb.close();
   });
 
-  test('v13 -> v14 : colonne anchor_day ajoutée, données conservées', () async {
+  test('v13 -> v15 : colonne anchor_day ajoutée, données conservées', () async {
     final raw = await openRaw(13, (db) async {
       await db.execute('''
         CREATE TABLE recurring_transactions (
@@ -98,7 +98,7 @@ void main() {
     await appDb.close();
   });
 
-  test('v12 -> v14 : montants convertis en centimes entiers + sauvegarde de sécurité', () async {
+  test('v12 -> v15 : montants convertis en centimes entiers + sauvegarde de sécurité', () async {
     final raw = await openRaw(12, (db) async {
       await db.execute(
           'CREATE TABLE accounts (id INTEGER PRIMARY KEY, initial_balance REAL, current_balance REAL)');
@@ -127,6 +127,44 @@ void main() {
         .where((f) => p.basename(f.path).startsWith('avant_migration_centimes_'))
         .toList();
     expect(backups, isNotEmpty, reason: 'la sauvegarde avant migration doit exister');
+
+    await appDb.close();
+  });
+
+  test('v14 -> v15 : photos existantes rattachées à la première entité, index par entité', () async {
+    final raw = await openRaw(14, (db) async {
+      await db.execute(
+          'CREATE TABLE business_entities (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, created_at TEXT)');
+      await db.insert('business_entities', {'name': 'Personnel', 'type': 'personnel', 'created_at': 'x'});
+      await db.insert('business_entities', {'name': 'Société', 'type': 'entreprise', 'created_at': 'x'});
+      await db.execute('''
+        CREATE TABLE net_worth_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          snapshot_date TEXT NOT NULL,
+          net_worth REAL NOT NULL
+        )
+      ''');
+      await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
+      await db.insert('net_worth_snapshots', {'snapshot_date': '2026-09-01', 'net_worth': 500000});
+    });
+    await raw.close();
+
+    final appDb = AppDatabase(directoryOverride: dir);
+    final db = await appDb.database;
+
+    final old = (await db.query('net_worth_snapshots')).first;
+    expect(old['entity_id'], 1, reason: 'rattachée à Personnel');
+    expect(old['net_worth'], 500000);
+
+    // Deux entités peuvent avoir chacune leur photo le même jour...
+    await db.insert('net_worth_snapshots',
+        {'snapshot_date': '2026-09-01', 'net_worth': 100, 'entity_id': 2});
+    // ... mais pas deux fois pour la même entité.
+    expect(
+      () => db.insert('net_worth_snapshots',
+          {'snapshot_date': '2026-09-01', 'net_worth': 1, 'entity_id': 2}),
+      throwsA(isA<DatabaseException>()),
+    );
 
     await appDb.close();
   });

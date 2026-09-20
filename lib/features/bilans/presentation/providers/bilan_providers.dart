@@ -6,6 +6,7 @@ import '../../data/datasources/bilan_dao.dart';
 import '../../data/repositories/bilan_repository_impl.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../../domain/repositories/bilan_repository.dart';
+import '../../../entities/presentation/providers/entity_providers.dart';
 
 /// Périodes disponibles pour regrouper les revenus/dépenses.
 enum BilanPeriod { journalier, hebdomadaire, mensuel, trimestriel, semestriel, annuel }
@@ -42,8 +43,9 @@ final bilanRepositoryProvider = Provider<BilanRepository>((ref) {
 /// (remplace celle du jour si elle existe déjà).
 final netWorthHistoryProvider = FutureProvider.autoDispose<List<NetWorthSnapshot>>((ref) async {
   final repository = ref.watch(bilanRepositoryProvider);
-  await repository.refreshTodaySnapshot();
-  return repository.getNetWorthHistory();
+  final entityId = ref.watch(currentEntityIdProvider);
+  await repository.refreshTodaySnapshot(entityId: entityId);
+  return repository.getNetWorthHistory(entityId: entityId);
 });
 
 /// Détermine la date de début pour une période donnée, à partir d'une date de référence.
@@ -117,7 +119,9 @@ final revenueExpenseSummaryProvider =
 
   final latestEnd = _nextPeriodStart(query.period, _periodStartFor(query.period, now));
 
-  final transactions = await repository.getTransactionsBetween(earliestStart, latestEnd);
+  final entityId = ref.watch(currentEntityIdProvider);
+  final transactions =
+      await repository.getTransactionsBetween(earliestStart, latestEnd, entityId: entityId);
 
   // Construit la liste des périodes (bornes de début/fin), dans l'ordre chronologique.
   final periods = <PeriodSummary>[];

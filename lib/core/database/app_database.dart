@@ -22,7 +22,7 @@ class AppDatabase {
   final Directory? _directoryOverride;
 
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 14;
+  static const int _dbVersion = 15;
 
   /// Version de schéma que cette version de l'app sait lire.
   static const int schemaVersion = _dbVersion;
@@ -385,11 +385,13 @@ CREATE TABLE budgets (
         total_debts REAL NOT NULL,
         total_credits_remaining REAL NOT NULL,
         net_worth REAL NOT NULL,
+        entity_id INTEGER,
         created_at TEXT NOT NULL
       )
     ''');
 
-    await db.execute('CREATE UNIQUE INDEX idx_snapshot_date ON net_worth_snapshots (snapshot_date)');
+    await db.execute(
+        'CREATE UNIQUE INDEX idx_snapshot_date_entity ON net_worth_snapshots (snapshot_date, IFNULL(entity_id, 0))');
 
     await db.execute('''
       CREATE TABLE business_entities (
@@ -768,6 +770,31 @@ CREATE TABLE budgets (
       final cols = await db.rawQuery('PRAGMA table_info(recurring_transactions)');
       if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'anchor_day')) {
         await db.execute('ALTER TABLE recurring_transactions ADD COLUMN anchor_day INTEGER');
+      }
+    }
+
+    if (oldVersion < 15) {
+      // Bilans par entité : une photo du patrimoine net par jour ET par
+      // entité. Les photos existantes (d'avant) sont rattachées à la
+      // première entité (Personnel), seule à exister quand elles ont été
+      // prises. Migration non destructive : aucune donnée supprimée.
+      final cols = await db.rawQuery('PRAGMA table_info(net_worth_snapshots)');
+      if (cols.isNotEmpty) {
+        if (!cols.any((c) => c['name'] == 'entity_id')) {
+          await db.execute('ALTER TABLE net_worth_snapshots ADD COLUMN entity_id INTEGER');
+          final entities = await db.query('business_entities',
+              columns: ['id'], orderBy: 'id ASC', limit: 1);
+          if (entities.isNotEmpty) {
+            await db.update(
+              'net_worth_snapshots',
+              {'entity_id': entities.first['id']},
+              where: 'entity_id IS NULL',
+            );
+          }
+        }
+        await db.execute('DROP INDEX IF EXISTS idx_snapshot_date');
+        await db.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_date_entity ON net_worth_snapshots (snapshot_date, IFNULL(entity_id, 0))');
       }
     }
   }
