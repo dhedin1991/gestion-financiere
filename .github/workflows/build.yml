@@ -8,6 +8,8 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -136,6 +138,21 @@ jobs:
             done
             exit 1
           fi
+
+      - name: Publier le journal d'échec du build (branche ci-logs)
+        if: failure()
+        run: |
+          mkdir -p /tmp/rep
+          tail -c 15000 /tmp/build.log > /tmp/rep/build_tail.txt || true
+          cd /tmp/rep
+          git init -q
+          git checkout -q -b ci-logs
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          echo "${{ github.sha }}" > sha.txt
+          git add .
+          git commit -q -m "journal d'échec ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-logs
 
       - uses: actions/upload-artifact@v4
         with:
