@@ -102,15 +102,18 @@ jobs:
 
           val keyPropsFile = rootProject.file("key.properties")
           if (keyPropsFile.exists()) {
-              val keyProps = java.util.Properties()
-              keyPropsFile.inputStream().use { keyProps.load(it) }
+              // Lecture manuelle : dans un script Gradle, « java.util » est
+              // masqué par l'extension « java » du projet.
+              val keyProps = keyPropsFile.readLines()
+                  .filter { it.contains("=") }
+                  .associate { it.substringBefore("=") to it.substringAfter("=") }
               android {
                   signingConfigs {
                       create("release") {
-                          keyAlias = keyProps.getProperty("keyAlias")
-                          keyPassword = keyProps.getProperty("keyPassword")
-                          storeFile = file(keyProps.getProperty("storeFile"))
-                          storePassword = keyProps.getProperty("storePassword")
+                          keyAlias = keyProps.getValue("keyAlias")
+                          keyPassword = keyProps.getValue("keyPassword")
+                          storeFile = file(keyProps.getValue("storeFile"))
+                          storePassword = keyProps.getValue("storePassword")
                       }
                   }
                   buildTypes {
