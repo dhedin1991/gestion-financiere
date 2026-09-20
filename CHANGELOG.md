@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Bilans par entité (schéma v15)
+- Le patrimoine net et les graphiques Revenus/Dépenses sont désormais calculés
+  pour l'**entité active** uniquement (comptes, épargne, biens, dettes,
+  crédits), dans sa devise principale. Une photo du patrimoine par jour et par
+  entité ; les anciennes photos sont rattachées à l'entité « Personnel ».
+
 ### Windows / dettes
 - **Windows** : l'app retombe sur la bibliothèque SQLite intégrée à Windows
   (`winsqlite3.dll`) si aucun `sqlite3.dll` n'est fourni à côté de l'exécutable
