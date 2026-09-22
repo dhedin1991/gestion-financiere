@@ -21,6 +21,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
     setState(() => _busy = true);
     try {
       await ref.read(backupServiceProvider).exportBackup();
+      ref.invalidate(lastExportDateProvider);
     } catch (e) {
       if (mounted) {
         AppErrorMessage.showSnackBar(context, e);
@@ -80,6 +81,10 @@ class _BackupPageState extends ConsumerState<BackupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final lastExport = ref.watch(lastExportDateProvider).valueOrNull;
+    final needsReminder =
+        lastExport == null || DateTime.now().difference(lastExport) > const Duration(days: 30);
+
     return Scaffold(
       appBar: AppBar(
         leading: const AppBackButton(),
@@ -91,6 +96,28 @@ class _BackupPageState extends ConsumerState<BackupPage> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (needsReminder)
+                  Card(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: ListTile(
+                      leading: Icon(Icons.warning_amber_rounded,
+                          color: Theme.of(context).colorScheme.onErrorContainer),
+                      title: Text(
+                        lastExport == null
+                            ? 'Aucun export effectué pour l\'instant'
+                            : 'Dernier export il y a plus de 30 jours',
+                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+                      ),
+                      subtitle: Text(
+                        'Une copie de sécurité automatique existe dans le dossier de l\'app, '
+                        'mais elle ne te protège pas d\'un téléphone perdu ou cassé. '
+                        'Exporte régulièrement vers un endroit sûr (Drive, clé USB...).',
+                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+                      ),
+                    ),
+                  ),
+                if (needsReminder) const SizedBox(height: 8),
+
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.upload_outlined),

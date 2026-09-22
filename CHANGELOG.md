@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Sauvegarde automatique périodique
+- Une copie de sécurité de la base est prise automatiquement toutes les
+  7 jours (silencieuse, 3 dernières copies conservées) : protège contre un
+  bug interne entre deux exports manuels. Elle ne remplace PAS l'export
+  manuel (Sauvegarde > Exporter) : elle reste dans le dossier de l'app et
+  disparaît si l'app est désinstallée.
+- L'écran Sauvegarde affiche un rappel si aucun export manuel n'a été fait
+  depuis plus de 30 jours.
+
 ### Bilans par entité (schéma v15)
 - Le patrimoine net et les graphiques Revenus/Dépenses sont désormais calculés
   pour l'**entité active** uniquement (comptes, épargne, biens, dettes,

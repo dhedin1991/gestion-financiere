@@ -7,6 +7,7 @@ import 'core/database/database_initializer.dart';
 import 'core/utils/app_logger.dart';
 import 'core/utils/external_activity_guard.dart';
 import 'core/router/app_router.dart';
+import 'features/backup/presentation/providers/backup_providers.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
@@ -218,6 +219,7 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     final router = ref.watch(appRouterProvider);
     ref.watch(reminderBootstrapProvider);
     ref.watch(recurringGenerationBootstrapProvider);
+    ref.watch(autoBackupBootstrapProvider);
 
     return MaterialApp.router(
       title: kAppName,

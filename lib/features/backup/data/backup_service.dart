@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/database/app_database.dart';
@@ -58,6 +59,21 @@ class BackupService {
       subject: 'Sauvegarde $kAppName',
       text: 'Sauvegarde de tes données — garde ce fichier en lieu sûr, il n\'est pas chiffré.',
     ));
+
+    // Sert uniquement à afficher un rappel si aucun export n'a été fait
+    // depuis longtemps (voir lastExportDate) — pas de garantie que le
+    // fichier ait été réellement enregistré quelque part par la suite.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('dernier_export_manuel', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  static const _lastExportKey = 'dernier_export_manuel';
+
+  /// Date du dernier export manuel lancé (null si jamais fait).
+  Future<DateTime?> lastExportDate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final millis = prefs.getInt(_lastExportKey);
+    return millis == null ? null : DateTime.fromMillisecondsSinceEpoch(millis);
   }
 
   /// Ouvre le sélecteur de fichier, valide qu'il s'agit bien d'une base
