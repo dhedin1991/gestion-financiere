@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Fusion des données pour la synchronisation Wi-Fi
+- La sync propose maintenant deux modes : **Fusionner** (par défaut,
+  recommandé) combine les données des deux appareils sans rien perdre ni
+  dupliquer de part et d'autre ; **Remplacer** garde l'ancien comportement
+  (tout écraser).
+- La fusion rapproche comptes, catégories, entités, épargnes, dettes,
+  crédits, biens, budgets et récurrences par une clé naturelle (nom, pas
+  l'id, qui peut différer entre appareils) ; les transactions, versements
+  d'épargne et paiements de dette sont ajoutés de façon additive, sans
+  doublons ; une échéance de crédit marquée payée sur un appareil le reste
+  après fusion, même si l'autre appareil ne l'avait pas encore payée.
+- Les soldes des comptes et de l'épargne sont recalculés à partir des
+  mouvements réels après fusion, pour rester exacts.
+- Une copie de sécurité (`avant_fusion_...`) est prise avant, par précaution.
+- Testé avec de vraies bases SQLite (deux fichiers distincts simulant deux
+  appareils), pas seulement en théorie.
+
 ### Sauvegarde automatique périodique
 - Une copie de sécurité de la base est prise automatiquement toutes les
   7 jours (silencieuse, 3 dernières copies conservées) : protège contre un
