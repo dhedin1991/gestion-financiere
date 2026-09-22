@@ -55,7 +55,7 @@ class DatabaseFileUtils {
   }
 
   static final RegExp _safetyName =
-      RegExp(r'^avant_(restauration|synchronisation|migration_centimes)_.*\.db$');
+      RegExp(r'^avant_(restauration|synchronisation|fusion|migration_centimes)_.*\.db$');
 
   /// Ne garde que les [keep] copies de sécurité les plus récentes de chaque
   /// type : sans cela elles s'accumulent indéfiniment (données financières

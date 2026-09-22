@@ -180,7 +180,9 @@ class _SyncPageState extends ConsumerState<SyncPage> {
             _StatusCard(
               icon: Icons.check_circle,
               color: Colors.green,
-              message: 'Synchronisation réussie ! Redémarre l\'application pour voir les nouvelles données.',
+              message: syncState.mergeSummary == null
+                  ? 'Synchronisation réussie ! Redémarre l\'application pour voir les nouvelles données.'
+                  : 'Fusion réussie ! ${_summarize(syncState.mergeSummary!)}',
               loading: false,
               onDismiss: controller.reset,
             ),
@@ -196,6 +198,32 @@ class _SyncPageState extends ConsumerState<SyncPage> {
         ],
       ),
     );
+  }
+
+  String _summarize(Map<String, int> added) {
+    const labels = {
+      'transactions': 'transaction(s)',
+      'debt_payments': 'paiement(s) de dette',
+      'savings_transactions': 'mouvement(s) d\'épargne',
+      'credit_installments': 'échéance(s) de crédit',
+      'accounts': 'compte(s)',
+      'debts': 'dette(s)/créance(s)',
+      'credits': 'crédit(s)',
+      'savings': 'épargne(s)',
+      'patrimoine_items': 'bien(s)',
+      'budgets': 'budget(s)',
+      'recurring_transactions': 'récurrence(s)',
+      'categories': 'catégorie(s)',
+      'business_entities': 'entité(s)',
+    };
+    final parts = <String>[];
+    for (final entry in added.entries) {
+      if (entry.value <= 0) continue;
+      parts.add('${entry.value} ${labels[entry.key] ?? entry.key}');
+    }
+    return parts.isEmpty
+        ? 'Aucune nouveauté à ajouter, tout était déjà à jour.'
+        : '${parts.join(', ')} ajouté(e)s.';
   }
 
   Future<void> _confirmAndSync(BuildContext context, SyncController controller) async {
@@ -220,33 +248,42 @@ class _SyncPageState extends ConsumerState<SyncPage> {
     final localIsNewer =
         remoteModified != null && localModified != null && localModified.isAfter(remoteModified);
     final warning = localIsNewer
-        ? '\n\n⚠️ ATTENTION : les données de cet appareil sont PLUS RÉCENTES '
+        ? '\n\n⚠️ Les données de cet appareil sont plus récentes '
             '(${fmt.format(localModified)}) que celles de l\'autre appareil '
-            '(${fmt.format(remoteModified)}). Tu vas perdre les saisies faites ici depuis. '
-            'Fais plutôt la synchronisation dans l\'autre sens.'
+            '(${fmt.format(remoteModified)}). Avec la fusion, rien n\'est perdu ici ; '
+            'avec le remplacement complet, tu perdrais les saisies faites ici depuis.'
         : '';
 
-    final confirmed = await showDialog<bool>(
+    final mode = await showDialog<SyncMode>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirmer la synchronisation'),
+        title: const Text('Comment synchroniser ?'),
         content: Text(
-          'Toutes les données actuelles de CET appareil vont être remplacées '
-          'par celles de l\'appareil à l\'adresse $ip. Une copie de sécurité de '
-          'tes données actuelles est conservée avant le remplacement.$warning\n\nContinuer ?',
+          'Avec l\'appareil à l\'adresse $ip :\n\n'
+          '• Fusionner (recommandé) : combine les données des deux appareils, '
+          'rien n\'est perdu d\'un côté ni de l\'autre. Demande que les deux appareils '
+          'aient la même version de l\'app.\n\n'
+          '• Remplacer : efface toutes les données de CET appareil et les remplace '
+          'par celles de l\'autre.\n\n'
+          'Une copie de sécurité de tes données actuelles est conservée avant, quel '
+          'que soit le choix.$warning',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Annuler')),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(SyncMode.replace),
             child: const Text('Remplacer mes données', style: TextStyle(color: Colors.red)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(SyncMode.merge),
+            child: const Text('Fusionner'),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      await controller.syncFromServer(ip, pin);
+    if (mode != null) {
+      await controller.syncFromServer(ip, pin, mode: mode);
     }
   }
 }

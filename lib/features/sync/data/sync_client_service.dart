@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_file_utils.dart';
 import '../../../core/utils/app_logger.dart';
+import 'database_merge_service.dart';
 import 'dart:convert';
 
 class SyncClientService {
@@ -108,5 +109,62 @@ class SyncClientService {
     DatabaseFileUtils.pruneSafetyCopies(directory);
 
     AppLogger.info('Base remplacée par la copie de $ipAddress (v$remoteVersion)', name: 'sync_client');
+  }
+
+  /// Comme [downloadAndReplace], mais FUSIONNE les données distantes dans la
+  /// base locale au lieu de tout remplacer (voir DatabaseMergeService) :
+  /// les opérations propres à chaque appareil depuis la dernière
+  /// synchronisation sont conservées des deux côtés.
+  ///
+  /// La base locale n'est jamais fermée ni remplacée. Une copie de sécurité
+  /// (`avant_fusion_...`) est prise juste avant, par précaution, même si la
+  /// fusion elle-même n'écrase aucune donnée existante — seulement des
+  /// nouveautés ajoutées ou des cases précises mises à jour (voir le détail
+  /// des règles dans DatabaseMergeService).
+  ///
+  /// Retourne le nombre d'éléments ajoutés, par type, pour affichage.
+  Future<Map<String, int>> downloadAndMerge(
+      String ipAddress, String pin, AppDatabase appDatabase) async {
+    final uri = Uri.parse('http://$ipAddress:$port/database?pin=${Uri.encodeQueryComponent(pin)}');
+    final response = await http.get(uri).timeout(const Duration(minutes: 2));
+
+    if (response.statusCode == 401) {
+      throw Exception('Code PIN incorrect. Vérifie le code affiché sur l\'appareil qui partage.');
+    }
+    if (response.statusCode != 200) {
+      throw Exception('L\'appareil distant n\'a pas pu envoyer la base de données (code ${response.statusCode})');
+    }
+
+    final remoteVersion = DatabaseFileUtils.userVersionFromBytes(response.bodyBytes);
+    if (remoteVersion == null || remoteVersion < 1) {
+      throw Exception('Les données reçues ne sont pas une base de données valide. Rien n\'a été modifié.');
+    }
+    if (remoteVersion != AppDatabase.schemaVersion) {
+      throw Exception(
+        'La fusion demande que les deux appareils utilisent exactement la même '
+        'version de l\'application. Mets-les à jour, puis recommence. Rien n\'a été modifié.',
+      );
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    final dbPath = join(directory.path, 'gestion_financiere.db');
+    final tempFile = File('$dbPath.merge_tmp');
+    await tempFile.writeAsBytes(response.bodyBytes, flush: true);
+
+    try {
+      final db = await appDatabase.database;
+
+      // Copie de sécurité de l'état AVANT fusion (jamais fermée, snapshot
+      // cohérent même avec la base ouverte).
+      final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+      await db.rawQuery('VACUUM INTO ?', [join(directory.path, 'avant_fusion_$stamp.db')]);
+      DatabaseFileUtils.pruneSafetyCopies(directory);
+
+      final added = await DatabaseMergeService(db).mergeFrom(tempFile.path);
+      AppLogger.info('Fusion avec $ipAddress terminée : $added', name: 'sync_client');
+      return added;
+    } finally {
+      if (tempFile.existsSync()) await tempFile.delete();
+    }
   }
 }
