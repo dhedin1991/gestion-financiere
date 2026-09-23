@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Virements entre comptes
+- Nouveau bouton (icône ⇄) sur l'écran Revenus & Dépenses : crée deux
+  écritures liées (dépense + revenu) entre deux comptes de MÊME devise,
+  jamais comptées dans les totaux Revenus/Dépenses ni dans les budgets.
+  Supprimer un virement supprime toujours ses deux écritures ensemble.
+  Fonctionne aussi correctement à travers la fusion de synchronisation
+  Wi-Fi (le lien entre les deux écritures est reconstruit proprement).
+  Schéma v16 (colonne `transfer_group`).
+
+### Export et sauvegarde protégés par mot de passe
+- Case « Protéger par mot de passe » sur l'export CSV/PDF et sur la
+  sauvegarde complète : produit un fichier chiffré (AES-256-GCM, clé
+  dérivée par PBKDF2) au lieu du fichier en clair.
+- Nouvel écran « Déchiffrer un fichier » (Sauvegarde) : ouvre un export
+  chiffré avec son mot de passe ; pour une sauvegarde de base, propose de
+  la restaurer directement.
+
 ### Fusion des données pour la synchronisation Wi-Fi
 - La sync propose maintenant deux modes : **Fusionner** (par défaut,
   recommandé) combine les données des deux appareils sans rien perdre ni
