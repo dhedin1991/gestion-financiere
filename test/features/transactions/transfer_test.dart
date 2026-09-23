@@ -6,7 +6,6 @@ import 'package:gestion_financiere/features/audit_log/data/audit_log_dao.dart';
 import 'package:gestion_financiere/features/transactions/data/datasources/transaction_dao.dart';
 import 'package:gestion_financiere/features/transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:gestion_financiere/features/transactions/domain/entities/transaction.dart';
-import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Virement entre comptes : les deux écritures liées, l'effet sur les deux
@@ -35,8 +34,8 @@ void main() {
       'name': 'Compte courant',
       'account_type': 'courant',
       'currency': 'XOF',
-      'initial_balance': 1000000,
-      'current_balance': 1000000,
+      'initial_balance': 100000000,
+      'current_balance': 100000000,
       'is_archived': 0,
       'created_at': '2026-01-01T00:00:00.000',
       'updated_at': '2026-01-01T00:00:00.000',
@@ -71,8 +70,8 @@ void main() {
 
     final db = await appDb.database;
     final accounts = {for (final a in await db.query('accounts')) a['id']: a};
-    expect((accounts[1]!['current_balance'] as num).round(), 950000);
-    expect((accounts[2]!['current_balance'] as num).round(), 50000);
+    expect((accounts[1]!['current_balance'] as num).round(), 95000000);
+    expect((accounts[2]!['current_balance'] as num).round(), 5000000);
 
     final transactions = await repo.getTransactions(limit: 10);
     expect(transactions, hasLength(2));
@@ -112,7 +111,7 @@ void main() {
 
     final db = await appDb.database;
     final accounts = {for (final a in await db.query('accounts')) a['id']: a};
-    expect((accounts[1]!['current_balance'] as num).round(), 1000000);
+    expect((accounts[1]!['current_balance'] as num).round(), 100000000);
     expect((accounts[2]!['current_balance'] as num).round(), 0);
   });
 
