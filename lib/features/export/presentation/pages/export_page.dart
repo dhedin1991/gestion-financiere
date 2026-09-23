@@ -30,6 +30,14 @@ class _ExportPageState extends ConsumerState<ExportPage> {
   _Period _period = _Period.moisEnCours;
   DateTimeRange? _customRange;
   bool _exporting = false;
+  bool _protectWithPassword = false;
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   (DateTime?, DateTime?) _resolveRange() {
     final now = DateTime.now();
@@ -62,6 +70,14 @@ class _ExportPageState extends ConsumerState<ExportPage> {
   }
 
   Future<void> _export({required bool asPdf}) async {
+    if (_protectWithPassword && _passwordController.text.trim().length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le mot de passe doit faire au moins 4 caractères.')),
+      );
+      return;
+    }
+    final password = _protectWithPassword ? _passwordController.text.trim() : null;
+
     setState(() => _exporting = true);
     try {
       final (from, to) = _resolveRange();
@@ -92,12 +108,14 @@ class _ExportPageState extends ConsumerState<ExportPage> {
           categories: categories,
           periodFrom: from,
           periodTo: to,
+          password: password,
         );
       } else {
         await service.exportCsv(
           transactions: transactions,
           accounts: accounts,
           categories: categories,
+          password: password,
         );
       }
     } catch (e) {
@@ -198,6 +216,25 @@ class _ExportPageState extends ConsumerState<ExportPage> {
           ),
           const SizedBox(height: 24),
           Text('Format', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          CheckboxListTile(
+            value: _protectWithPassword,
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Protéger par mot de passe'),
+            subtitle: const Text(
+              'Fichier chiffré (.enc), à déchiffrer dans l\'app (Sauvegarde > Déchiffrer un fichier).',
+              style: TextStyle(fontSize: 12),
+            ),
+            onChanged: (v) => setState(() => _protectWithPassword = v ?? false),
+          ),
+          if (_protectWithPassword) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Mot de passe (au moins 4 caractères)'),
+            ),
+          ],
           const SizedBox(height: 12),
           if (_exporting)
             const Center(child: Padding(

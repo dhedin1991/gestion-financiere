@@ -30,13 +30,13 @@ void main() {
     return openDatabase(dbPath(), version: version, onCreate: (db, _) => onCreate(db));
   }
 
-  test('installation neuve : schéma v15 complet', () async {
+  test('installation neuve : schéma v16 complet', () async {
     final appDb = AppDatabase(directoryOverride: dir);
     final db = await appDb.database;
 
     final version = (await db.rawQuery('PRAGMA user_version')).first.values.first;
     expect(version, AppDatabase.schemaVersion);
-    expect(AppDatabase.schemaVersion, 15);
+    expect(AppDatabase.schemaVersion, 16);
 
     final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
         .map((r) => r['name'] as String)
@@ -165,6 +165,29 @@ void main() {
           {'snapshot_date': '2026-09-01', 'net_worth': 1, 'entity_id': 2}),
       throwsA(isA<DatabaseException>()),
     );
+
+    await appDb.close();
+  });
+
+  test('v15 -> v16 : colonne transfer_group ajoutée, transactions existantes conservées', () async {
+    final raw = await openRaw(15, (db) async {
+      await db.execute(
+          'CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, account_id INTEGER, type TEXT, amount INTEGER, transaction_date TEXT)');
+      await db.insert('transactions',
+          {'account_id': 1, 'type': 'depense', 'amount': 100000, 'transaction_date': '2026-09-01'});
+    });
+    await raw.close();
+
+    final appDb = AppDatabase(directoryOverride: dir);
+    final db = await appDb.database;
+
+    final cols = (await db.rawQuery('PRAGMA table_info(transactions)')).map((c) => c['name']).toSet();
+    expect(cols, contains('transfer_group'));
+
+    final rows = await db.query('transactions');
+    expect(rows, hasLength(1));
+    expect(rows.first['amount'], 100000);
+    expect(rows.first['transfer_group'], isNull);
 
     await appDb.close();
   });

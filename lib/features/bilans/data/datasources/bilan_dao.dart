@@ -194,7 +194,8 @@ class BilanDao {
     return db.query(
       'transactions',
       columns: ['type', 'amount', 'transaction_date'],
-      where: 'transaction_date >= ? AND transaction_date <= ? AND currency = ?'
+      where: 'transaction_date >= ? AND transaction_date <= ? AND currency = ? '
+          'AND transfer_group IS NULL' // un virement n'est ni un revenu ni une dépense
           '${entityId == null ? '' : ' AND ${_accountInEntity('account_id')}'}',
       whereArgs: [
         start.toIso8601String(),

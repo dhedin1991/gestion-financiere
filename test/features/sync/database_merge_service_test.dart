@@ -132,6 +132,65 @@ void main() {
     expect(transactions.first['description'], 'Virement');
   });
 
+  test('un virement fusionné garde ses deux écritures liées par un NOUVEL id local', () async {
+    final localAcc1 = await insertAccount(local, 'Compte courant', balanceCents: 1000000);
+    final localAcc2 = await insertAccount(local, 'Épargne');
+    final remoteAcc1 = await insertAccount(remote, 'Compte courant', balanceCents: 1000000);
+    final remoteAcc2 = await insertAccount(remote, 'Épargne');
+
+    // Virement créé uniquement sur l'appareil distant.
+    final remoteDb = await remote.database;
+    final depenseId = await remoteDb.insert('transactions', {
+      'account_id': remoteAcc1,
+      'type': 'depense',
+      'amount': 50000,
+      'currency': 'XOF',
+      'description': 'Virement',
+      'transaction_date': '2026-09-01T00:00:00.000',
+      'created_at': '2026-09-01T00:00:00.000',
+      'updated_at': '2026-09-01T00:00:00.000',
+    });
+    await remoteDb.update('transactions', {'transfer_group': depenseId}, where: 'id = ?', whereArgs: [depenseId]);
+    await remoteDb.insert('transactions', {
+      'account_id': remoteAcc2,
+      'type': 'revenu',
+      'amount': 50000,
+      'currency': 'XOF',
+      'description': 'Virement',
+      'transaction_date': '2026-09-01T00:00:00.000',
+      'created_at': '2026-09-01T00:00:00.000',
+      'updated_at': '2026-09-01T00:00:00.000',
+      'transfer_group': depenseId,
+    });
+
+    final localDb = await local.database;
+    final remoteFile = File(p.join(dir.path, 'remote', 'gestion_financiere.db'));
+    await remoteDb.rawQuery('PRAGMA wal_checkpoint(FULL)');
+
+    final added = await DatabaseMergeService(localDb).mergeFrom(remoteFile.path);
+    expect(added['transactions'], 2);
+
+    final transactions = await localDb.query('transactions');
+    expect(transactions, hasLength(2));
+    final groups = transactions.map((t) => t['transfer_group']).toSet();
+    expect(groups, hasLength(1), reason: 'toujours liées entre elles après fusion');
+    // Le nouveau transfer_group local doit être l'id local de la ligne
+    // "dépense" elle-même, pas le transfer_group brut venu du fichier distant.
+    final depenseRow = transactions.firstWhere((t) => t['type'] == 'depense');
+    expect(groups.first, depenseRow['id']);
+
+    // Soldes recalculés correctement des deux côtés du virement.
+    final accounts = {for (final a in await localDb.query('accounts')) a['id']: a};
+    expect((accounts[localAcc1]!['current_balance'] as num).round(), 950000);
+    expect((accounts[localAcc2]!['current_balance'] as num).round(), 50000);
+
+    // Rejouer la fusion ne duplique pas le virement.
+    final secondRun = await DatabaseMergeService(localDb).mergeFrom(remoteFile.path);
+    expect(secondRun['transactions'] ?? 0, 0);
+    final afterSecond = await localDb.query('transactions');
+    expect(afterSecond, hasLength(2));
+  });
+
   test('une échéance de crédit payée sur un appareil le reste après fusion', () async {
     final localAccId = await insertAccount(local, 'Compte courant');
     final remoteAccId = await insertAccount(remote, 'Compte courant');

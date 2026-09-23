@@ -21,7 +21,10 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.type == TransactionType.revenu;
-    final color = isIncome ? const Color(0xFF16A085) : const Color(0xFFE74C3C);
+    final isTransfer = transaction.isTransfer;
+    final color = isTransfer
+        ? const Color(0xFF5C6BC0)
+        : (isIncome ? const Color(0xFF16A085) : const Color(0xFFE74C3C));
     final formatter = NumberFormat.currency(
       locale: 'fr_FR',
       symbol: transaction.currency,
@@ -45,7 +48,9 @@ class TransactionTile extends StatelessWidget {
           leading: CircleAvatar(
             backgroundColor: color.withValues(alpha: 0.12),
             child: Icon(
-              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+              isTransfer
+                  ? Icons.swap_horiz
+                  : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
               color: color,
               size: 20,
             ),

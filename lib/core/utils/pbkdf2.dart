@@ -50,6 +50,23 @@ class Pbkdf2 {
     return buffer.toString();
   }
 
+  /// Comme [deriveHex], mais retourne directement les octets bruts —
+  /// utilisé pour dériver une clé de chiffrement AES (pas seulement un
+  /// hash à comparer).
+  static Uint8List deriveBytes({
+    required String password,
+    required List<int> salt,
+    int iterations = defaultIterations,
+    int keyLengthBytes = defaultKeyLengthBytes,
+  }) {
+    return _derive(
+      password: utf8.encode(password),
+      salt: salt,
+      iterations: iterations,
+      keyLengthBytes: keyLengthBytes,
+    );
+  }
+
   static Uint8List _derive({
     required List<int> password,
     required List<int> salt,

@@ -14,6 +14,10 @@ class FinancialTransaction {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Non nul si cette transaction est une moitié d'un virement entre
+  /// comptes : les deux écritures liées partagent cette même valeur.
+  final int? transferGroup;
+
   const FinancialTransaction({
     this.id,
     required this.accountId,
@@ -26,7 +30,10 @@ class FinancialTransaction {
     required this.transactionDate,
     required this.createdAt,
     required this.updatedAt,
+    this.transferGroup,
   });
+
+  bool get isTransfer => transferGroup != null;
 
   /// Impact réel sur le solde du compte (négatif pour une dépense).
   double get signedAmount => type == TransactionType.depense ? -amount : amount;
@@ -43,6 +50,7 @@ class FinancialTransaction {
     DateTime? transactionDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? Function()? transferGroup,
   }) {
     return FinancialTransaction(
       id: id ?? this.id,
@@ -56,6 +64,7 @@ class FinancialTransaction {
       transactionDate: transactionDate ?? this.transactionDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
+      transferGroup: transferGroup != null ? transferGroup() : this.transferGroup,
     );
   }
 }

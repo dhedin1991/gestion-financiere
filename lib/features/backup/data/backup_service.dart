@@ -13,6 +13,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/database_file_utils.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/external_activity_guard.dart';
+import '../../../core/utils/file_encryption.dart';
 
 /// En-tête binaire présent en début de tout fichier SQLite valide
 /// ("SQLite format 3\0"), utilisé pour vérifier qu'un fichier choisi par
@@ -43,21 +44,33 @@ class BackupService {
     return p.join(directory.path, 'gestion_financiere.db');
   }
 
-  Future<void> exportBackup() async {
+  Future<void> exportBackup({String? password}) async {
     final dbFile = File(await _dbPath());
     if (!await dbFile.exists()) {
       throw Exception('Base de données introuvable.');
     }
 
     final tempDir = await getTemporaryDirectory();
-    final backupName =
+    final baseName =
         'sauvegarde_gestion_financiere_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.db';
-    final backupFile = await dbFile.copy(p.join(tempDir.path, backupName));
+
+    final File backupFile;
+    final String shareText;
+    if (password != null && password.isNotEmpty) {
+      final encrypted = FileEncryption.encryptBytes(await dbFile.readAsBytes(), password);
+      backupFile = File(p.join(tempDir.path, '$baseName.enc'));
+      await backupFile.writeAsBytes(encrypted);
+      shareText = 'Sauvegarde protégée par mot de passe — à restaurer via '
+          'Sauvegarde > Déchiffrer un fichier, puis Restaurer.';
+    } else {
+      backupFile = await dbFile.copy(p.join(tempDir.path, baseName));
+      shareText = 'Sauvegarde de tes données — garde ce fichier en lieu sûr, il n\'est pas chiffré.';
+    }
 
     await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(backupFile.path)],
       subject: 'Sauvegarde $kAppName',
-      text: 'Sauvegarde de tes données — garde ce fichier en lieu sûr, il n\'est pas chiffré.',
+      text: shareText,
     ));
 
     // Sert uniquement à afficher un rappel si aucun export n'a été fait
@@ -92,9 +105,15 @@ class BackupService {
       dialogTitle: 'Choisir un fichier de sauvegarde (.db)',
     ));
     if (result == null || result.files.single.path == null) return false;
+    return _restoreFromFile(File(result.files.single.path!));
+  }
 
-    final pickedFile = File(result.files.single.path!);
+  /// Comme [restoreBackup], mais à partir d'un fichier déjà sur disque
+  /// (utilisé après [decryptPickedFile] : pas de second sélecteur de
+  /// fichier, le fichier déchiffré est déjà là).
+  Future<bool> restoreDecryptedDbFile(File decryptedFile) => _restoreFromFile(decryptedFile);
 
+  Future<bool> _restoreFromFile(File pickedFile) async {
     final pickedVersion = await DatabaseFileUtils.readUserVersion(pickedFile);
     if (pickedVersion != null && pickedVersion > AppDatabase.schemaVersion) {
       throw const InvalidBackupFileException(
@@ -143,6 +162,30 @@ class BackupService {
     await pickedFile.copy(dbPath);
     DatabaseFileUtils.pruneSafetyCopies(await getApplicationDocumentsDirectory());
     return true;
+  }
+
+  /// Ouvre le sélecteur de fichier, déchiffre le fichier `.enc` choisi avec
+  /// [password], et écrit le résultat dans un fichier temporaire portant le
+  /// même nom sans l'extension `.enc` (ex. `releve.pdf.enc` -> `releve.pdf`).
+  /// Retourne le fichier déchiffré, ou `null` si l'utilisateur a annulé.
+  /// Lève [FileEncryptionException] si le mot de passe est incorrect ou le
+  /// fichier n'est pas un export chiffré valide — rien n'est modifié.
+  Future<File?> decryptPickedFile(String password) async {
+    final result = await ExternalActivityGuard.run(() => FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['enc'],
+      dialogTitle: 'Choisir un fichier chiffré (.enc)',
+    ));
+    if (result == null || result.files.single.path == null) return null;
+
+    final pickedFile = File(result.files.single.path!);
+    final decrypted = FileEncryption.decryptBytes(await pickedFile.readAsBytes(), password);
+
+    final originalName = p.basenameWithoutExtension(pickedFile.path); // retire .enc
+    final tempDir = await getTemporaryDirectory();
+    final outFile = File(p.join(tempDir.path, originalName));
+    await outFile.writeAsBytes(decrypted);
+    return outFile;
   }
 
   Future<bool> _looksLikeSqliteDatabase(File file) async {

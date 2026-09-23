@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +14,7 @@ import '../../categories/domain/entities/category.dart';
 import '../../transactions/domain/entities/transaction.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/external_activity_guard.dart';
+import '../../../core/utils/file_encryption.dart';
 
 /// Génère et partage un relevé des transactions, au format CSV (pour
 /// tableur / comptable) ou PDF (pour impression / archive).
@@ -36,6 +39,7 @@ class StatementExportService {
     required List<FinancialTransaction> transactions,
     required List<Account> accounts,
     required List<AppCategory> categories,
+    String? password,
   }) async {
     final dateFmt = DateFormat('dd/MM/yyyy');
     final rows = <List<String>>[
@@ -52,14 +56,24 @@ class StatementExportService {
     ];
 
     final csvContent = const ListToCsvConverter(fieldDelimiter: ';').convert(rows);
-    final file = await _writeToTempFile(
-      'transactions_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv',
-      csvContent,
-    );
+    final baseName = 'transactions_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
+
+    final File file;
+    final String shareText;
+    if (password != null && password.isNotEmpty) {
+      final encrypted = FileEncryption.encryptBytes(Uint8List.fromList(utf8.encode(csvContent)), password);
+      file = await _writeBytesToTempFile('$baseName.enc', encrypted);
+      shareText = 'Fichier protégé par mot de passe — à déchiffrer dans $kAppName '
+          '(Sauvegarde > Déchiffrer un fichier).';
+    } else {
+      file = await _writeToTempFile(baseName, csvContent);
+      shareText = 'Export transactions';
+    }
 
     await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Export transactions',
+      text: shareText,
     ));
   }
 
@@ -69,6 +83,7 @@ class StatementExportService {
     required List<AppCategory> categories,
     DateTime? periodFrom,
     DateTime? periodTo,
+    String? password,
   }) async {
     final dateFmt = DateFormat('dd/MM/yyyy');
     final currency = transactions.isNotEmpty ? transactions.first.currency : 'XOF';
@@ -182,14 +197,25 @@ class StatementExportService {
       ),
     );
 
-    final file = await _writeBytesToTempFile(
-      'releve_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf',
-      await doc.save(),
-    );
+    final pdfBytes = await doc.save();
+    final baseName = 'releve_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+
+    final File file;
+    final String shareText;
+    if (password != null && password.isNotEmpty) {
+      final encrypted = FileEncryption.encryptBytes(Uint8List.fromList(pdfBytes), password);
+      file = await _writeBytesToTempFile('$baseName.enc', encrypted);
+      shareText = 'Fichier protégé par mot de passe — à déchiffrer dans $kAppName '
+          '(Sauvegarde > Déchiffrer un fichier).';
+    } else {
+      file = await _writeBytesToTempFile(baseName, pdfBytes);
+      shareText = 'Relevé de transactions';
+    }
 
     await ExternalActivityGuard.run(() => Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Relevé de transactions',
+      text: shareText,
     ));
   }
 

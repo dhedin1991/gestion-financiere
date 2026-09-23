@@ -12,6 +12,7 @@ import '../../../categories/presentation/providers/category_providers.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/transaction_tile.dart';
+import '../widgets/transfer_form_sheet.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
@@ -50,7 +51,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text('Revenus & Dépenses'),
-        actions: const [AppMenuButton()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Virement entre comptes',
+            onPressed: () => _showTransferForm(context),
+          ),
+          const AppMenuButton(),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTransactionForm(context, ref),
@@ -152,7 +160,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     return TransactionTile(
                       transaction: t,
                       accountName: accountName,
-                      onTap: () => _showTransactionForm(context, ref, existing: t),
+                      onTap: () => t.isTransfer
+                          ? _confirmDeleteTransfer(context, ref, t)
+                          : _showTransactionForm(context, ref, existing: t),
                     );
                   },
                 );
@@ -217,6 +227,47 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       ),
       builder: (_) => _TransactionFormSheet(existing: existing),
     );
+  }
+
+  void _showTransferForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const TransferFormSheet(),
+    );
+  }
+
+  Future<void> _confirmDeleteTransfer(BuildContext context, WidgetRef ref, FinancialTransaction t) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer ce virement ?'),
+        content: const Text(
+          'Les deux écritures liées à ce virement (sur les deux comptes) seront supprimées ensemble.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(transactionRepositoryProvider).deleteTransfer(t.transferGroup!);
+      ref.invalidate(accountsListProvider);
+      ref.invalidate(allAccountsIncludingArchivedProvider);
+      ref.invalidate(globalBalanceProvider);
+      ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(filteredTransactionsProvider);
+    } catch (e) {
+      if (context.mounted) AppErrorMessage.showSnackBar(context, e);
+    }
   }
 }
 

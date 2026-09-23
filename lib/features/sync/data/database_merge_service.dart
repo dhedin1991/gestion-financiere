@@ -90,10 +90,19 @@ class DatabaseMergeService {
             updateIfNewer: true);
 
         // ---- Fusion additive des mouvements ----
+        // Les virements (deux lignes liées par transfer_group) sont fusionnés
+        // à part : leur lien doit être reconstruit avec un nouvel id LOCAL
+        // partagé, jamais avec le transfer_group brut du fichier distant
+        // (qui n'a aucun sens ici et pourrait même coïncider par hasard avec
+        // un id local existant).
+        await _mergeTransferPairs(txn, added,
+            remap: {'account_id': accountMap, 'category_id': categoryMap});
+
         await _mergeAdditive(txn, added,
             table: 'transactions',
             remap: {'account_id': accountMap, 'category_id': categoryMap},
-            dedupeCols: ['account_id', 'transaction_date', 'type', 'amount', 'description']);
+            dedupeCols: ['account_id', 'transaction_date', 'type', 'amount', 'description'],
+            extraWhere: 'transfer_group IS NULL');
 
         await _mergeAdditive(txn, added,
             table: 'savings_transactions',
@@ -205,8 +214,9 @@ class DatabaseMergeService {
     required String table,
     required Map<String, Map<int, int>> remap,
     required List<String> dedupeCols,
+    String? extraWhere,
   }) async {
-    final remoteRows = await txn.query('remote.$table');
+    final remoteRows = await txn.query('remote.$table', where: extraWhere);
     final localRows = await txn.query(table, columns: dedupeCols);
 
     String keyOf(Map<String, dynamic> row) => dedupeCols.map((c) => '$c=${row[c]}').join('|');
@@ -219,6 +229,50 @@ class DatabaseMergeService {
       await txn.insert(table, values);
       localKeys.add(key);
       added[table] = (added[table] ?? 0) + 1;
+    }
+  }
+
+  /// Fusionne les virements (paires de lignes `transactions` partageant un
+  /// `transfer_group` distant) : une paire absente localement (comparée sur
+  /// compte+date+montant+description, comme pour les transactions
+  /// normales) est ajoutée avec un NOUVEL id local partagé entre ses deux
+  /// lignes, indépendant du `transfer_group` du fichier distant.
+  Future<void> _mergeTransferPairs(
+    Transaction txn,
+    Map<String, int> added, {
+    required Map<String, Map<int, int>> remap,
+  }) async {
+    final remoteRows = await txn.query('remote.transactions', where: 'transfer_group IS NOT NULL');
+    if (remoteRows.isEmpty) return;
+
+    final byGroup = <int, List<Map<String, dynamic>>>{};
+    for (final row in remoteRows) {
+      byGroup.putIfAbsent(row['transfer_group'] as int, () => []).add(row);
+    }
+
+    String dedupeKey(Map<String, dynamic> row) =>
+        '${row['account_id']}|${row['transaction_date']}|${row['type']}|${row['amount']}|${row['description']}';
+
+    final localKeys = (await txn.query('transactions',
+            columns: ['account_id', 'transaction_date', 'type', 'amount', 'description']))
+        .map(dedupeKey)
+        .toSet();
+
+    for (final pair in byGroup.values) {
+      if (pair.length != 2) continue; // paire incomplète côté distant : ignorée par sécurité
+      final remapped = pair.map((r) => _applyRemap(r, remap)..remove('id')).toList();
+      final keys = remapped.map(dedupeKey).toList();
+      if (keys.every(localKeys.contains)) continue; // déjà présent des deux côtés
+
+      final depense = remapped.firstWhere((r) => r['type'] == 'depense', orElse: () => remapped.first);
+      final revenu = remapped.firstWhere((r) => r['type'] == 'revenu', orElse: () => remapped.last);
+
+      final depenseId = await txn.insert('transactions', {...depense, 'transfer_group': null});
+      await txn.update('transactions', {'transfer_group': depenseId}, where: 'id = ?', whereArgs: [depenseId]);
+      await txn.insert('transactions', {...revenu, 'transfer_group': depenseId});
+
+      localKeys.addAll(keys);
+      added['transactions'] = (added['transactions'] ?? 0) + 2;
     }
   }
 

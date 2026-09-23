@@ -1,3 +1,4 @@
+import '../../../../core/utils/money.dart';
 import '../../../audit_log/data/audit_log_dao.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
@@ -83,12 +84,87 @@ class TransactionRepositoryImpl implements TransactionRepository {
     final row = await _dao.findById(id);
     if (row == null) return;
     final t = TransactionModel.fromMap(row);
+    if (t.isTransfer) {
+      // Une moitié de virement ne se supprime jamais seule : les deux
+      // écritures doivent rester cohérentes entre elles.
+      await deleteTransfer(t.transferGroup!);
+      return;
+    }
     await _dao.deleteWithBalanceUpdate(id, t.accountId, t.signedAmount);
     await _auditLog?.log(
       entityType: 'transaction',
       entityId: id,
       action: 'delete',
       oldValue: '${t.amount} ${t.currency}${t.description != null ? ' — ${t.description}' : ''}',
+    );
+  }
+
+  @override
+  Future<void> createTransfer({
+    required int fromAccountId,
+    required int toAccountId,
+    required double amount,
+    required String currency,
+    required DateTime date,
+    String? description,
+  }) async {
+    if (fromAccountId == toAccountId) {
+      throw ArgumentError('Le compte source et le compte destination doivent être différents.');
+    }
+    if (amount <= 0) {
+      throw ArgumentError('Le montant du virement doit être supérieur à 0.');
+    }
+    final now = DateTime.now();
+    final amountCents = Money.toCents(amount);
+    final label = description == null || description.trim().isEmpty
+        ? 'Virement'
+        : 'Virement — ${description.trim()}';
+
+    final depenseData = TransactionModel.toMap(FinancialTransaction(
+      accountId: fromAccountId,
+      type: TransactionType.depense,
+      amount: amount,
+      currency: currency,
+      description: label,
+      transactionDate: date,
+      createdAt: now,
+      updatedAt: now,
+    ));
+    final revenuData = TransactionModel.toMap(FinancialTransaction(
+      accountId: toAccountId,
+      type: TransactionType.revenu,
+      amount: amount,
+      currency: currency,
+      description: label,
+      transactionDate: date,
+      createdAt: now,
+      updatedAt: now,
+    ));
+
+    final (depenseId, _) = await _dao.insertTransfer(
+      depenseData: depenseData,
+      revenuData: revenuData,
+      fromAccountId: fromAccountId,
+      toAccountId: toAccountId,
+      amountCents: amountCents,
+    );
+
+    await _auditLog?.log(
+      entityType: 'transaction',
+      entityId: depenseId,
+      action: 'create',
+      newValue: 'Virement de $amount $currency (compte $fromAccountId -> compte $toAccountId)',
+    );
+  }
+
+  @override
+  Future<void> deleteTransfer(int transferGroup) async {
+    await _dao.deleteTransfer(transferGroup);
+    await _auditLog?.log(
+      entityType: 'transaction',
+      entityId: transferGroup,
+      action: 'delete',
+      oldValue: 'Virement supprimé',
     );
   }
 

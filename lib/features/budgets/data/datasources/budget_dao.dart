@@ -77,6 +77,7 @@ class BudgetDao {
 
     final whereClauses = <String>[
       "type = 'depense'",
+      'transfer_group IS NULL', // un virement n'est pas une dépense
       'transaction_date >= ?',
       'transaction_date < ?',
     ];

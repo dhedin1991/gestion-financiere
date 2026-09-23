@@ -22,7 +22,7 @@ class AppDatabase {
   final Directory? _directoryOverride;
 
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 15;
+  static const int _dbVersion = 16;
 
   /// Version de schéma que cette version de l'app sait lire.
   static const int schemaVersion = _dbVersion;
@@ -177,6 +177,7 @@ class AppDatabase {
         description TEXT,
         payment_method TEXT,
         transaction_date TEXT NOT NULL,
+        transfer_group INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
@@ -770,6 +771,17 @@ CREATE TABLE budgets (
       final cols = await db.rawQuery('PRAGMA table_info(recurring_transactions)');
       if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'anchor_day')) {
         await db.execute('ALTER TABLE recurring_transactions ADD COLUMN anchor_day INTEGER');
+      }
+    }
+
+    if (oldVersion < 16) {
+      // Virements entre comptes : les deux écritures liées (dépense +
+      // revenu) partagent ce même identifiant, pour être reconnues comme
+      // un virement (exclu des totaux Revenus/Dépenses) et supprimées
+      // ensemble. Migration non destructive.
+      final cols = await db.rawQuery('PRAGMA table_info(transactions)');
+      if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'transfer_group')) {
+        await db.execute('ALTER TABLE transactions ADD COLUMN transfer_group INTEGER');
       }
     }
 

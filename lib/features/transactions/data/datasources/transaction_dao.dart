@@ -87,12 +87,70 @@ class TransactionDao {
       conditions.add('transaction_date <= ?');
       args.add(toIso);
     }
+    // Un virement entre comptes n'est ni un revenu ni une dépense réelle :
+    // il ne doit jamais entrer dans les totaux Revenus/Dépenses.
+    conditions.add('transfer_group IS NULL');
     final result = await db.rawQuery(
       'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE ${conditions.join(' AND ')}',
       args,
     );
     final totalCents = (result.first['total'] as num).toInt();
     return Money.fromCents(totalCents);
+  }
+
+  /// Crée les deux écritures liées d'un virement (dépense sur le compte
+  /// source, revenu sur le compte destination) dans une seule transaction
+  /// SQL atomique, avec mise à jour des deux soldes. Retourne les deux ids
+  /// créés : `(depenseId, revenuId)`. Les deux lignes partagent le même
+  /// `transfer_group` (l'id de la première), qui permet de les reconnaître
+  /// comme un virement et de les supprimer ensemble.
+  Future<(int, int)> insertTransfer({
+    required Map<String, dynamic> depenseData,
+    required Map<String, dynamic> revenuData,
+    required int fromAccountId,
+    required int toAccountId,
+    required int amountCents,
+  }) async {
+    final db = await _appDatabase.database;
+    final now = DateTime.now().toIso8601String();
+    return db.transaction((txn) async {
+      final depenseId = await txn.insert('transactions', depenseData);
+      await txn.update('transactions', {'transfer_group': depenseId},
+          where: 'id = ?', whereArgs: [depenseId]);
+      final revenuId = await txn.insert(
+          'transactions', {...revenuData, 'transfer_group': depenseId});
+
+      await txn.rawUpdate(
+        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+        [amountCents, now, fromAccountId],
+      );
+      await txn.rawUpdate(
+        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+        [amountCents, now, toAccountId],
+      );
+      return (depenseId, revenuId);
+    });
+  }
+
+  /// Supprime les deux écritures d'un virement (identifié par son
+  /// `transfer_group`) et annule leur effet sur les deux comptes.
+  Future<void> deleteTransfer(int transferGroup) async {
+    final db = await _appDatabase.database;
+    final rows = await db.query('transactions', where: 'transfer_group = ?', whereArgs: [transferGroup]);
+    if (rows.isEmpty) return;
+    final now = DateTime.now().toIso8601String();
+    await db.transaction((txn) async {
+      for (final row in rows) {
+        final signedCents = row['type'] == 'revenu'
+            ? (row['amount'] as num).toInt()
+            : -(row['amount'] as num).toInt();
+        await txn.rawUpdate(
+          'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+          [signedCents, now, row['account_id']],
+        );
+      }
+      await txn.delete('transactions', where: 'transfer_group = ?', whereArgs: [transferGroup]);
+    });
   }
 
   /// Crée une transaction ET applique son effet sur le solde du compte,
