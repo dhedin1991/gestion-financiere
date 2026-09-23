@@ -81,7 +81,7 @@ void main() {
     expect(groups, hasLength(1), reason: 'les deux écritures partagent le même transfer_group');
   });
 
-  test('un virement n\\'entre jamais dans les totaux Revenus/Dépenses', () async {
+  test('un virement n\'entre jamais dans les totaux Revenus/Dépenses', () async {
     await repo.createTransfer(
       fromAccountId: 1,
       toAccountId: 2,
@@ -95,7 +95,7 @@ void main() {
     expect(income, 0);
   });
 
-  test('supprimer un virement supprime ses deux écritures et annule l\\'effet sur les deux soldes', () async {
+  test('supprimer un virement supprime ses deux écritures et annule l\'effet sur les deux soldes', () async {
     await repo.createTransfer(
       fromAccountId: 1,
       toAccountId: 2,

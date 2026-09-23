@@ -39,6 +39,19 @@ class _FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<void> createTransfer({
+    required int fromAccountId,
+    required int toAccountId,
+    required double amount,
+    required String currency,
+    required DateTime date,
+    String? description,
+  }) async {}
+
+  @override
+  Future<void> deleteTransfer(int transferGroup) async {}
+
+  @override
   Future<List<FinancialTransaction>> getTransactions({
     int? accountId,
     int? categoryId,

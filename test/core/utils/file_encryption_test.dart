@@ -6,7 +6,7 @@ import 'package:gestion_financiere/core/utils/file_encryption.dart';
 
 void main() {
   group('FileEncryption', () {
-    test('round-trip : les octets déchiffrés sont identiques aux octets d\\'origine', () {
+    test('round-trip : les octets déchiffrés sont identiques aux octets d\'origine', () {
       final data = Uint8List.fromList(utf8.encode('Contenu du relevé — montants : 12 345 XOF'));
       final encrypted = FileEncryption.encryptBytes(data, 'motDePasse123');
       final decrypted = FileEncryption.decryptBytes(encrypted, 'motDePasse123');
