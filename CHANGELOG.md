@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié]
 
+### Pagination des transactions
+- La liste Revenus & Dépenses charge par pages de 50 (bouton « Charger
+  plus ») au lieu d'un plafond fixe à 300 qui masquait silencieusement les
+  transactions plus anciennes sans le signaler.
+
+### Taux de change manuels
+- Nouvel écran Paramètres > Taux de change : saisis à la main combien vaut
+  1 unité de chaque devise en XOF (aucun appel réseau, l'app reste 100%
+  hors ligne). Le Tableau de bord affiche alors une estimation du solde
+  toutes devises confondues, en plus du solde par devise principale déjà
+  affiché. Schéma v17 (table `exchange_rates`).
+
 ### Virements entre comptes
 - Nouveau bouton (icône ⇄) sur l'écran Revenus & Dépenses : crée deux
   écritures liées (dépense + revenu) entre deux comptes de MÊME devise,
