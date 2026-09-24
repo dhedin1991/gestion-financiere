@@ -22,7 +22,7 @@ class AppDatabase {
   final Directory? _directoryOverride;
 
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 16;
+  static const int _dbVersion = 17;
 
   /// Version de schéma que cette version de l'app sait lire.
   static const int schemaVersion = _dbVersion;
@@ -393,6 +393,18 @@ CREATE TABLE budgets (
 
     await db.execute(
         'CREATE UNIQUE INDEX idx_snapshot_date_entity ON net_worth_snapshots (snapshot_date, IFNULL(entity_id, 0))');
+
+    // Taux de change saisis à la main (l'app reste 100% hors ligne, donc
+    // aucun taux n'est récupéré automatiquement en ligne). `rate_to_xof`
+    // exprime "1 unité de `currency` = combien de XOF" — sert uniquement à
+    // calculer une estimation globale toutes devises confondues.
+    await db.execute('''
+      CREATE TABLE exchange_rates (
+        currency TEXT PRIMARY KEY,
+        rate_to_xof REAL NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
 
     await db.execute('''
       CREATE TABLE business_entities (
@@ -772,6 +784,17 @@ CREATE TABLE budgets (
       if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'anchor_day')) {
         await db.execute('ALTER TABLE recurring_transactions ADD COLUMN anchor_day INTEGER');
       }
+    }
+
+    if (oldVersion < 17) {
+      // Taux de change manuels (voir _onCreate pour le détail).
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS exchange_rates (
+          currency TEXT PRIMARY KEY,
+          rate_to_xof REAL NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
     }
 
     if (oldVersion < 16) {

@@ -9,6 +9,7 @@ abstract class TransactionRepository {
     DateTime? to,
     String? searchText,
     int limit = 100,
+    int offset = 0,
   });
   Future<FinancialTransaction> createTransaction(FinancialTransaction transaction);
   Future<void> updateTransaction(FinancialTransaction transaction);

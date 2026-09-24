@@ -133,7 +133,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             child: transactionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
-              data: (transactions) {
+              data: (page) {
+                final transactions = page.items;
                 if (transactions.isEmpty) {
                   return EmptyState(
                     icon: filters.isActive ? Icons.search_off : Icons.receipt_long_outlined,
@@ -148,11 +149,29 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
                 final accounts = accountsAsync.valueOrNull ?? <Account>[];
 
+                final showFooter = page.hasMore || page.loadingMore;
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: transactions.length,
+                  itemCount: transactions.length + (showFooter ? 1 : 0),
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
+                    if (index >= transactions.length) {
+                      // Ligne de pied de liste : bouton "Charger plus" (ou
+                      // indicateur de chargement pendant la page suivante).
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: page.loadingMore
+                              ? const CircularProgressIndicator()
+                              : OutlinedButton(
+                                  onPressed: () =>
+                                      ref.read(filteredTransactionsProvider.notifier).loadMore(),
+                                  child: const Text('Charger plus'),
+                                ),
+                        ),
+                      );
+                    }
+
                     final t = transactions[index];
                     final account = accounts.where((a) => a.id == t.accountId).toList();
                     final accountName = account.isNotEmpty ? account.first.name : 'Compte supprimé';

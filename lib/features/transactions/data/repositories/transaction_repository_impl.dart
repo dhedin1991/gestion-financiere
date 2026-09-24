@@ -19,6 +19,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
     DateTime? to,
     String? searchText,
     int limit = 100,
+    int offset = 0,
   }) async {
     final rows = await _dao.find(
       accountId: accountId,
@@ -28,6 +29,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
       toIso: to?.toIso8601String(),
       searchText: searchText,
       limit: limit,
+      offset: offset,
     );
     return rows.map(TransactionModel.fromMap).toList();
   }

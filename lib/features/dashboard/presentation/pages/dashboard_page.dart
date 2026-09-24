@@ -13,6 +13,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../debts/domain/entities/debt.dart';
 import '../../../debts/presentation/providers/debt_providers.dart';
 import '../../../savings/presentation/providers/savings_providers.dart';
+import '../../../settings/presentation/providers/exchange_rate_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -258,10 +259,50 @@ class _GlobalBalanceCard extends ConsumerWidget {
               'Comptes en ${excluded.join(', ')} non inclus (pas de conversion de devises)',
               style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
+            const _ConvertedBalanceNote(),
           ],
         ],
       ),
     );
+  }
+}
+
+/// Estimation du solde toutes devises confondues, convertie en XOF avec les
+/// taux de change saisis manuellement (voir exchange_rate_providers.dart).
+/// N'affiche rien si toutes les devises utilisées ont un taux ; sinon
+/// propose d'aller les renseigner.
+class _ConvertedBalanceNote extends ConsumerWidget {
+  const _ConvertedBalanceNote();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final converted = ref.watch(convertedGlobalBalanceProvider).valueOrNull;
+    final missing = ref.watch(missingRatesProvider).valueOrNull ?? const <String>[];
+
+    if (converted != null) {
+      final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'XOF', decimalDigits: 0);
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          '≈ ${formatter.format(converted)} toutes devises confondues (taux saisis manuellement)',
+          style: const TextStyle(color: Colors.white70, fontSize: 12, fontStyle: FontStyle.italic),
+        ),
+      );
+    }
+    if (missing.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: GestureDetector(
+          onTap: () => context.push('/exchange-rates'),
+          child: Text(
+            'Renseigne un taux pour ${missing.join(', ')} pour voir un total converti',
+            style: const TextStyle(
+                color: Colors.white70, fontSize: 12, decoration: TextDecoration.underline),
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 

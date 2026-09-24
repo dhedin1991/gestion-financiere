@@ -77,6 +77,13 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => context.push('/sync'),
           ),
           ListTile(
+            leading: const Icon(Icons.currency_exchange),
+            title: const Text('Taux de change'),
+            subtitle: const Text('Pour le solde global toutes devises confondues'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/exchange-rates'),
+          ),
+          ListTile(
             leading: const Icon(Icons.archive_outlined),
             title: const Text('Archives'),
             trailing: const Icon(Icons.chevron_right),

@@ -60,6 +60,7 @@ class _FakeTransactionRepository implements TransactionRepository {
     DateTime? to,
     String? searchText,
     int limit = 100,
+    int offset = 0,
   }) async =>
       created;
 

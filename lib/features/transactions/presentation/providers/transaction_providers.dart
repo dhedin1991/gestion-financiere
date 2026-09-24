@@ -64,23 +64,82 @@ final transactionFiltersProvider = StateProvider.autoDispose<TransactionFilters>
   return const TransactionFilters();
 });
 
-/// Transactions filtrées selon [transactionFiltersProvider]. Se
-/// recalcule automatiquement à chaque changement de filtre.
-final filteredTransactionsProvider =
-    FutureProvider.autoDispose<List<FinancialTransaction>>((ref) async {
-  final filters = ref.watch(transactionFiltersProvider);
-  final repository = ref.watch(transactionRepositoryProvider);
-  final accounts = await ref.watch(accountsListProvider.future);
-  final accountIds = accounts.map((a) => a.id).toSet();
+/// Page de transactions filtrées + indicateur "il y en a d'autres".
+class TransactionsPage {
+  final List<FinancialTransaction> items;
+  final bool hasMore;
+  final bool loadingMore;
 
-  final results = await repository.getTransactions(
-    accountId: filters.accountId,
-    categoryId: filters.categoryId,
-    type: filters.type,
-    searchText: filters.search.trim().isEmpty ? null : filters.search,
-    limit: 1000,
-  );
-  return results.where((t) => accountIds.contains(t.accountId)).take(300).toList();
+  const TransactionsPage({required this.items, required this.hasMore, this.loadingMore = false});
+
+  TransactionsPage copyWith({List<FinancialTransaction>? items, bool? hasMore, bool? loadingMore}) {
+    return TransactionsPage(
+      items: items ?? this.items,
+      hasMore: hasMore ?? this.hasMore,
+      loadingMore: loadingMore ?? this.loadingMore,
+    );
+  }
+}
+
+/// Transactions filtrées selon [transactionFiltersProvider], chargées par
+/// pages de 50 (au lieu d'un plafond fixe à 300 qui cachait silencieusement
+/// les transactions plus anciennes sans le dire). Se recalcule depuis le
+/// début à chaque changement de filtre ; [loadMore] ajoute la page suivante.
+class TransactionListNotifier extends StateNotifier<AsyncValue<TransactionsPage>> {
+  TransactionListNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _load(reset: true);
+  }
+
+  static const pageSize = 50;
+  final Ref _ref;
+  int _offset = 0;
+
+  Future<void> _load({required bool reset}) async {
+    if (reset) {
+      _offset = 0;
+      state = const AsyncValue.loading();
+    }
+    try {
+      final filters = _ref.read(transactionFiltersProvider);
+      final repository = _ref.read(transactionRepositoryProvider);
+      final accounts = await _ref.read(accountsListProvider.future);
+      final accountIds = accounts.map((a) => a.id).toSet();
+
+      // On sur-demande un peu pour compenser les lignes filtrées ensuite
+      // par accountIds (comptes archivés exclus) et garder des pages pleines.
+      final fetched = await repository.getTransactions(
+        accountId: filters.accountId,
+        categoryId: filters.categoryId,
+        type: filters.type,
+        searchText: filters.search.trim().isEmpty ? null : filters.search,
+        limit: pageSize,
+        offset: _offset,
+      );
+      final page = fetched.where((t) => accountIds.contains(t.accountId)).toList();
+      final hasMore = fetched.length == pageSize;
+      _offset += fetched.length;
+
+      final previous = reset ? const <FinancialTransaction>[] : (state.valueOrNull?.items ?? const []);
+      state = AsyncValue.data(TransactionsPage(items: [...previous, ...page], hasMore: hasMore));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMore || current.loadingMore) return;
+    state = AsyncValue.data(current.copyWith(loadingMore: true));
+    await _load(reset: false);
+  }
+
+  void reset() => _load(reset: true);
+}
+
+final filteredTransactionsProvider =
+    StateNotifierProvider.autoDispose<TransactionListNotifier, AsyncValue<TransactionsPage>>((ref) {
+  ref.watch(transactionFiltersProvider); // reconstruit le notifier (donc réinitialise) au changement de filtre
+  return TransactionListNotifier(ref);
 });
 
 /// Total des revenus du mois en cours — utile pour le Tableau de bord.

@@ -30,13 +30,13 @@ void main() {
     return openDatabase(dbPath(), version: version, onCreate: (db, _) => onCreate(db));
   }
 
-  test('installation neuve : schéma v16 complet', () async {
+  test('installation neuve : schéma v17 complet', () async {
     final appDb = AppDatabase(directoryOverride: dir);
     final db = await appDb.database;
 
     final version = (await db.rawQuery('PRAGMA user_version')).first.values.first;
     expect(version, AppDatabase.schemaVersion);
-    expect(AppDatabase.schemaVersion, 16);
+    expect(AppDatabase.schemaVersion, 17);
 
     final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
         .map((r) => r['name'] as String)
@@ -188,6 +188,25 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.first['amount'], 100000);
     expect(rows.first['transfer_group'], isNull);
+
+    await appDb.close();
+  });
+
+  test('v16 -> v17 : table exchange_rates créée', () async {
+    final raw = await openRaw(16, (db) async {});
+    await raw.close();
+
+    final appDb = AppDatabase(directoryOverride: dir);
+    final db = await appDb.database;
+
+    final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
+        .map((r) => r['name'] as String)
+        .toSet();
+    expect(tables, contains('exchange_rates'));
+
+    await db.insert('exchange_rates', {'currency': 'EUR', 'rate_to_xof': 655.0, 'updated_at': 'x'});
+    final rows = await db.query('exchange_rates');
+    expect(rows, hasLength(1));
 
     await appDb.close();
   });

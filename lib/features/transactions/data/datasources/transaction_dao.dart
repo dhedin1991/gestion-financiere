@@ -20,6 +20,7 @@ class TransactionDao {
     String? toIso,
     String? searchText,
     int limit = 100,
+    int offset = 0,
   }) async {
     final db = await _appDatabase.database;
 
@@ -57,6 +58,7 @@ class TransactionDao {
       whereArgs: conditions.isEmpty ? null : args,
       orderBy: 'transaction_date DESC, id DESC',
       limit: limit,
+      offset: offset,
     );
   }
 
