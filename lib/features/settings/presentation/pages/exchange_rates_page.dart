@@ -73,7 +73,7 @@ class _ExchangeRatesPageState extends ConsumerState<ExchangeRatesPage> {
               padding: EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'Tous tes comptes sont en XOF : aucun taux n\\'est nécessaire.',
+                  'Tous tes comptes sont en XOF : aucun taux n\'est nécessaire.',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -87,7 +87,7 @@ class _ExchangeRatesPageState extends ConsumerState<ExchangeRatesPage> {
                 'Saisis manuellement combien vaut 1 unité de chaque devise en XOF. '
                 'Ces taux servent uniquement à estimer ton solde global toutes devises '
                 'confondues sur le Tableau de bord — ils ne sont jamais récupérés '
-                'automatiquement en ligne (l\\'app reste 100% hors ligne) et doivent être '
+                'automatiquement en ligne (l\'app reste 100% hors ligne) et doivent être '
                 'mis à jour à la main quand ils changent.',
                 style: TextStyle(fontSize: 13, color: Colors.grey),
               ),

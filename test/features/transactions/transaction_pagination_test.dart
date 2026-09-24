@@ -73,7 +73,7 @@ void main() {
     expect(all.map((t) => t.id).toSet(), hasLength(25), reason: 'aucun id en double');
   });
 
-  test('la dernière page indique bien qu\\'il n\\'y en a plus (moins que pageSize)', () async {
+  test('la dernière page indique bien qu\'il n\'y en a plus (moins que pageSize)', () async {
     final page1 = await repo.getTransactions(limit: 10, offset: 0);
     final page2 = await repo.getTransactions(limit: 10, offset: 10);
     final page3 = await repo.getTransactions(limit: 10, offset: 20);

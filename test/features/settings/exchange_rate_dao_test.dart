@@ -33,7 +33,7 @@ void main() {
     expect(rates['EUR'], 655.0);
   });
 
-  test('setRate sur une devise déjà enregistrée remplace l\\'ancien taux (pas de doublon)', () async {
+  test('setRate sur une devise déjà enregistrée remplace l\'ancien taux (pas de doublon)', () async {
     await dao.setRate('EUR', 650.0);
     await dao.setRate('EUR', 655.5);
     final rates = await dao.getAll();
