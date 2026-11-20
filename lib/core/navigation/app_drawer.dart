@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_constants.dart';
+import '../shell/global_search.dart';
 
 /// Menu latéral principal de l'application, listant tous les modules.
 /// Remplace l'ancienne barre de navigation du bas, devenue trop chargée
@@ -15,6 +16,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
+      _DrawerItem('Statistiques', Icons.insights_outlined, Icons.insights, '/statistics'),
     ];
     final comptabilite = <_DrawerItem>[
       _DrawerItem('Comptes', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, '/accounts'),
@@ -101,6 +103,15 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.search),
+              title: const Text('Rechercher…'),
+              onTap: () {
+                Navigator.of(context).pop();
+                showGlobalSearch(context);
+              },
+            ),
             const Divider(height: 1),
             Expanded(
               child: ListView(
@@ -120,7 +131,7 @@ class AppDrawer extends StatelessWidget {
                     title: const Text('Paramètres'),
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.push('/settings');
+                      context.go('/settings');
                     },
                   ),
                   const SizedBox(height: 8),

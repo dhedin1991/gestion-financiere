@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../providers/bilan_providers.dart';
+import '../../../../core/utils/app_format.dart';
 
 class RevenueExpenseTab extends ConsumerStatefulWidget {
   const RevenueExpenseTab({super.key});
@@ -55,7 +56,7 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
   Widget build(BuildContext context) {
     final query = BilanQuery(period: _period, periodsCount: 6);
     final summaryAsync = ref.watch(revenueExpenseSummaryProvider(query));
-    final fmt = NumberFormat.compactCurrency(locale: 'fr_FR', symbol: 'XOF');
+    final fmt = AppFormat.compactCurrency(symbol: 'XOF');
 
     return Column(
       children: [

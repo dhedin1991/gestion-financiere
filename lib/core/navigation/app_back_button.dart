@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../shell/app_shell.dart';
+
 /// Bouton retour à placer en `leading` de l'AppBar de **chaque page** de
 /// l'application (voir demande explicite : cohérence de navigation).
 ///
@@ -24,6 +26,10 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sur le poste de travail, les onglets remplacent le retour (sauf page empilée).
+    if (isDesktopWidth(context) && !Navigator.of(context).canPop()) {
+      return const SizedBox.shrink();
+    }
     return IconButton(
       icon: const Icon(Icons.arrow_back),
       tooltip: 'Retour',

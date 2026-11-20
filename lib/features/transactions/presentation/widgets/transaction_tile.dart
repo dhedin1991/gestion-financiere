@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/transaction.dart';
+import '../../../../core/utils/app_format.dart';
 
 class TransactionTile extends StatelessWidget {
   final FinancialTransaction transaction;
@@ -25,11 +26,7 @@ class TransactionTile extends StatelessWidget {
     final color = isTransfer
         ? const Color(0xFF5C6BC0)
         : (isIncome ? const Color(0xFF16A085) : const Color(0xFFE74C3C));
-    final formatter = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: transaction.currency,
-      decimalDigits: 0,
-    );
+    final formatter = AppFormat.currency(symbol: transaction.currency, decimalDigits: 0);
     final dateFormatter = DateFormat('dd MMM yyyy', 'fr_FR');
 
     final label = transaction.description?.isNotEmpty == true

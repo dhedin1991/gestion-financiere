@@ -538,3 +538,28 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     }
   }
 }
+
+/// Ouvre le formulaire de saisie d'une écriture (nouvelle ou existante).
+/// Utilisable depuis n'importe quel écran (bouton « + », Accueil, recherche).
+void showTransactionFormSheet(BuildContext context, {FinancialTransaction? existing}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _TransactionFormSheet(existing: existing),
+  );
+}
+
+/// Ouvre le formulaire de virement entre deux comptes.
+void showTransferFormSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => const TransferFormSheet(),
+  );
+}

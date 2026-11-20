@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/account.dart';
+import '../../../../core/utils/app_format.dart';
 
 class AccountCard extends StatelessWidget {
   final Account account;
@@ -13,11 +13,7 @@ class AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final formatter = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: account.currency,
-      decimalDigits: 0,
-    );
+    final formatter = AppFormat.currency(symbol: account.currency, decimalDigits: 0);
 
     return Card(
       child: InkWell(

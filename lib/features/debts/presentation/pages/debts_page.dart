@@ -9,6 +9,7 @@ import '../../../../core/widgets/empty_state.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/debt.dart';
 import '../providers/debt_providers.dart';
+import '../../../../core/utils/app_format.dart';
 
 class DebtsPage extends ConsumerWidget {
   const DebtsPage({super.key});
@@ -124,7 +125,7 @@ class _DebtCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDette = debt.type == DebtType.dette;
     final color = debt.isSettled ? Colors.grey : (isDette ? Colors.red : Colors.green);
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: debt.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: debt.currency);
 
     return Card(
       child: ListTile(
@@ -226,7 +227,7 @@ class _PaymentHistorySheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paymentsAsync = ref.watch(debtPaymentsProvider(debt.id!));
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: debt.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: debt.currency);
 
     return SafeArea(
       child: Padding(
@@ -531,7 +532,7 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: widget.debt.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: widget.debt.currency);
 
     return Padding(
       padding: EdgeInsets.only(

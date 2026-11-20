@@ -12,6 +12,7 @@ import '../providers/savings_providers.dart';
 import '../widgets/savings_movement_dialog.dart';
 import '../widgets/savings_form_sheet.dart';
 import 'savings_history_page.dart';
+import '../../../../core/utils/app_format.dart';
 
 class SavingsPage extends ConsumerWidget {
   const SavingsPage({super.key});
@@ -109,7 +110,7 @@ class _SavingsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: savings.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: savings.currency, decimalDigits: 0);
 
     String accountName = '...';
     final accounts = accountsAsync.valueOrNull ?? <Account>[];

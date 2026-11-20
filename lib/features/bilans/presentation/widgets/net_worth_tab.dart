@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../providers/bilan_providers.dart';
+import '../../../../core/utils/app_format.dart';
 
 class NetWorthTab extends ConsumerWidget {
   const NetWorthTab({super.key});
@@ -15,7 +16,7 @@ class NetWorthTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(netWorthHistoryProvider);
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: 'XOF', decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: 'XOF');
 
     return historyAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,7 +172,7 @@ class _BreakdownItem {
 
 class _BreakdownLegend extends StatelessWidget {
   final NetWorthSnapshot latest;
-  final NumberFormat fmt;
+  final AppNumberFormat fmt;
 
   const _BreakdownLegend({required this.latest, required this.fmt});
 

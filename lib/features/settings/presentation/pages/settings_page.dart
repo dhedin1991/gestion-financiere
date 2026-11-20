@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/theme/theme_providers.dart';
 
 /// Page **Paramètres**, unique point d'entrée pour tous les réglages de
 /// l'application. Remplace les entrées précédemment éparpillées dans le
@@ -19,9 +17,6 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
-    final themePreset = ref.watch(themePresetProvider);
-
     return Scaffold(
       appBar: AppBar(
         leading: const AppBackButton(),
@@ -42,18 +37,11 @@ class SettingsPage extends ConsumerWidget {
 
           _SectionHeader('Apparence'),
           ListTile(
-            leading: Icon(_themeIcon(themeMode)),
-            title: const Text('Thème'),
-            subtitle: Text(_themeLabel(themeMode)),
+            leading: const Icon(Icons.palette_outlined),
+            title: const Text('Affichage'),
+            subtitle: const Text('Zoom, thèmes, polices, fenêtres, recherche'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showThemeDialog(context, ref, themeMode),
-          ),
-          ListTile(
-            leading: Icon(Icons.palette_outlined, color: themePreset.swatch),
-            title: const Text('Style visuel'),
-            subtitle: Text(themePreset.label),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showPresetDialog(context, ref, themePreset),
+            onTap: () => context.push('/display-settings'),
           ),
           const Divider(height: 24),
 
@@ -119,83 +107,6 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-
-  IconData _themeIcon(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return Icons.light_mode_outlined;
-      case ThemeMode.dark:
-        return Icons.dark_mode_outlined;
-      case ThemeMode.system:
-        return Icons.brightness_auto_outlined;
-    }
-  }
-
-  String _themeLabel(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'Clair';
-      case ThemeMode.dark:
-        return 'Sombre';
-      case ThemeMode.system:
-        return 'Automatique (selon l\'appareil)';
-    }
-  }
-
-  void _showThemeDialog(BuildContext context, WidgetRef ref, ThemeMode current) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Thème'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ThemeMode.values.map((mode) {
-            return RadioListTile<ThemeMode>(
-              value: mode,
-              groupValue: current,
-              title: Text(_themeLabel(mode)),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(themeModeProvider.notifier).setThemeMode(value);
-                }
-                Navigator.of(dialogContext).pop();
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  void _showPresetDialog(BuildContext context, WidgetRef ref, AppThemePreset current) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Style de l\'application'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: AppThemePreset.values.map((preset) {
-              return RadioListTile<AppThemePreset>(
-                value: preset,
-                groupValue: current,
-                secondary: CircleAvatar(backgroundColor: preset.swatch, radius: 14),
-                title: Text(preset.label),
-                subtitle: Text(preset.description, style: const TextStyle(fontSize: 12)),
-                onChanged: (value) {
-                  if (value != null) {
-                    ref.read(themePresetProvider.notifier).setPreset(value);
-                  }
-                  Navigator.of(dialogContext).pop();
-                },
-              );
-            }).toList(),
-          ),
-        ),
       ),
     );
   }
