@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
+import '../../../../core/utils/app_format.dart';
 
 /// Page listant tous les éléments archivés de l'application. Pour l'instant,
 /// seul le module Comptes gère l'archivage — les autres modules (Épargne,
@@ -99,7 +99,7 @@ class _ArchivedAccountTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: account.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: account.currency);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),

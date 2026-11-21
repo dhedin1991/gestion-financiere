@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
@@ -9,6 +8,7 @@ import '../../domain/entities/credit.dart';
 import '../providers/credit_providers.dart';
 import '../widgets/credit_form_sheet.dart';
 import 'credit_detail_page.dart';
+import '../../../../core/utils/app_format.dart';
 
 class CreditsPage extends ConsumerWidget {
   const CreditsPage({super.key});
@@ -102,7 +102,7 @@ class _CreditCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: credit.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: credit.currency, decimalDigits: 0);
     final paidCountAsync = ref.watch(creditPaidCountProvider(credit.id!));
 
     final isSolde = credit.status == CreditStatus.solde;

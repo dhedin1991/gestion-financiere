@@ -1,77 +1,57 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_theme.dart';
 
-const String _themePrefsKey = 'theme_mode';
-const String _presetPrefsKey = 'theme_preset';
+const String _presetPrefsKey = 'theme_preset_v2';
+const String _oldPresetPrefsKey = 'theme_preset';
+const String _oldModePrefsKey = 'theme_mode';
 
-/// Gère le mode de thème choisi par l'utilisateur (clair, sombre, ou
-/// automatique selon le téléphone/PC), avec mémorisation entre les
-/// ouvertures de l'application.
-class ThemeModeController extends StateNotifier<ThemeMode> {
-  ThemeModeController() : super(ThemeMode.system) {
-    _loadSavedTheme();
-  }
-
-  Future<void> _loadSavedTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_themePrefsKey);
-    switch (saved) {
-      case 'light':
-        state = ThemeMode.light;
-        break;
-      case 'dark':
-        state = ThemeMode.dark;
-        break;
-      default:
-        state = ThemeMode.system;
-    }
-  }
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = mode;
-    final prefs = await SharedPreferences.getInstance();
-    switch (mode) {
-      case ThemeMode.light:
-        await prefs.setString(_themePrefsKey, 'light');
-        break;
-      case ThemeMode.dark:
-        await prefs.setString(_themePrefsKey, 'dark');
-        break;
-      case ThemeMode.system:
-        await prefs.setString(_themePrefsKey, 'system');
-        break;
-    }
-  }
-}
-
-final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>((ref) {
-  return ThemeModeController();
-});
-
-/// Gère le style visuel choisi (Bancaire Pro, Coloré, Nature, Minimaliste),
-/// indépendamment du mode clair/sombre, avec mémorisation entre les
-/// ouvertures de l'application.
+/// Gère le thème choisi (8 thèmes complets), avec mémorisation. Les anciens
+/// réglages (style + mode clair/sombre) sont convertis automatiquement.
 class ThemePresetController extends StateNotifier<AppThemePreset> {
-  ThemePresetController() : super(AppThemePreset.bancaire) {
-    _loadSavedPreset();
+  ThemePresetController() : super(AppThemePreset.nuitBancaire) {
+    _load();
   }
 
-  Future<void> _loadSavedPreset() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_presetPrefsKey);
-    state = AppThemePreset.values.firstWhere(
-      (p) => p.name == saved,
-      orElse: () => AppThemePreset.bancaire,
-    );
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_presetPrefsKey);
+      if (saved != null) {
+        state = AppThemePreset.values.firstWhere(
+          (p) => p.name == saved,
+          orElse: () => AppThemePreset.nuitBancaire,
+        );
+        return;
+      }
+      // Migration depuis l'ancien système (style + mode).
+      final oldPreset = prefs.getString(_oldPresetPrefsKey);
+      final oldMode = prefs.getString(_oldModePrefsKey);
+      AppThemePreset migrated;
+      switch (oldPreset) {
+        case 'colore':
+          migrated = AppThemePreset.violetNuit;
+          break;
+        case 'nature':
+          migrated = AppThemePreset.emeraude;
+          break;
+        case 'minimaliste':
+          migrated = AppThemePreset.graphite;
+          break;
+        default:
+          migrated = oldMode == 'light' ? AppThemePreset.clairPro : AppThemePreset.nuitBancaire;
+      }
+      state = migrated;
+    } catch (_) {}
   }
 
   Future<void> setPreset(AppThemePreset preset) async {
     state = preset;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_presetPrefsKey, preset.name);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_presetPrefsKey, preset.name);
+    } catch (_) {}
   }
 }
 

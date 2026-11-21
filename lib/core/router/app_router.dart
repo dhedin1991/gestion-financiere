@@ -1,141 +1,25 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/accounts/presentation/pages/accounts_page.dart';
-import '../../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../../features/transactions/presentation/pages/transactions_page.dart';
-import '../../features/debts/presentation/pages/debts_page.dart';
-import '../../features/budgets/presentation/pages/budgets_page.dart';
-import '../../features/savings/presentation/pages/savings_page.dart';
-import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
-import '../../features/credits/presentation/pages/credits_page.dart';
-import '../../features/bilans/presentation/pages/bilans_page.dart';
-import '../../features/archives/presentation/pages/archives_page.dart';
-import '../../features/settings/presentation/pages/exchange_rates_page.dart';
-import '../../features/sync/presentation/pages/sync_page.dart';
-import '../../features/app_lock/presentation/pages/security_settings_page.dart';
-import '../../features/export/presentation/pages/export_page.dart';
-import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
-import '../../features/backup/presentation/pages/backup_page.dart';
-import '../../features/help/presentation/pages/help_page.dart';
-import '../../features/audit_log/presentation/pages/audit_log_page.dart';
-import '../../features/settings/presentation/pages/settings_page.dart';
-import '../navigation/app_drawer.dart';
-import '../navigation/scaffold_key_provider.dart';
-import 'app_info_page.dart';
+import '../navigation/modules.dart';
+import '../shell/app_shell.dart';
 
-/// Provider unique du routeur — permet d'injecter facilement une logique
-/// de garde (ex: écran de verrouillage biométrique) à cet endroit plus tard,
-/// sans toucher le reste de l'app.
+/// Provider unique du routeur : toutes les routes viennent du registre
+/// des modules (`kModules`), enveloppées dans la coque [AppShell].
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
       ShellRoute(
-        builder: (context, state, child) => _MainScaffold(child: child),
+        builder: (context, state, child) => AppShell(child: child),
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => const DashboardPage(),
-          ),
-          GoRoute(
-            path: '/accounts',
-            builder: (context, state) => const AccountsPage(),
-          ),
-          GoRoute(
-            path: '/transactions',
-            builder: (context, state) => const TransactionsPage(),
-          ),
-          GoRoute(
-            path: '/debts',
-            builder: (context, state) => const DebtsPage(),
-          ),
-          GoRoute(
-            path: '/budgets',
-            builder: (context, state) => const BudgetsPage(),
-          ),
-          GoRoute(
-            path: '/savings',
-            builder: (context, state) => const SavingsPage(),
-          ),
-          GoRoute(
-            path: '/patrimoine',
-            builder: (context, state) => const PatrimoinePage(),
-          ),
-          GoRoute(
-            path: '/credits',
-            builder: (context, state) => const CreditsPage(),
-          ),
-          GoRoute(
-            path: '/bilans',
-            builder: (context, state) => const BilansPage(),
-          ),
-          GoRoute(
-            path: '/app-info',
-            builder: (context, state) => const AppInfoPage(),
-          ),
-          GoRoute(
-            path: '/sync',
-            builder: (context, state) => const SyncPage(),
-          ),
-          GoRoute(
-            path: '/exchange-rates',
-            builder: (context, state) => const ExchangeRatesPage(),
-          ),
-          GoRoute(
-            path: '/archives',
-            builder: (context, state) => const ArchivesPage(),
-          ),
-          GoRoute(
-            path: '/security',
-            builder: (context, state) => const SecuritySettingsPage(),
-          ),
-          GoRoute(
-            path: '/export',
-            builder: (context, state) => const ExportPage(),
-          ),
-          GoRoute(
-            path: '/recurring',
-            builder: (context, state) => const RecurringTransactionsPage(),
-          ),
-          GoRoute(
-            path: '/backup',
-            builder: (context, state) => const BackupPage(),
-          ),
-          GoRoute(
-            path: '/help',
-            builder: (context, state) => const HelpPage(),
-          ),
-          GoRoute(
-            path: '/audit-log',
-            builder: (context, state) => const AuditLogPage(),
-          ),
-          GoRoute(
-            path: '/settings',
-            builder: (context, state) => const SettingsPage(),
-          ),
-          // Les futurs modules s'ajouteront ici, un par un.
+          for (final m in kModules)
+            GoRoute(
+              path: m.route,
+              builder: (context, state) => m.builder(),
+            ),
         ],
       ),
     ],
   );
 });
-
-/// Structure commune (menu latéral) partagée par tous les écrans principaux.
-class _MainScaffold extends ConsumerWidget {
-  final Widget child;
-  const _MainScaffold({required this.child});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scaffoldKey = ref.watch(scaffoldKeyProvider);
-    final location = GoRouterState.of(context).uri.toString();
-
-    return Scaffold(
-      key: scaffoldKey,
-      drawer: AppDrawer(currentLocation: location),
-      body: child,
-    );
-  }
-}

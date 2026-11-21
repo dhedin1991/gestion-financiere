@@ -19,6 +19,7 @@ jobs:
           channel: 'stable'
 
       - run: flutter create --platforms=android --project-name gestion_financiere .
+      - run: flutter pub get && dart run flutter_launcher_icons
       - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
       - run: sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
       - name: Activer le core library desugaring (requis par flutter_local_notifications)
@@ -174,7 +175,7 @@ jobs:
           channel: 'stable'
 
       - run: flutter create --platforms=windows --project-name gestion_financiere .
-      - run: flutter pub get
+      - run: flutter pub get && dart run flutter_launcher_icons
       - run: flutter build windows --release
 
       - uses: actions/upload-artifact@v4

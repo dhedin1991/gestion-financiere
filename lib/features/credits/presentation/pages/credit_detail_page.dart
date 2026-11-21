@@ -9,6 +9,7 @@ import '../../domain/entities/credit.dart';
 import '../../domain/entities/credit_installment.dart';
 import '../providers/credit_providers.dart';
 import '../widgets/credit_form_sheet.dart';
+import '../../../../core/utils/app_format.dart';
 
 class CreditDetailPage extends ConsumerWidget {
   final Credit credit;
@@ -18,7 +19,7 @@ class CreditDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final installmentsAsync = ref.watch(creditInstallmentsProvider(credit.id!));
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: credit.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: credit.currency, decimalDigits: 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -169,7 +170,7 @@ class _InstallmentTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '', decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: '', decimalDigits: 0);
     final isPaid = installment.status == InstallmentStatus.payee;
 
     return Card(

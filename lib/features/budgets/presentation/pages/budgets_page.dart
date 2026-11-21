@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
@@ -9,6 +8,7 @@ import '../../../categories/domain/entities/category.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
 import '../../domain/entities/budget.dart';
 import '../providers/budget_providers.dart';
+import '../../../../core/utils/app_format.dart';
 
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
@@ -128,7 +128,7 @@ class _BudgetCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final spentAsync = ref.watch(budgetSpentAmountProvider(budget.id!));
     final categoriesAsync = ref.watch(allCategoriesProvider);
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: budget.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: budget.currency);
 
     String title;
     if (budget.name != null && budget.name!.isNotEmpty) {

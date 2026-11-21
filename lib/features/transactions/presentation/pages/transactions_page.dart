@@ -176,12 +176,17 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     final account = accounts.where((a) => a.id == t.accountId).toList();
                     final accountName = account.isNotEmpty ? account.first.name : 'Compte supprimé';
 
-                    return TransactionTile(
-                      transaction: t,
-                      accountName: accountName,
-                      onTap: () => t.isTransfer
-                          ? _confirmDeleteTransfer(context, ref, t)
-                          : _showTransactionForm(context, ref, existing: t),
+                    return GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onSecondaryTapUp: t.isTransfer ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                      onLongPressStart: t.isTransfer ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                      child: TransactionTile(
+                        transaction: t,
+                        accountName: accountName,
+                        onTap: () => t.isTransfer
+                            ? _confirmDeleteTransfer(context, ref, t)
+                            : _showTransactionForm(context, ref, existing: t),
+                      ),
                     );
                   },
                 );
@@ -246,6 +251,36 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       ),
       builder: (_) => _TransactionFormSheet(existing: existing),
     );
+  }
+
+  /// Menu contextuel (clic droit sur Windows, appui long sur mobile).
+  Future<void> _showContextMenu(BuildContext context, WidgetRef ref, FinancialTransaction t, Offset position) async {
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      items: const [
+        PopupMenuItem(value: 'edit', child: Text('Modifier')),
+        PopupMenuItem(value: 'duplicate', child: Text('Dupliquer (aujourd\u2019hui)')),
+        PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+      ],
+    );
+    if (!context.mounted || choice == null) return;
+    final actions = ref.read(transactionActionsProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (choice == 'edit') {
+        _showTransactionForm(context, ref, existing: t);
+      } else if (choice == 'duplicate') {
+        final now = DateTime.now();
+        await actions.create(_copyWithoutId(t, date: now));
+        messenger.showSnackBar(const SnackBar(content: Text('Écriture dupliquée')));
+      } else if (choice == 'delete' && t.id != null) {
+        await actions.delete(t.id!);
+        _showUndoDelete(messenger, actions, t);
+      }
+    } catch (e) {
+      if (context.mounted) AppErrorMessage.showSnackBar(context, e);
+    }
   }
 
   void _showTransferForm(BuildContext context) {
@@ -529,12 +564,81 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(transactionActionsProvider).delete(widget.existing!.id!);
+      final deleted = widget.existing!;
+      final messenger = ScaffoldMessenger.of(context);
+      final actions = ref.read(transactionActionsProvider);
+      await actions.delete(deleted.id!);
       if (mounted) Navigator.of(context).pop();
+      _showUndoDelete(messenger, actions, deleted);
     } catch (e) {
       if (mounted) {
         AppErrorMessage.showSnackBar(context, e);
       }
     }
   }
+}
+
+/// Ouvre le formulaire de saisie d'une écriture (nouvelle ou existante).
+/// Utilisable depuis n'importe quel écran (bouton « + », Accueil, recherche).
+void showTransactionFormSheet(BuildContext context, {FinancialTransaction? existing}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _TransactionFormSheet(existing: existing),
+  );
+}
+
+/// Ouvre le formulaire de virement entre deux comptes.
+void showTransferFormSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => const TransferFormSheet(),
+  );
+}
+
+
+FinancialTransaction _copyWithoutId(FinancialTransaction t, {DateTime? date}) {
+  final now = DateTime.now();
+  return FinancialTransaction(
+    accountId: t.accountId,
+    categoryId: t.categoryId,
+    type: t.type,
+    amount: t.amount,
+    currency: t.currency,
+    description: t.description,
+    paymentMethod: t.paymentMethod,
+    transactionDate: date ?? t.transactionDate,
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+/// Affiche « Écriture supprimée — Annuler » : l'annulation recrée l'écriture
+/// (le solde du compte est ajusté comme pour une saisie normale).
+void _showUndoDelete(ScaffoldMessengerState messenger, TransactionActions actions, FinancialTransaction deleted) {
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: const Text('Écriture supprimée'),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(
+          label: 'Annuler',
+          onPressed: () async {
+            try {
+              await actions.create(_copyWithoutId(deleted));
+            } catch (_) {
+              messenger.showSnackBar(const SnackBar(content: Text('Impossible de rétablir l\u2019écriture')));
+            }
+          },
+        ),
+      ),
+    );
 }

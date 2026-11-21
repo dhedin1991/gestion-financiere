@@ -9,6 +9,7 @@ import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
 import '../widgets/savings_movement_dialog.dart';
+import '../../../../core/utils/app_format.dart';
 
 class SavingsHistoryPage extends ConsumerWidget {
   final Savings savings;
@@ -17,7 +18,7 @@ class SavingsHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(savingsTransactionsProvider(savings.id!));
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: savings.currency, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: savings.currency, decimalDigits: 0);
 
     return Scaffold(
       appBar: AppBar(

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../domain/entities/recurring_transaction.dart';
+import '../../../../core/utils/app_format.dart';
 
 String frequencyLabel(RecurrenceFrequency f) {
   switch (f) {
@@ -32,7 +33,7 @@ class RecurringTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncome = recurring.type == TransactionType.revenu;
     final color = isIncome ? Colors.green : Colors.red;
-    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: recurring.currency, decimalDigits: 0);
+    final formatter = AppFormat.currency(symbol: recurring.currency);
     final dateFmt = DateFormat('dd/MM/yyyy');
 
     return Opacity(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
@@ -9,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/patrimoine_item.dart';
 import '../providers/patrimoine_providers.dart';
 import '../widgets/patrimoine_form_sheet.dart';
+import '../../../../core/utils/app_format.dart';
 
 class PatrimoinePage extends ConsumerWidget {
   const PatrimoinePage({super.key});
@@ -85,7 +85,7 @@ class _TotalHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: 'XOF', decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: 'XOF');
 
     return Container(
       width: double.infinity,
@@ -191,7 +191,7 @@ class _PatrimoineCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: item.devise, decimalDigits: 0);
+    final fmt = AppFormat.currency(symbol: item.devise);
 
     return Card(
       child: InkWell(

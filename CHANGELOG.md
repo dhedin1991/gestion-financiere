@@ -3,6 +3,22 @@
 Ce fichier documente les changements notables du projet.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Interface professionnelle] — 2026-11-21
+
+- Logo « Barres et courbe » (8 logos au choix dans Paramètres > Affichage), icône de l'application Android/Windows.
+- Favoris dans le navigateur (étoile), saisie rapide dans la recherche (« loyer 120000 », « + salaire 650000 »), annulation après suppression, menu clic droit / appui long sur les transactions.
+
+### Nouveau
+- **Nouvelle interface « terminal bancaire »** (inspirée de MetaTrader 5 et TradingView) : 8 thèmes (Nuit bancaire, Clair professionnel, Océan, Émeraude, Graphite, Violet nuit, Sépia confort, Contraste élevé) et 8 polices embarquées (IBM Plex Sans, Inter, Roboto, Open Sans, Source Sans, Lato, Atkinson, Segoe UI), hors ligne.
+- **Poste de travail Windows** : barre de menus, recherche globale (Ctrl K), onglets façon navigateur, Navigateur (arborescence) à gauche, barre d'état avec alertes. Dispositions de fenêtres : Onglets, Cascade (déplaçables et redimensionnables), Colonnes, Mosaïque.
+- **Mobile** : barre de navigation du bas avec bouton « + » central.
+- **Accueil** et **Statistiques** : courbe du patrimoine, répartition par compte, cercles de suivi animés (budget, épargne, crédit, taux d'épargne, dettes), un graphe d'évolution par compte avec cercle d'objectif modifiable, dépenses par catégorie, revenus vs dépenses.
+- **Paramètres > Affichage** : zoom 75–150 % par pas de 5, thème, police, fenêtres, recherche, taille du texte, densité, séparateur des milliers, police des montants, mode confidentialité (œil).
+- Raccourcis Windows : Ctrl K (recherche), Ctrl N (nouvelle écriture), Ctrl + / − / 0 (zoom), Ctrl Tab, Ctrl W.
+
+### Modifié
+- Les anciens réglages « style » et « mode clair/sombre » sont convertis automatiquement vers le nouveau thème le plus proche.
+
 ## [Non publié]
 
 ### Pagination des transactions

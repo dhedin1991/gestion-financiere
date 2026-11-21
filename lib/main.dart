@@ -9,6 +9,8 @@ import 'core/utils/external_activity_guard.dart';
 import 'core/router/app_router.dart';
 import 'features/backup/presentation/providers/backup_providers.dart';
 import 'core/constants/app_constants.dart';
+import 'core/display/display_prefs.dart';
+import 'core/display/display_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
 import 'features/app_lock/presentation/pages/login_page.dart';
@@ -158,8 +160,9 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
     final themePreset = ref.watch(themePresetProvider);
+    final display = ref.watch(displayPrefsProvider);
+    final themes = _resolveThemes(themePreset, display);
     final lockPhase = ref.watch(appLockControllerProvider).phase;
 
     // Tant que le verrouillage n'a pas tranché (chargement, code à saisir,
@@ -169,9 +172,10 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     if (lockPhase == AppLockPhase.loading) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(themePreset),
-        darkTheme: AppTheme.dark(themePreset),
-        themeMode: themeMode,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: themes.mode,
+        builder: displayBuilder,
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
@@ -179,9 +183,10 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     if (lockPhase == AppLockPhase.locked) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(themePreset),
-        darkTheme: AppTheme.dark(themePreset),
-        themeMode: themeMode,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: themes.mode,
+        builder: displayBuilder,
         home: const LoginPage(),
       );
     }
@@ -189,9 +194,10 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     if (lockPhase == AppLockPhase.needsSetup) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(themePreset),
-        darkTheme: AppTheme.dark(themePreset),
-        themeMode: themeMode,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: themes.mode,
+        builder: displayBuilder,
         home: const PasswordSetupPage(),
       );
     }
@@ -200,18 +206,20 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     if (onboardingSeen.isLoading) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(themePreset),
-        darkTheme: AppTheme.dark(themePreset),
-        themeMode: themeMode,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: themes.mode,
+        builder: displayBuilder,
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
     if (onboardingSeen.valueOrNull == false) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(themePreset),
-        darkTheme: AppTheme.dark(themePreset),
-        themeMode: themeMode,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: themes.mode,
+        builder: displayBuilder,
         home: OnboardingPage(onDone: () => ref.invalidate(onboardingSeenProvider)),
       );
     }
@@ -224,9 +232,10 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
     return MaterialApp.router(
       title: kAppName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(themePreset),
-      darkTheme: AppTheme.dark(themePreset),
-      themeMode: themeMode,
+      theme: themes.light,
+      darkTheme: themes.dark,
+      themeMode: themes.mode,
+      builder: displayBuilder,
       routerConfig: router,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
@@ -237,4 +246,23 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
       ],
     );
   }
+}
+
+
+class _ResolvedThemes {
+  final ThemeData light;
+  final ThemeData dark;
+  final ThemeMode mode;
+  const _ResolvedThemes(this.light, this.dark, this.mode);
+}
+
+_ResolvedThemes _resolveThemes(AppThemePreset preset, DisplayPrefs d) {
+  ThemeData build(AppThemePreset p) => AppTheme.build(p, font: d.font, density: d.density);
+  if (d.followSystemTheme) {
+    final light = build(preset.isDark ? AppThemePreset.clairPro : preset);
+    final dark = build(preset.isDark ? preset : AppThemePreset.nuitBancaire);
+    return _ResolvedThemes(light, dark, ThemeMode.system);
+  }
+  final t = build(preset);
+  return _ResolvedThemes(t, t, preset.isDark ? ThemeMode.dark : ThemeMode.light);
 }
