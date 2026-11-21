@@ -13,6 +13,9 @@ import '../widgets/savings_movement_dialog.dart';
 import '../widgets/savings_form_sheet.dart';
 import 'savings_history_page.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/summary_header.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../dashboard/presentation/providers/summary_providers.dart';
 
 class SavingsPage extends ConsumerWidget {
   const SavingsPage({super.key});
@@ -48,10 +51,11 @@ class SavingsPage extends ConsumerWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: savingsList.length,
+            itemCount: savingsList.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              final savings = savingsList[index];
+              if (index == 0) return const _SavingsSummaryHeader();
+              final savings = savingsList[index - 1];
               return _SavingsCard(savings: savings);
             },
           );
@@ -228,6 +232,38 @@ class _SavingsCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// Bandeau de synthèse : total épargné, objectifs, évolution dans le temps.
+class _SavingsSummaryHeader extends ConsumerWidget {
+  const _SavingsSummaryHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(savingsSummaryProvider);
+    final colors = context.appColors;
+    return async.when(
+      loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text(AppErrorMessage.friendly(e)),
+      data: (s) {
+        final fmt = AppFormat.currency(symbol: s.currency);
+        return SummaryHeader(
+          title: 'Synthèse de l’épargne',
+          ratio: s.ratio,
+          ringColor: colors.info,
+          ringText: s.targets > 0 ? null : '—',
+          stats: [
+            SummaryStat('Total épargné', fmt.format(s.total), color: colors.info),
+            SummaryStat('Objectifs cumulés', s.targets > 0 ? fmt.format(s.targets) : 'aucun'),
+            SummaryStat('Enveloppes', '${s.count}'),
+          ],
+          series: s.evolution,
+          seriesCaption: 'Évolution de l’épargne',
+        );
+      },
     );
   }
 }

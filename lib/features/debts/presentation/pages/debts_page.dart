@@ -10,6 +10,9 @@ import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/debt.dart';
 import '../providers/debt_providers.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/summary_header.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../dashboard/presentation/providers/summary_providers.dart';
 
 class DebtsPage extends ConsumerWidget {
   const DebtsPage({super.key});
@@ -45,10 +48,11 @@ class DebtsPage extends ConsumerWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: debts.length,
+            itemCount: debts.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              final debt = debts[index];
+              if (index == 0) return const _DebtsSummaryHeader();
+              final debt = debts[index - 1];
               return _DebtCard(
                 debt: debt,
                 onTap: () => _showDebtForm(context, ref, existing: debt),
@@ -647,5 +651,35 @@ class _PaymentFormSheetState extends ConsumerState<_PaymentFormSheet> {
         AppErrorMessage.showSnackBar(context, e);
       }
     }
+  }
+}
+
+
+/// Bandeau de synthèse : ce que je dois, ce qu'on me doit, part déjà réglée.
+class _DebtsSummaryHeader extends ConsumerWidget {
+  const _DebtsSummaryHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(debtsSummaryProvider);
+    final colors = context.appColors;
+    return async.when(
+      loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text(AppErrorMessage.friendly(e)),
+      data: (s) {
+        final fmt = AppFormat.currency(symbol: s.currency);
+        return SummaryHeader(
+          title: 'Synthèse dettes & créances',
+          ratio: s.ratio,
+          ringColor: colors.info,
+          stats: [
+            SummaryStat('Je dois encore', fmt.format(s.debtsRemaining), color: colors.negative),
+            SummaryStat('On me doit encore', fmt.format(s.receivablesRemaining), color: colors.positive),
+            SummaryStat('Total dettes', fmt.format(s.debtsTotal)),
+            SummaryStat('Total créances', fmt.format(s.receivablesTotal)),
+          ],
+        );
+      },
+    );
   }
 }
