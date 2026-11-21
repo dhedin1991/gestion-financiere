@@ -32,7 +32,7 @@ extension AppLogoInfo on AppLogo {
 }
 
 class AppLogoController extends StateNotifier<AppLogo> {
-  AppLogoController() : super(AppLogo.colonnes) {
+  AppLogoController() : super(AppLogo.barres) {
     _load();
   }
 
