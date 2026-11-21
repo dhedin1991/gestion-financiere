@@ -3,6 +3,19 @@
 Ce fichier documente les changements notables du projet.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Moteur d'interconnexion] — 2026-11-22 (branche `moteur`, non fusionné)
+
+### Nouveau
+- **Une seule saisie, synchronisation partout** : grand livre (chaque variation de solde laisse une écriture), service d'opérations (dépôt, retrait Moov/MTN vers la caisse, transfert, épargne, crédit, dette, créance, achat à crédit, remboursements), base de données v18 (migration non destructive).
+- **Comptes** : vues Cartes / Tableau / Évolution, rôles « Caisse principale » et « Épargne immédiate », alertes de solde orange puis rouge (seuils 15 000 / 10 000 modifiables, surchargeables par compte).
+- **Facturation** : liste avec indicateurs, formulaire, aperçu et PDF en 4 modèles, profil de l'entreprise, encaissement qui crédite un compte (revenu compté), annulation d'encaissement.
+- **Accueil** : bloc « Position financière » (trésorerie, épargne, créances, crédits, dettes, factures, position nette) et dernières transactions.
+- **Épargne, Crédits, Dettes** : bandeau de synthèse avec cercle de suivi et chiffres clés (courbe d'évolution pour l'épargne).
+- 10 tests de cohérence des soldes sur SQLite.
+
+### Corrigé
+- **Icône Android** : icône carrée pleine + premier plan adaptatif dédié (fond #0B1220), contrôle automatique des fichiers générés dans la CI. Désinstaller puis réinstaller l'APK pour vider le cache d'icône.
+
 ## [Interface professionnelle] — 2026-11-21
 
 - **Comptes** : « Ajuster le solde » crée une transaction « Correction de solde » tracée dans l'historique et le journal (plus d'écrasement silencieux).
