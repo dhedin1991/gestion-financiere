@@ -5,6 +5,8 @@ import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../entities/presentation/widgets/entity_selector_bar.dart';
+import '../../../transactions/domain/entities/transaction.dart';
+import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../domain/entities/account.dart';
 import '../providers/account_providers.dart';
 import '../widgets/account_card.dart';
@@ -225,8 +227,8 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                 controller: _currentBalanceController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: 'Corriger le solde actuel',
-                  helperText: 'Modifie uniquement le solde affiché, sans toucher au solde de départ',
+                  labelText: 'Ajuster le solde actuel',
+                  helperText: 'L\u2019écart crée une transaction « Correction de solde » visible dans l\u2019historique',
                 ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
@@ -296,8 +298,23 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
         type: _selectedType,
         currency: _selectedCurrency,
         initialBalance: balance,
-        currentBalance: currentBalance,
+        currentBalance: widget.existing!.currentBalance,
       ));
+      // Un écart de solde est tracé par une transaction de correction visible
+      // dans l'historique (au lieu d'écraser silencieusement le solde).
+      final diff = currentBalance - widget.existing!.currentBalance;
+      if (diff.abs() >= 0.005) {
+        await ref.read(transactionActionsProvider).create(FinancialTransaction(
+          accountId: widget.existing!.id!,
+          type: diff > 0 ? TransactionType.revenu : TransactionType.depense,
+          amount: diff.abs(),
+          currency: _selectedCurrency,
+          description: 'Correction de solde',
+          transactionDate: now,
+          createdAt: now,
+          updatedAt: now,
+        ));
+      }
     }
 
     if (mounted) Navigator.of(context).pop();

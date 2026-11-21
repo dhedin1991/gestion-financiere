@@ -5,6 +5,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Interface professionnelle] — 2026-11-21
 
+- **Comptes** : « Ajuster le solde » crée une transaction « Correction de solde » tracée dans l'historique et le journal (plus d'écrasement silencieux).
+- Guide de compilation mis à jour (téléchargement via Releases).
+
 - Logo « Barres et courbe » (8 logos au choix dans Paramètres > Affichage), icône de l'application Android/Windows.
 - Favoris dans le navigateur (étoile), saisie rapide dans la recherche (« loyer 120000 », « + salaire 650000 »), annulation après suppression, menu clic droit / appui long sur les transactions.
 

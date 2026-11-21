@@ -26,18 +26,16 @@ Ce guide t'explique comment obtenir ton application **sans télécharger le SDK 
 ## Étape 3 — Laisser GitHub compiler l'application
 
 1. Va dans l'onglet **"Actions"** en haut de la page de ton dépôt
-2. Tu devrais voir un workflow **"Compiler l'application (cloud)"** en train de tourner (rond jaune/orange qui tourne)
-3. Attends 3 à 8 minutes — c'est GitHub qui télécharge Flutter et compile, pas toi
-4. Quand le rond devient **vert ✅**, clique dessus
+2. Tu vois le workflow **"Build APK and Windows"** en train de tourner (rond jaune)
+3. Attends 8 à 15 minutes : c'est GitHub qui compile, pas toi
+4. Quand le rond devient **vert ✅**, la compilation est terminée
 
-## Étape 4 — Télécharger ton application (.apk)
+## Étape 4 — Télécharger tes logiciels
 
-1. Toujours sur la page du workflow terminé, descends jusqu'à la section **"Artifacts"**
-2. Clique sur **"application-android"** — ça télécharge un fichier `.zip` léger (quelques dizaines de Mo, pas 1 Go)
-3. Décompresse-le : tu obtiens un fichier `app-release.apk`
-4. Transfère ce fichier sur ton téléphone Android (par câble USB, ou en te l'envoyant via WhatsApp/e-mail à toi-même)
-5. Sur le téléphone, ouvre le fichier `.apk` pour l'installer
-   - Android va peut-être demander d'autoriser "l'installation depuis une source inconnue" → accepte, c'est normal pour une app qui n'est pas encore sur le Play Store
+1. Sur la page principale du dépôt, à droite, clique sur **"Releases"** puis **"Dernier build"**
+2. Télécharge **GestionFinanciere-Android.apk** (téléphone) ou **GestionFinanciere-Windows.zip** (PC : extraire le zip puis lancer l'exécutable)
+3. Sur le téléphone, ouvre le fichier `.apk` pour l'installer
+   - Android peut demander d'autoriser « l'installation depuis une source inconnue » : accepte
 
 ---
 
