@@ -20,6 +20,16 @@ jobs:
 
       - run: flutter create --platforms=android --project-name gestion_financiere .
       - run: flutter pub get && dart run flutter_launcher_icons
+      - name: Vérifier l'icône Android (échoue si l'icône par défaut de Flutter reste en place)
+        run: |
+          set -e
+          R=android/app/src/main/res
+          test -f $R/mipmap-xxxhdpi/ic_launcher.png
+          test -f $R/mipmap-anydpi-v26/ic_launcher.xml
+          grep -q "ic_launcher_foreground" $R/mipmap-anydpi-v26/ic_launcher.xml
+          grep -rq "0B1220" $R/values/colors.xml
+          grep -q '@mipmap/ic_launcher' android/app/src/main/AndroidManifest.xml
+          find $R -name "ic_launcher*" | sort
       - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
       - run: sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
       - name: Activer le core library desugaring (requis par flutter_local_notifications)
