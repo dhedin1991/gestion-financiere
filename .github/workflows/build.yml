@@ -175,7 +175,7 @@ jobs:
           channel: 'stable'
 
       - run: flutter create --platforms=windows --project-name gestion_financiere .
-      - run: flutter pub get && dart run flutter_launcher_icons
+      - run: flutter pub get && dart run flutter_launcher_icons -f flutter_launcher_icons-windows.yaml
       - run: flutter build windows --release
 
       - uses: actions/upload-artifact@v4
