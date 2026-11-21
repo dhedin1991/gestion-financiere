@@ -167,7 +167,7 @@ class _SavingsCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${fmt.format(savings.currentBalance)} sur ${fmt.format(savings.targetAmount)}'
+                  '${fmt.format(savings.currentBalance)} sur ${fmt.format(savings.targetAmount ?? 0)}'
                   '${savings.targetDate != null ? ' - avant le ${DateFormat('dd/MM/yyyy').format(savings.targetDate!)}' : ''}',
                   style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                 ),
