@@ -396,6 +396,14 @@ class OperationService {
           }
         }
         break;
+      case LedgerKind.facture:
+        if (ref != null) {
+          await db.transaction((txn) async {
+            await Ledger.unpost(txn, kinds: [LedgerKind.facture], refId: ref);
+            await txn.update('invoices', {'status': 'envoyee', 'paid_amount': 0}, where: 'id = ?', whereArgs: [ref]);
+          });
+        }
+        break;
       case LedgerKind.epargne:
       case LedgerKind.epargneObjectif:
         if (ref != null) {

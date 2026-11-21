@@ -23,6 +23,7 @@ class LedgerKind {
   static const rembCredit = 'remb_credit';
   static const rembDette = 'remb_dette';
   static const encaissementCreance = 'encaissement_creance';
+  static const facture = 'facture'; // facture encaissée (revenu compté)
 
   static const labels = <String, String>{
     depot: 'Dépôt',
@@ -38,6 +39,7 @@ class LedgerKind {
     rembCredit: 'Remboursement de crédit',
     rembDette: 'Remboursement de dette',
     encaissementCreance: 'Encaissement de créance',
+    facture: 'Facture encaissée',
   };
 }
 
