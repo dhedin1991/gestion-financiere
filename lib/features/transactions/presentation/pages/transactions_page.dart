@@ -11,6 +11,8 @@ import '../../../categories/domain/entities/category.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_providers.dart';
+import '../../../../core/ledger/operation_service.dart';
+import '../widgets/operation_form_sheet.dart';
 import '../widgets/transaction_tile.dart';
 import '../widgets/transfer_form_sheet.dart';
 
@@ -178,12 +180,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
                     return GestureDetector(
                       behavior: HitTestBehavior.translucent,
-                      onSecondaryTapUp: t.isTransfer ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
-                      onLongPressStart: t.isTransfer ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                      onSecondaryTapUp: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                      onLongPressStart: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
                       child: TransactionTile(
                         transaction: t,
                         accountName: accountName,
-                        onTap: () => t.isTransfer
+                        onTap: () => (t.isTransfer || t.kind != null)
                             ? _confirmDeleteTransfer(context, ref, t)
                             : _showTransactionForm(context, ref, existing: t),
                       ),
@@ -249,7 +251,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _TransactionFormSheet(existing: existing),
+      builder: (_) => existing == null ? const OperationFormSheet() : _TransactionFormSheet(existing: existing),
     );
   }
 
@@ -298,9 +300,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer ce virement ?'),
-        content: const Text(
-          'Les deux écritures liées à ce virement (sur les deux comptes) seront supprimées ensemble.',
+        title: Text(t.kind == null ? 'Supprimer ce virement ?' : 'Supprimer cette opération ?'),
+        content: Text(
+          t.kind == null
+              ? 'Les deux écritures liées à ce virement (sur les deux comptes) seront supprimées ensemble.'
+              : 'Tout ce que cette opération a créé ou modifié (comptes, dette, crédit, épargne) sera annulé.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
@@ -313,7 +317,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     );
     if (confirmed != true) return;
     try {
-      await ref.read(transactionRepositoryProvider).deleteTransfer(t.transferGroup!);
+      if (t.kind != null && t.id != null) {
+        await ref.read(operationServiceProvider).deleteLedgerEntry(t.id!);
+      } else {
+        await ref.read(transactionRepositoryProvider).deleteTransfer(t.transferGroup!);
+      }
       ref.invalidate(accountsListProvider);
       ref.invalidate(allAccountsIncludingArchivedProvider);
       ref.invalidate(globalBalanceProvider);
@@ -587,7 +595,7 @@ void showTransactionFormSheet(BuildContext context, {FinancialTransaction? exist
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _TransactionFormSheet(existing: existing),
+    builder: (_) => existing == null ? const OperationFormSheet() : _TransactionFormSheet(existing: existing),
   );
 }
 

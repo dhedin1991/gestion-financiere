@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/ledger/ledger.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/transaction.dart';
 import '../../../../core/utils/app_format.dart';
@@ -31,7 +32,7 @@ class TransactionTile extends StatelessWidget {
 
     final label = transaction.description?.isNotEmpty == true
         ? transaction.description!
-        : (categoryName ?? (isIncome ? 'Revenu' : 'Dépense'));
+        : (LedgerKind.labels[transaction.kind] ?? categoryName ?? (isIncome ? 'Revenu' : 'Dépense'));
 
     return Semantics(
       label: '$label, ${isIncome ? 'crédit' : 'débit'} de ${formatter.format(transaction.amount)}, '
@@ -45,9 +46,10 @@ class TransactionTile extends StatelessWidget {
           leading: CircleAvatar(
             backgroundColor: color.withValues(alpha: 0.12),
             child: Icon(
-              isTransfer
-                  ? Icons.swap_horiz
-                  : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
+              _kindIcon(transaction.kind) ??
+                  (isTransfer
+                      ? Icons.swap_horiz
+                      : (isIncome ? Icons.arrow_downward : Icons.arrow_upward)),
               color: color,
               size: 20,
             ),
@@ -68,5 +70,30 @@ class TransactionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+IconData? _kindIcon(String? kind) {
+  switch (kind) {
+    case LedgerKind.depot:
+      return Icons.add_card;
+    case LedgerKind.retrait:
+      return Icons.atm_outlined;
+    case LedgerKind.epargne:
+    case LedgerKind.epargneObjectif:
+      return Icons.savings_outlined;
+    case LedgerKind.creditRecu:
+    case LedgerKind.rembCredit:
+      return Icons.account_balance_outlined;
+    case LedgerKind.detteRecue:
+    case LedgerKind.creanceAccordee:
+    case LedgerKind.rembDette:
+    case LedgerKind.encaissementCreance:
+    case LedgerKind.achatCreditDette:
+      return Icons.handshake_outlined;
+    case LedgerKind.achatCredit:
+      return Icons.credit_score_outlined;
+    default:
+      return null;
   }
 }

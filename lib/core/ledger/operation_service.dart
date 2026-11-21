@@ -5,6 +5,7 @@ import '../database/database_providers.dart';
 import '../utils/loan_calculator.dart';
 import '../utils/money.dart';
 import '../../features/accounts/presentation/providers/account_providers.dart';
+import '../../features/categories/presentation/providers/category_providers.dart';
 import '../../features/credits/data/models/credit_model.dart';
 import '../../features/credits/domain/entities/credit.dart';
 import '../../features/credits/presentation/providers/credit_providers.dart';
@@ -336,6 +337,19 @@ class OperationService {
     final list = await repo.getInstallmentsForCredit(creditId);
     final inst = list.firstWhere((i) => i.id == instId, orElse: () => throw StateError('Échéance introuvable.'));
     await _ref.read(creditActionsProvider).markInstallmentPaid(inst.copyWith(paymentDate: r.date));
+  }
+
+  /// Retourne l'id de la catégorie [name] (de type [type] : 'revenu' ou
+  /// 'depense'), en la créant si elle n'existe pas encore.
+  Future<int> ensureCategory(String name, String type) async {
+    final db = await _db;
+    final rows = await db.query('categories',
+        columns: ['id'], where: 'name = ? AND type = ?', whereArgs: [name, type], limit: 1);
+    if (rows.isNotEmpty) return rows.first['id'] as int;
+    final id = await db.insert('categories', {'name': name, 'type': type, 'is_default': 1});
+    _ref.invalidate(expenseCategoriesProvider);
+    _ref.invalidate(incomeCategoriesProvider);
+    return id;
   }
 
   // --------------------------------------------------------- suppression
