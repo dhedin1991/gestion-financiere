@@ -20,6 +20,15 @@ class Account {
   final String? icon;
   final bool isArchived;
   final int? entityId;
+
+  /// Rôle particulier : 'caisse' (caisse principale, reçoit les retraits
+  /// Mobile Money) ou 'epargne' (compte d'épargne immédiate).
+  final String? role;
+
+  /// Seuils d'alerte de solde faible, propres au compte (null = seuils par
+  /// défaut de l'application).
+  final double? alertWarning;
+  final double? alertCritical;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,6 +44,9 @@ class Account {
     this.icon,
     this.isArchived = false,
     this.entityId,
+    this.role,
+    this.alertWarning,
+    this.alertCritical,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -51,6 +63,11 @@ class Account {
     String? icon,
     bool? isArchived,
     int? entityId,
+    String? role,
+    bool clearRole = false,
+    double? alertWarning,
+    double? alertCritical,
+    bool clearAlerts = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -66,6 +83,9 @@ class Account {
       icon: icon ?? this.icon,
       isArchived: isArchived ?? this.isArchived,
       entityId: entityId ?? this.entityId,
+      role: clearRole ? null : (role ?? this.role),
+      alertWarning: clearAlerts ? null : (alertWarning ?? this.alertWarning),
+      alertCritical: clearAlerts ? null : (alertCritical ?? this.alertCritical),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );

@@ -22,7 +22,7 @@ class AppDatabase {
   final Directory? _directoryOverride;
 
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 17;
+  static const int _dbVersion = 18;
 
   /// Version de schéma que cette version de l'app sait lire.
   static const int schemaVersion = _dbVersion;
@@ -142,6 +142,9 @@ class AppDatabase {
         icon TEXT,
         is_archived INTEGER NOT NULL DEFAULT 0,
         entity_id INTEGER,
+        role TEXT,
+        alert_warning INTEGER,
+        alert_critical INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -178,6 +181,8 @@ class AppDatabase {
         payment_method TEXT,
         transaction_date TEXT NOT NULL,
         transfer_group INTEGER,
+        kind TEXT,
+        ref_id INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
@@ -371,6 +376,8 @@ CREATE TABLE budgets (
     await db.execute('CREATE INDEX idx_credits_status ON credits (status)');
     await db.execute('CREATE INDEX idx_credit_installments_credit ON credit_installments (credit_id)');
     await db.execute('CREATE INDEX idx_credit_installments_status ON credit_installments (status)');
+
+    await _createInvoiceTables(db);
 
     // ==========================================================
     // TABLE : net_worth_snapshots (photos du patrimoine net dans le temps)
@@ -797,6 +804,24 @@ CREATE TABLE budgets (
       ''');
     }
 
+    if (oldVersion < 18) {
+      // Grand livre unifié + facturation + seuils d'alerte des comptes.
+      // Migration non destructive : uniquement des colonnes/tables ajoutées.
+      Future<void> addCol(String table, String col, String type) async {
+        final cols = await db.rawQuery('PRAGMA table_info($table)');
+        if (cols.isNotEmpty && !cols.any((c) => c['name'] == col)) {
+          await db.execute('ALTER TABLE $table ADD COLUMN $col $type');
+        }
+      }
+
+      await addCol('transactions', 'kind', 'TEXT');
+      await addCol('transactions', 'ref_id', 'INTEGER');
+      await addCol('accounts', 'role', 'TEXT');
+      await addCol('accounts', 'alert_warning', 'INTEGER');
+      await addCol('accounts', 'alert_critical', 'INTEGER');
+      await _createInvoiceTables(db);
+    }
+
     if (oldVersion < 16) {
       // Virements entre comptes : les deux écritures liées (dépense +
       // revenu) partagent ce même identifiant, pour être reconnues comme
@@ -834,6 +859,45 @@ CREATE TABLE budgets (
     }
   }
   
+  /// Facturation : factures et leurs lignes (montants en centimes).
+  Future<void> _createInvoiceTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        number TEXT NOT NULL,
+        template TEXT NOT NULL DEFAULT 'classique',
+        status TEXT NOT NULL DEFAULT 'brouillon',
+        client_name TEXT NOT NULL,
+        client_address TEXT,
+        client_phone TEXT,
+        client_email TEXT,
+        issue_date TEXT NOT NULL,
+        due_date TEXT,
+        currency TEXT NOT NULL DEFAULT 'XOF',
+        tax_rate REAL NOT NULL DEFAULT 0,
+        discount INTEGER NOT NULL DEFAULT 0,
+        paid_amount INTEGER NOT NULL DEFAULT 0,
+        account_id INTEGER,
+        notes TEXT,
+        entity_id INTEGER,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS invoice_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_id INTEGER NOT NULL,
+        description TEXT NOT NULL,
+        quantity REAL NOT NULL DEFAULT 1,
+        unit_price INTEGER NOT NULL DEFAULT 0,
+        position INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (invoice_id) REFERENCES invoices (id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items (invoice_id)');
+  }
+
   /// Insère quelques catégories par défaut pour que l'app ne soit
   /// pas vide au premier lancement (l'utilisateur peut tout modifier ensuite).
   Future<void> _seedDefaultCategories(Database db) async {

@@ -18,6 +18,13 @@ class FinancialTransaction {
   /// comptes : les deux écritures liées partagent cette même valeur.
   final int? transferGroup;
 
+  /// Nature de l'opération pour les écritures du grand livre (voir LedgerKind) ;
+  /// null pour un simple revenu/dépense saisi à la main.
+  final String? kind;
+
+  /// Identifiant de l'enregistrement lié (dette, crédit, échéance, versement...).
+  final int? refId;
+
   const FinancialTransaction({
     this.id,
     required this.accountId,
@@ -31,6 +38,8 @@ class FinancialTransaction {
     required this.createdAt,
     required this.updatedAt,
     this.transferGroup,
+    this.kind,
+    this.refId,
   });
 
   bool get isTransfer => transferGroup != null;
@@ -65,6 +74,8 @@ class FinancialTransaction {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       transferGroup: transferGroup != null ? transferGroup() : this.transferGroup,
+      kind: this.kind,
+      refId: this.refId,
     );
   }
 }

@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/ledger/ledger.dart';
 import '../../../../core/utils/money.dart';
 
 /// DAO Épargne.
@@ -76,10 +77,19 @@ class SavingsDao {
         [signedCents, nowIso, savingsId],
       );
 
-      // Le solde du compte évolue en sens inverse (un versement sort de l'argent du compte).
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedCents, nowIso, accountId],
+      // Le solde du compte évolue en sens inverse (un versement sort de l'argent
+      // du compte) : écriture neutre du grand livre.
+      final sv = await txn.query('savings',
+          columns: ['name', 'currency'], where: 'id = ?', whereArgs: [savingsId], limit: 1);
+      await Ledger.post(
+        txn,
+        accountId: accountId,
+        signedCents: -signedCents,
+        kind: LedgerKind.epargneObjectif,
+        refId: id,
+        currency: sv.isEmpty ? 'XOF' : (sv.first['currency'] as String? ?? 'XOF'),
+        description: '${signedCents >= 0 ? 'Versement' : 'Retrait'} épargne — ${sv.isEmpty ? '' : sv.first['name']}',
+        date: DateTime.tryParse('${data['date']}'),
       );
 
       return id;
@@ -118,10 +128,31 @@ class SavingsDao {
         [deltaCents, nowIso, savingsId],
       );
 
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [deltaCents, nowIso, accountId],
-      );
+      final linked = await txn.query('transactions',
+          where: 'kind = ? AND ref_id = ?', whereArgs: [LedgerKind.epargne, transactionId], limit: 1);
+      if (linked.isNotEmpty) {
+        throw StateError('Ce versement vient d\u2019une opération Transactions : supprimez-le puis recréez-le.');
+      }
+      final n = await Ledger.unpost(txn, kinds: [LedgerKind.epargneObjectif], refId: transactionId);
+      if (n == 0) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+          [deltaCents, nowIso, accountId],
+        );
+      } else {
+        final sv = await txn.query('savings',
+            columns: ['name', 'currency'], where: 'id = ?', whereArgs: [savingsId], limit: 1);
+        await Ledger.post(
+          txn,
+          accountId: accountId,
+          signedCents: -Money.toCents(newSignedAmount),
+          kind: LedgerKind.epargneObjectif,
+          refId: transactionId,
+          currency: sv.isEmpty ? 'XOF' : (sv.first['currency'] as String? ?? 'XOF'),
+          description: 'Épargne — ${sv.isEmpty ? '' : sv.first['name']}',
+          date: DateTime.tryParse('${data['date']}'),
+        );
+      }
     });
   }
 
@@ -143,10 +174,14 @@ class SavingsDao {
         [signedCents, nowIso, savingsId],
       );
 
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedCents, nowIso, accountId],
-      );
+      final n = await Ledger.unpost(txn,
+          kinds: [LedgerKind.epargneObjectif, LedgerKind.epargne], refId: transactionId);
+      if (n == 0) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+          [signedCents, nowIso, accountId],
+        );
+      }
     });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/ledger/ledger.dart';
 import '../../../../core/utils/money.dart';
 
 /// Data Access Object : seule classe autorisée à écrire du SQL brut
@@ -93,13 +94,23 @@ class DebtDao {
     required double signedAmount,
   }) async {
     final db = await _appDatabase.database;
-    final nowIso = DateTime.now().toIso8601String();
     final signedCents = Money.toCents(signedAmount);
     return db.transaction((txn) async {
       final id = await txn.insert('debt_payments', data);
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [signedCents, nowIso, accountId],
+      final debtRows = await txn.query('debts',
+          columns: ['person_name', 'currency'], where: 'id = ?', whereArgs: [data['debt_id']], limit: 1);
+      final person = debtRows.isEmpty ? '' : (debtRows.first['person_name'] as String? ?? '');
+      final currency = debtRows.isEmpty ? 'XOF' : (debtRows.first['currency'] as String? ?? 'XOF');
+      final isPayout = signedCents < 0;
+      await Ledger.post(
+        txn,
+        accountId: accountId,
+        signedCents: signedCents,
+        kind: isPayout ? LedgerKind.rembDette : LedgerKind.encaissementCreance,
+        refId: id,
+        currency: currency,
+        description: '${isPayout ? 'Remboursement de dette' : 'Encaissement de créance'} — $person',
+        date: DateTime.tryParse('${data['payment_date']}'),
       );
       return id;
     });
@@ -116,10 +127,15 @@ class DebtDao {
     final signedCents = Money.toCents(signedAmount);
     await db.transaction((txn) async {
       await txn.delete('debt_payments', where: 'id = ?', whereArgs: [paymentId]);
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
-        [signedCents, nowIso, accountId],
-      );
+      final n = await Ledger.unpost(txn,
+          kinds: [LedgerKind.rembDette, LedgerKind.encaissementCreance], refId: paymentId);
+      if (n == 0) {
+        // Paiement ancien (sans écriture) : ancienne logique.
+        await txn.rawUpdate(
+          'UPDATE accounts SET current_balance = current_balance - ?, updated_at = ? WHERE id = ?',
+          [signedCents, nowIso, accountId],
+        );
+      }
     });
   }
 
@@ -136,12 +152,28 @@ class DebtDao {
     final nowIso = DateTime.now().toIso8601String();
     final reversalCents = Money.toCents(reversalAmount);
     await db.transaction((txn) async {
+      final pays = await txn.query('debt_payments', where: 'debt_id = ?', whereArgs: [debtId]);
+      final sign = reversalCents >= 0 ? 1 : -1;
+      var legacyCents = 0;
+      for (final pay in pays) {
+        final n = await Ledger.unpost(txn,
+            kinds: [LedgerKind.rembDette, LedgerKind.encaissementCreance], refId: pay['id'] as int);
+        if (n == 0) legacyCents += sign * (pay['amount'] as num).toInt();
+      }
+      // Écritures d'origine (argent reçu / prêté, achat à crédit).
+      await Ledger.unpost(txn, kinds: [
+        LedgerKind.detteRecue,
+        LedgerKind.creanceAccordee,
+        LedgerKind.achatCredit,
+        LedgerKind.achatCreditDette,
+      ], refId: debtId);
       await txn.delete('debts', where: 'id = ?', whereArgs: [debtId]);
-      await txn.rawUpdate(
-        'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
-        [reversalCents, nowIso, accountId],
-      );
+      if (legacyCents != 0) {
+        await txn.rawUpdate(
+          'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+          [legacyCents, nowIso, accountId],
+        );
+      }
     });
   }
 }
-

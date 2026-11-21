@@ -16,6 +16,8 @@ class TransactionModel {
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
       transferGroup: (map['transfer_group'] as num?)?.toInt(),
+      kind: map['kind'] as String?,
+      refId: (map['ref_id'] as num?)?.toInt(),
     );
   }
 
@@ -33,6 +35,8 @@ class TransactionModel {
       'created_at': t.createdAt.toIso8601String(),
       'updated_at': t.updatedAt.toIso8601String(),
       'transfer_group': t.transferGroup,
+      'kind': t.kind,
+      'ref_id': t.refId,
     };
   }
 }
