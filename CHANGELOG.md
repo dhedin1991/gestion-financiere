@@ -5,6 +5,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Interface professionnelle] — 2026-11-21
 
+- Logo « Barres et courbe » (8 logos au choix dans Paramètres > Affichage), icône de l'application Android/Windows.
+- Favoris dans le navigateur (étoile), saisie rapide dans la recherche (« loyer 120000 », « + salaire 650000 »), annulation après suppression, menu clic droit / appui long sur les transactions.
+
 ### Nouveau
 - **Nouvelle interface « terminal bancaire »** (inspirée de MetaTrader 5 et TradingView) : 8 thèmes (Nuit bancaire, Clair professionnel, Océan, Émeraude, Graphite, Violet nuit, Sépia confort, Contraste élevé) et 8 polices embarquées (IBM Plex Sans, Inter, Roboto, Open Sans, Source Sans, Lato, Atkinson, Segoe UI), hors ligne.
 - **Poste de travail Windows** : barre de menus, recherche globale (Ctrl K), onglets façon navigateur, Navigateur (arborescence) à gauche, barre d'état avec alertes. Dispositions de fenêtres : Onglets, Cascade (déplaçables et redimensionnables), Colonnes, Mosaïque.
