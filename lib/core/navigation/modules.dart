@@ -12,6 +12,7 @@ import '../../features/dashboard/presentation/pages/home_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
+import '../../features/invoicing/presentation/pages/invoicing_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
 import '../../features/savings/presentation/pages/savings_page.dart';
@@ -54,6 +55,7 @@ final List<AppModule> kModules = [
   AppModule(label: 'Revenus & Dépenses', route: '/transactions', icon: Icons.swap_vert, selectedIcon: Icons.swap_vert_circle, section: 'Comptabilité', builder: () => const TransactionsPage()),
   AppModule(label: 'Transactions récurrentes', route: '/recurring', icon: Icons.autorenew, selectedIcon: Icons.autorenew, section: 'Comptabilité', builder: () => const RecurringTransactionsPage()),
   AppModule(label: 'Budgets', route: '/budgets', icon: Icons.pie_chart_outline, selectedIcon: Icons.pie_chart, section: 'Comptabilité', builder: () => const BudgetsPage()),
+  AppModule(label: 'Facturation', route: '/invoicing', icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long, section: 'Comptabilité', builder: () => const InvoicingPage()),
   AppModule(label: 'Épargne', route: '/savings', icon: Icons.savings_outlined, selectedIcon: Icons.savings, section: 'Patrimoine', builder: () => const SavingsPage()),
   AppModule(label: 'Crédits', route: '/credits', icon: Icons.request_quote_outlined, selectedIcon: Icons.request_quote, section: 'Patrimoine', builder: () => const CreditsPage()),
   AppModule(label: 'Dettes & Créances', route: '/debts', icon: Icons.handshake_outlined, selectedIcon: Icons.handshake, section: 'Patrimoine', builder: () => const DebtsPage()),

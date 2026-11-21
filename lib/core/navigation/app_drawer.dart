@@ -26,6 +26,7 @@ class AppDrawer extends StatelessWidget {
       _DrawerItem('Transactions', Icons.swap_vert, Icons.swap_vert_circle, '/transactions'),
       _DrawerItem('Transactions récurrentes', Icons.autorenew, Icons.autorenew, '/recurring'),
       _DrawerItem('Budgets', Icons.pie_chart_outline, Icons.pie_chart, '/budgets'),
+      _DrawerItem('Facturation', Icons.receipt_long_outlined, Icons.receipt_long, '/invoicing'),
     ];
     final patrimoineItems = <_DrawerItem>[
       _DrawerItem('Épargne', Icons.savings_outlined, Icons.savings, '/savings'),
