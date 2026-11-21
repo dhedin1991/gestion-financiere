@@ -7,6 +7,7 @@ import '../../features/budgets/presentation/providers/budget_providers.dart';
 import '../../features/credits/presentation/providers/credit_providers.dart';
 import '../../features/debts/presentation/providers/debt_providers.dart';
 import '../../features/savings/presentation/providers/savings_providers.dart';
+import '../../features/transactions/domain/entities/transaction.dart';
 import '../../features/transactions/presentation/providers/transaction_providers.dart';
 import '../display/display_prefs.dart';
 import '../navigation/modules.dart';
@@ -68,11 +69,53 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
     }
   }
 
+  Future<void> _addQuick(_Quick q, int accountId, String currency) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final actions = ref.read(transactionActionsProvider);
+    Navigator.of(context).pop();
+    final now = DateTime.now();
+    try {
+      await actions.create(FinancialTransaction(
+        accountId: accountId,
+        type: q.income ? TransactionType.revenu : TransactionType.depense,
+        amount: q.amount,
+        currency: currency,
+        description: q.label,
+        transactionDate: now,
+        createdAt: now,
+        updatedAt: now,
+      ));
+      messenger.showSnackBar(SnackBar(content: Text('${q.income ? 'Revenu' : 'Dépense'} « ${q.label} » enregistré(e)')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Impossible d\u2019enregistrer l\u2019écriture')));
+    }
+  }
+
   Future<void> _run(String raw) async {
     final q = raw.trim().toLowerCase();
     final token = ++_token;
     setState(() => _busy = q.isNotEmpty);
     final hits = <_Hit>[];
+
+    // Saisie rapide : « loyer 120000 » (dépense) ou « + salaire 650000 » (revenu).
+    final quick = _parseQuickEntry(raw);
+    if (quick != null) {
+      try {
+        final accounts = await ref.read(accountsListProvider.future);
+        final target = accounts.where((a) => a.id != null).toList();
+        if (target.isNotEmpty) {
+          final acc = target.first;
+          final isIncome = quick.income;
+          hits.add(_Hit(
+            isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
+            '${isIncome ? 'Ajouter le revenu' : 'Ajouter la dépense'} « ${quick.label} »',
+            '${AppFormat.currency(symbol: acc.currency).format(quick.amount)} · compte ${acc.name}',
+            'Saisie rapide',
+            () => _addQuick(quick, acc.id!, acc.currency),
+          ));
+        }
+      } catch (_) {}
+    }
 
     for (final m in kModules) {
       if (q.isEmpty ? m.inNav && ['Général', 'Comptabilité'].contains(m.section) : m.label.toLowerCase().contains(q)) {
@@ -172,4 +215,22 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
       ),
     );
   }
+}
+
+
+class _Quick {
+  final String label;
+  final double amount;
+  final bool income;
+  const _Quick(this.label, this.amount, this.income);
+}
+
+/// Reconnaît « libellé montant » (dépense) ou « + libellé montant » (revenu).
+_Quick? _parseQuickEntry(String raw) {
+  final m = RegExp(r'^\s*(\+)?\s*([^\d+].*?)\s+(\d[\d\s\u202F.,]*)\s*$').firstMatch(raw);
+  if (m == null) return null;
+  final label = m.group(2)!.trim();
+  final amount = double.tryParse(m.group(3)!.replaceAll(RegExp(r'[\s\u202F\u00A0]'), '').replaceAll(',', '.'));
+  if (label.isEmpty || amount == null || amount <= 0) return null;
+  return _Quick(label, amount, m.group(1) != null);
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../branding/app_logo.dart';
 
 import '../constants/app_constants.dart';
 import '../shell/global_search.dart';
@@ -88,10 +91,9 @@ class AppDrawer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.account_balance,
-                    size: 32,
-                    color: Theme.of(context).colorScheme.primary,
+                  Consumer(
+                    builder: (context, ref, _) =>
+                        AppLogoMark(logo: ref.watch(appLogoProvider), size: 40, tile: true),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(

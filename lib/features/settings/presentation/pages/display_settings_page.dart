@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/branding/app_logo.dart';
 import '../../../../core/display/display_prefs.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -28,6 +29,7 @@ class DisplaySettingsPage extends ConsumerWidget {
           _zoomPanel(context, prefs, ctrl),
           _windowsPanel(context, prefs, ctrl),
           _searchPanel(prefs, ctrl),
+          _logoPanel(context, ref),
         ];
         final right = <Widget>[
           _themePanel(context, ref, preset, prefs, ctrl, colors, scheme),
@@ -170,6 +172,47 @@ class DisplaySettingsPage extends ConsumerWidget {
       child: Column(children: [
         _toggle('Activer la recherche rapide avec Ctrl + K', prefs.searchShortcut, (v) => ctrl.update(prefs.copyWith(searchShortcut: v))),
         _toggle('Inclure les comptes archivés dans les résultats', prefs.searchArchived, (v) => ctrl.update(prefs.copyWith(searchArchived: v))),
+      ]),
+    );
+  }
+
+  // ── Logo ────────────────────────────────────────────────────────────────
+  Widget _logoPanel(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final current = ref.watch(appLogoProvider);
+    return Panel(
+      title: 'Logo de l\u2019application',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Affiché dans la barre du haut. Il prend les couleurs du thème choisi.', style: TextStyle(color: colors.muted)),
+        const SizedBox(height: 12),
+        LayoutBuilder(builder: (context, box) {
+          final cols = box.maxWidth >= 520 ? 4 : 2;
+          final w = (box.maxWidth - 10 * (cols - 1)) / cols;
+          return Wrap(spacing: 10, runSpacing: 10, children: [
+            for (final l in AppLogo.values)
+              SizedBox(
+                width: w,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => ref.read(appLogoProvider.notifier).set(l),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: current == l ? scheme.primary : colors.border, width: current == l ? 1.6 : 1),
+                    ),
+                    child: Column(children: [
+                      AppLogoMark(logo: l, size: 56, tile: true),
+                      const SizedBox(height: 8),
+                      Text(l.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                    ]),
+                  ),
+                ),
+              ),
+          ]);
+        }),
       ]),
     );
   }

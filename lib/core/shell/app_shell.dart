@@ -7,9 +7,11 @@ import '../../features/accounts/presentation/providers/account_providers.dart';
 import '../../features/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../features/backup/presentation/providers/backup_providers.dart';
 import '../../features/transactions/presentation/pages/transactions_page.dart';
+import '../branding/app_logo.dart';
 import '../constants/app_constants.dart';
 import '../display/display_prefs.dart';
 import '../navigation/app_drawer.dart';
+import '../navigation/favorites.dart';
 import '../navigation/modules.dart';
 import '../navigation/scaffold_key_provider.dart';
 import '../theme/app_theme.dart';
@@ -268,13 +270,7 @@ class _TopBar extends ConsumerWidget {
       decoration: BoxDecoration(color: scheme.surfaceContainerLow, border: Border(bottom: BorderSide(color: colors.border))),
       child: Row(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(7)),
-            child: Icon(Icons.account_balance, size: 16, color: scheme.onPrimary),
-          ),
+          AppLogoMark(logo: ref.watch(appLogoProvider), size: 32, tile: true),
           const SizedBox(width: 10),
           Text(kAppNameShort, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(width: 12),
@@ -456,6 +452,7 @@ class _NavigatorTree extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    final favorites = ref.watch(favoritesProvider).map(moduleForRoute).whereType<AppModule>().toList();
     return Container(
       width: 232,
       decoration: BoxDecoration(color: scheme.surfaceContainerLow, border: Border(right: BorderSide(color: colors.border))),
@@ -466,6 +463,13 @@ class _NavigatorTree extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(16, 0, 16, 6),
             child: Text('NAVIGATEUR', style: TextStyle(fontSize: 11, letterSpacing: 1, fontWeight: FontWeight.w600)),
           ),
+          if (favorites.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+              child: Text('FAVORIS', style: TextStyle(fontSize: 10.5, letterSpacing: 0.8, color: colors.muted, fontWeight: FontWeight.w600)),
+            ),
+            for (final m in favorites) _NavItem(module: m, selected: location == m.route),
+          ],
           for (final section in kSections) ...[
             if (section != 'Général')
               Padding(
@@ -481,13 +485,14 @@ class _NavigatorTree extends ConsumerWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends ConsumerWidget {
   final AppModule module;
   final bool selected;
   const _NavItem({required this.module, required this.selected});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFav = ref.watch(favoritesProvider).contains(module.route);
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     return InkWell(
@@ -506,6 +511,14 @@ class _NavItem extends StatelessWidget {
             child: Text(module.label,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w600 : FontWeight.normal, color: selected ? scheme.onSurface : null)),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => ref.read(favoritesProvider.notifier).toggle(module.route),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(isFav ? Icons.star : Icons.star_border, size: 16, color: isFav ? scheme.primary : colors.muted.withValues(alpha: 0.6)),
+            ),
           ),
         ]),
       ),
