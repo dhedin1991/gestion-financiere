@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/database_providers.dart';
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
@@ -9,7 +10,8 @@ import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../domain/entities/account.dart';
 import '../providers/account_providers.dart';
-import '../widgets/account_card.dart';
+import '../providers/balance_alerts.dart';
+import '../widgets/accounts_overview.dart';
 
 class AccountsPage extends ConsumerWidget {
   const AccountsPage({super.key});
@@ -24,6 +26,11 @@ class AccountsPage extends ConsumerWidget {
   title: const Text('Mes Comptes'),
   actions: [
     const AppMenuButton(),
+    IconButton(
+      icon: const Icon(Icons.notifications_active_outlined),
+      tooltip: 'Seuils d\u2019alerte des soldes',
+      onPressed: () => _showThresholds(context, ref),
+    ),
     IconButton(
       icon: const Icon(Icons.refresh),
       tooltip: 'Actualiser',
@@ -50,17 +57,9 @@ class AccountsPage extends ConsumerWidget {
                 if (accounts.isEmpty) {
                   return const _EmptyState();
                 }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: accounts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 4),
-                  itemBuilder: (context, index) {
-                    final account = accounts[index];
-                    return AccountCard(
-                      account: account,
-                      onTap: () => _showAccountForm(context, ref, existing: account),
-                    );
-                  },
+                return AccountsOverview(
+                  accounts: accounts,
+                  onOpen: (account) => _showAccountForm(context, ref, existing: account),
                 );
               },
             ),
@@ -68,6 +67,38 @@ class AccountsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showThresholds(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(balanceThresholdsProvider);
+    final warn = TextEditingController(text: current.warning.toStringAsFixed(0));
+    final crit = TextEditingController(text: current.critical.toStringAsFixed(0));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Seuils d\u2019alerte des soldes'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Sous le seuil « faible », le compte passe en orange ; sous le seuil « critique », il passe en rouge (graphique, cercle et alerte). Chaque compte peut avoir ses propres seuils dans sa fiche.'),
+          const SizedBox(height: 12),
+          TextField(controller: warn, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Seuil solde faible (orange)')),
+          const SizedBox(height: 8),
+          TextField(controller: crit, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Seuil solde critique (rouge)')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Enregistrer')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      final w = double.tryParse(warn.text.replaceAll(',', '.'));
+      final c = double.tryParse(crit.text.replaceAll(',', '.'));
+      if (w != null && c != null) {
+        await ref.read(balanceThresholdsProvider.notifier).set(warning: w, critical: c);
+      }
+    }
+    warn.dispose();
+    crit.dispose();
   }
 
   void _showAccountForm(BuildContext context, WidgetRef ref, {Account? existing}) {
@@ -126,6 +157,9 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   late final TextEditingController _bankController;
   late final TextEditingController _balanceController;
   late final TextEditingController _currentBalanceController;
+  late final TextEditingController _warnController;
+  late final TextEditingController _critController;
+  String? _role;
   AccountType _selectedType = AccountType.courant;
   String _selectedCurrency = 'XOF';
 
@@ -143,9 +177,12 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     _currentBalanceController = TextEditingController(
       text: e != null ? e.currentBalance.toStringAsFixed(0) : '',
     );
+    _warnController = TextEditingController(text: e?.alertWarning?.toStringAsFixed(0) ?? '');
+    _critController = TextEditingController(text: e?.alertCritical?.toStringAsFixed(0) ?? '');
     if (e != null) {
       _selectedType = e.type;
       _selectedCurrency = e.currency;
+      _role = e.role;
     }
   }
 
@@ -221,6 +258,38 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String?>(
+              value: _role,
+              decoration: const InputDecoration(
+                labelText: 'Rôle du compte',
+                helperText: 'Caisse : reçoit les retraits Mobile Money. Épargne : reçoit les versements d\u2019épargne.',
+              ),
+              items: const [
+                DropdownMenuItem<String?>(value: null, child: Text('Aucun rôle particulier')),
+                DropdownMenuItem<String?>(value: 'caisse', child: Text('Caisse principale (Agent liquide)')),
+                DropdownMenuItem<String?>(value: 'epargne', child: Text('Compte d\u2019épargne immédiate')),
+              ],
+              onChanged: (v) => setState(() => _role = v),
+            ),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _warnController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Alerte faible (orange)', helperText: 'Vide = seuil par défaut'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _critController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Alerte critique (rouge)', helperText: 'Vide = seuil par défaut'),
+                ),
+              ),
+            ]),
             if (isEditing) ...[
               const SizedBox(height: 12),
               TextFormField(
@@ -279,6 +348,11 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   final now = DateTime.now();
 
   try {
+    if (_role != null) {
+      // Un seul compte par rôle (caisse principale / épargne immédiate).
+      final db = await ref.read(appDatabaseProvider).database;
+      await db.rawUpdate('UPDATE accounts SET role = NULL WHERE role = ? AND id IS NOT ?', [_role, widget.existing?.id]);
+    }
     if (widget.existing == null) {
       await actions.create(Account(
         name: _nameController.text.trim(),
@@ -287,18 +361,32 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
         currency: _selectedCurrency,
         initialBalance: balance,
         currentBalance: balance,
+        role: _role,
+        alertWarning: double.tryParse(_warnController.text.replaceAll(',', '.')),
+        alertCritical: double.tryParse(_critController.text.replaceAll(',', '.')),
         createdAt: now,
         updatedAt: now,
       ));
     } else {
       final currentBalance = double.parse(_currentBalanceController.text.replaceAll(',', '.'));
-      await actions.update(widget.existing!.copyWith(
+      final old = widget.existing!;
+      await actions.update(Account(
+        id: old.id,
         name: _nameController.text.trim(),
         bankName: _bankController.text.trim().isEmpty ? null : _bankController.text.trim(),
         type: _selectedType,
         currency: _selectedCurrency,
         initialBalance: balance,
-        currentBalance: widget.existing!.currentBalance,
+        currentBalance: old.currentBalance,
+        color: old.color,
+        icon: old.icon,
+        isArchived: old.isArchived,
+        entityId: old.entityId,
+        role: _role,
+        alertWarning: double.tryParse(_warnController.text.replaceAll(',', '.')),
+        alertCritical: double.tryParse(_critController.text.replaceAll(',', '.')),
+        createdAt: old.createdAt,
+        updatedAt: DateTime.now(),
       ));
       // Un écart de solde est tracé par une transaction de correction visible
       // dans l'historique (au lieu d'écraser silencieusement le solde).
