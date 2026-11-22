@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/database_providers.dart';
+
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../credits/domain/entities/credit.dart';
 import '../../../credits/domain/entities/credit_installment.dart';
@@ -57,8 +59,21 @@ final financialPositionProvider = FutureProvider.autoDispose<FinancialPosition>(
   final treasury = inMain.where((a) => a.role != 'epargne').fold<double>(0, (s, a) => s + a.currentBalance);
   var savings = inMain.where((a) => a.role == 'epargne').fold<double>(0, (s, a) => s + a.currentBalance);
 
+  // Enveloppes d'épargne. Les versements faits via « Nouvelle opération »
+  // (nature 'epargne') déplacent déjà l'argent vers un compte : ils sont comptés
+  // dans les soldes des comptes, on les retire donc des enveloppes pour ne pas
+  // les compter deux fois.
   final envelopes = await ref.watch(savingsListProvider.future);
-  savings += envelopes.where((e) => e.currency == main).fold<double>(0, (s, e) => s + e.currentBalance);
+  var envelopeTotal = envelopes.where((e) => e.currency == main).fold<double>(0, (s, e) => s + e.currentBalance);
+  final db = await ref.watch(appDatabaseProvider).database;
+  final dup = await db.rawQuery(
+    "SELECT COALESCE(SUM(CASE WHEN st.type = 'versement' THEN st.amount ELSE -st.amount END), 0) AS s "
+    'FROM savings_transactions st '
+    "WHERE st.id IN (SELECT ref_id FROM transactions WHERE kind = 'epargne' AND ref_id IS NOT NULL)",
+  );
+  envelopeTotal -= ((dup.first['s'] as num?) ?? 0) / 100.0;
+  if (envelopeTotal < 0) envelopeTotal = 0;
+  savings += envelopeTotal;
 
   final creditRepo = ref.watch(creditRepositoryProvider);
   final credits = await ref.watch(creditsListProvider.future);

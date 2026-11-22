@@ -12,6 +12,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Accueil** : bloc « Position financière » (trésorerie, épargne, créances, crédits, dettes, factures, position nette) et dernières transactions.
 - **Épargne, Crédits, Dettes** : bandeau de synthèse avec cercle de suivi et chiffres clés (courbe d'évolution pour l'épargne).
 - 10 tests de cohérence des soldes sur SQLite.
+- **Outils > Contrôle d'intégrité** : compare chaque solde à « solde initial + écritures » et ajoute, au besoin, une écriture neutre « Correction d'historique » (le solde affiché ne change pas).
+- Position financière : les versements d'épargne faits via « Nouvelle opération » ne sont plus comptés deux fois (compte d'épargne + enveloppe).
 
 ### Corrigé
 - **Icône Android** : icône carrée pleine + premier plan adaptatif dédié (fond #0B1220), contrôle automatique des fichiers générés dans la CI. Désinstaller puis réinstaller l'APK pour vider le cache d'icône.

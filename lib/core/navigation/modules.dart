@@ -12,6 +12,7 @@ import '../../features/dashboard/presentation/pages/home_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
+import '../../features/integrity/presentation/pages/integrity_page.dart';
 import '../../features/invoicing/presentation/pages/invoicing_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
@@ -65,6 +66,7 @@ final List<AppModule> kModules = [
   AppModule(label: 'Sauvegarde & restauration', route: '/backup', icon: Icons.backup_outlined, selectedIcon: Icons.backup, section: 'Outils', builder: () => const BackupPage()),
   AppModule(label: 'Synchronisation Wi-Fi', route: '/sync', icon: Icons.wifi_tethering, selectedIcon: Icons.wifi_tethering, section: 'Outils', builder: () => const SyncPage()),
   AppModule(label: 'Archives', route: '/archives', icon: Icons.archive_outlined, selectedIcon: Icons.archive, section: 'Outils', builder: () => const ArchivesPage()),
+  AppModule(label: 'Contrôle d’intégrité', route: '/integrity', icon: Icons.fact_check_outlined, selectedIcon: Icons.fact_check, section: 'Outils', builder: () => const IntegrityPage()),
   AppModule(label: 'Journal des actions', route: '/audit-log', icon: Icons.history, selectedIcon: Icons.history, section: 'Outils', builder: () => const AuditLogPage()),
   AppModule(label: 'Paramètres', route: '/settings', icon: Icons.settings_outlined, selectedIcon: Icons.settings, section: 'Application', builder: () => const SettingsPage()),
   AppModule(label: 'Affichage', route: '/display-settings', icon: Icons.palette_outlined, selectedIcon: Icons.palette, section: 'Application', inNav: false, builder: () => const DisplaySettingsPage()),

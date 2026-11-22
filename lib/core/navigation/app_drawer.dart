@@ -40,6 +40,7 @@ class AppDrawer extends StatelessWidget {
       _DrawerItem('Sauvegarde & restauration', Icons.backup_outlined, Icons.backup, '/backup'),
       _DrawerItem('Synchronisation Wi-Fi', Icons.wifi_tethering, Icons.wifi_tethering, '/sync'),
       _DrawerItem('Archives', Icons.archive_outlined, Icons.archive, '/archives'),
+      _DrawerItem('Contrôle d’intégrité', Icons.fact_check_outlined, Icons.fact_check, '/integrity'),
       _DrawerItem('Journal des actions', Icons.history, Icons.history, '/audit-log'),
     ];
 

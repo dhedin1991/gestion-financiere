@@ -24,6 +24,7 @@ class LedgerKind {
   static const rembDette = 'remb_dette';
   static const encaissementCreance = 'encaissement_creance';
   static const facture = 'facture'; // facture encaissée (revenu compté)
+  static const correction = 'correction'; // rattrapage d'historique (neutre)
 
   static const labels = <String, String>{
     depot: 'Dépôt',
@@ -40,6 +41,7 @@ class LedgerKind {
     rembDette: 'Remboursement de dette',
     encaissementCreance: 'Encaissement de créance',
     facture: 'Facture encaissée',
+    correction: 'Correction d’historique',
   };
 }
 
