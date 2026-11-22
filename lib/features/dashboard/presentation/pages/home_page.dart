@@ -77,11 +77,11 @@ class HomePage extends ConsumerWidget {
                 const SizedBox(height: 14),
                 _ChartsRow(width: w),
                 const SizedBox(height: 14),
-                _Position(width: w),
+                PositionPanel(width: w),
                 const SizedBox(height: 14),
                 _Rings(width: w),
                 const SizedBox(height: 14),
-                _RecentTransactions(),
+                RecentTransactionsPanel(),
                 const SizedBox(height: 14),
                 _AccountCards(width: w),
                 const SizedBox(height: 14),
@@ -318,9 +318,9 @@ class _Rings extends ConsumerWidget {
 
 /// Position financière : trésorerie, épargne, crédits, dettes, créances,
 /// factures à encaisser et patrimoine net estimé.
-class _Position extends ConsumerWidget {
+class PositionPanel extends ConsumerWidget {
   final double width;
-  const _Position({required this.width});
+  const PositionPanel({required this.width});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -388,7 +388,7 @@ class _Position extends ConsumerWidget {
 }
 
 /// Dernières écritures (toutes natures confondues).
-class _RecentTransactions extends ConsumerWidget {
+class RecentTransactionsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;

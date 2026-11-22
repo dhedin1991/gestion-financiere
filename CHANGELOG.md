@@ -14,6 +14,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Facturation : encaissement partiel (acomptes), duplication d'une facture, police intégrée au PDF (accents et ponctuation corrects).
 - **Transactions** : nouveau design (synthèse revenus / dépenses / solde net, regroupement par jour avec total quotidien, lignes en cartes).
 - **Comptes** : bouton « Créer mes comptes types » (Agent liquide, Banque courante, Banque secondaire, Moov, MTN).
+- **Tableau de bord** (nouvelle page) : ce mois-ci (cercle d'épargne, revenus, dépenses, solde net), position financière, patrimoine, revenus/dépenses sur 6 mois, dépenses par catégorie, dernières transactions.
+- **Comptes** : cercle de répartition des soldes et courbe du patrimoine toujours visibles en haut.
 - 10 tests de cohérence des soldes sur SQLite.
 - **Outils > Contrôle d'intégrité** : compare chaque solde à « solde initial + écritures » et ajoute, au besoin, une écriture neutre « Correction d'historique » (le solde affiché ne change pas).
 - Position financière : les versements d'épargne faits via « Nouvelle opération » ne sont plus comptés deux fois (compte d'épargne + enveloppe).

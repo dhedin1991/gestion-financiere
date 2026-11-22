@@ -19,6 +19,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
+      _DrawerItem('Tableau de bord', Icons.space_dashboard_outlined, Icons.space_dashboard, '/dashboard'),
       _DrawerItem('Statistiques', Icons.insights_outlined, Icons.insights, '/statistics'),
     ];
     final comptabilite = <_DrawerItem>[

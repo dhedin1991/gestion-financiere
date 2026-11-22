@@ -118,6 +118,8 @@ class AccountsOverview extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 12),
+        const _AccountsCharts(),
+        const SizedBox(height: 12),
         switch (view) {
           AccountsView.cartes => _Cards(accounts: accounts, onOpen: onOpen),
           AccountsView.tableau => _Table(accounts: accounts, onOpen: onOpen),
@@ -340,5 +342,77 @@ class _Evolution extends ConsumerWidget {
         ]);
       },
     );
+  }
+}
+
+
+/// Graphiques toujours visibles en haut de la page Comptes : répartition des
+/// soldes (cercle) et évolution du patrimoine (courbe).
+class _AccountsCharts extends ConsumerWidget {
+  const _AccountsCharts();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final hist = ref.watch(accountHistoriesProvider);
+    final series = ref.watch(netWorthSeriesProvider);
+    final main = ref.watch(mainCurrencyProvider).valueOrNull ?? 'XOF';
+
+    final donut = Panel(
+      title: 'Répartition des soldes',
+      child: hist.when(
+        loading: () => const SizedBox(height: 130, child: Center(child: CircularProgressIndicator())),
+        error: (e, _) => Text(AppErrorMessage.friendly(e)),
+        data: (list) {
+          final items = list.where((h) => h.account.currency == main && h.last > 0).toList();
+          final total = items.fold<double>(0, (a, h) => a + h.last);
+          if (items.isEmpty) return const SizedBox(height: 80, child: Center(child: Text('Aucun solde positif')));
+          return Row(children: [
+            DonutChart(
+              size: 120,
+              stroke: 15,
+              slices: [for (final h in items) DonutSlice(h.last, seriesColor(context, list.indexOf(h)))],
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(children: [
+                for (final h in items)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(children: [
+                      Container(width: 10, height: 10, decoration: BoxDecoration(color: seriesColor(context, list.indexOf(h)), borderRadius: BorderRadius.circular(3))),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(h.account.name, overflow: TextOverflow.ellipsis)),
+                      Text('${(h.last / total * 100).round()} %', style: TextStyle(fontSize: 12, color: colors.muted)),
+                    ]),
+                  ),
+              ]),
+            ),
+          ]);
+        },
+      ),
+    );
+
+    final curve = Panel(
+      title: 'Évolution du patrimoine',
+      child: series.when(
+        loading: () => const SizedBox(height: 130, child: Center(child: CircularProgressIndicator())),
+        error: (e, _) => Text(AppErrorMessage.friendly(e)),
+        data: (v) => v.length < 2
+            ? const SizedBox(height: 80, child: Center(child: Text('Pas encore assez de données')))
+            : LineAreaChart(values: v, color: colors.info, height: 130),
+      ),
+    );
+
+    return LayoutBuilder(builder: (context, c) {
+      if (c.maxWidth >= 800) {
+        return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: donut),
+          const SizedBox(width: 12),
+          Expanded(child: curve),
+        ]);
+      }
+      return Column(children: [donut, const SizedBox(height: 12), curve]);
+    });
   }
 }

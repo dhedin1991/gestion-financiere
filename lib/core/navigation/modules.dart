@@ -8,6 +8,7 @@ import '../../features/backup/presentation/pages/backup_page.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
 import '../../features/budgets/presentation/pages/budgets_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/home_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
@@ -51,6 +52,7 @@ class AppModule {
 
 final List<AppModule> kModules = [
   AppModule(label: 'Accueil', route: '/', icon: Icons.dashboard_outlined, selectedIcon: Icons.dashboard, section: 'Général', builder: () => const HomePage()),
+  AppModule(label: 'Tableau de bord', route: '/dashboard', icon: Icons.space_dashboard_outlined, selectedIcon: Icons.space_dashboard, section: 'Général', builder: () => const DashboardPage()),
   AppModule(label: 'Statistiques', route: '/statistics', icon: Icons.insights_outlined, selectedIcon: Icons.insights, section: 'Général', builder: () => const StatisticsPage()),
   AppModule(label: 'Comptes', route: '/accounts', icon: Icons.account_balance_wallet_outlined, selectedIcon: Icons.account_balance_wallet, section: 'Comptabilité', builder: () => const AccountsPage()),
   AppModule(label: 'Revenus & Dépenses', route: '/transactions', icon: Icons.swap_vert, selectedIcon: Icons.swap_vert_circle, section: 'Comptabilité', builder: () => const TransactionsPage()),
