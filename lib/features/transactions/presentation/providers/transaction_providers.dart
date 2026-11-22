@@ -119,9 +119,11 @@ class TransactionListNotifier extends StateNotifier<AsyncValue<TransactionsPage>
       final hasMore = fetched.length == pageSize;
       _offset += fetched.length;
 
+      if (!mounted) return; // le provider a été libéré pendant le chargement
       final previous = reset ? const <FinancialTransaction>[] : (state.valueOrNull?.items ?? const []);
       state = AsyncValue.data(TransactionsPage(items: [...previous, ...page], hasMore: hasMore));
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
