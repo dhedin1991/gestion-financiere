@@ -19,6 +19,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <_DrawerItem>[
       _DrawerItem('Accueil', Icons.dashboard_outlined, Icons.dashboard, '/'),
+      _DrawerItem('Tableau de bord', Icons.space_dashboard_outlined, Icons.space_dashboard, '/dashboard'),
       _DrawerItem('Statistiques', Icons.insights_outlined, Icons.insights, '/statistics'),
     ];
     final comptabilite = <_DrawerItem>[
@@ -26,6 +27,7 @@ class AppDrawer extends StatelessWidget {
       _DrawerItem('Transactions', Icons.swap_vert, Icons.swap_vert_circle, '/transactions'),
       _DrawerItem('Transactions récurrentes', Icons.autorenew, Icons.autorenew, '/recurring'),
       _DrawerItem('Budgets', Icons.pie_chart_outline, Icons.pie_chart, '/budgets'),
+      _DrawerItem('Facturation', Icons.receipt_long_outlined, Icons.receipt_long, '/invoicing'),
     ];
     final patrimoineItems = <_DrawerItem>[
       _DrawerItem('Épargne', Icons.savings_outlined, Icons.savings, '/savings'),
@@ -39,6 +41,7 @@ class AppDrawer extends StatelessWidget {
       _DrawerItem('Sauvegarde & restauration', Icons.backup_outlined, Icons.backup, '/backup'),
       _DrawerItem('Synchronisation Wi-Fi', Icons.wifi_tethering, Icons.wifi_tethering, '/sync'),
       _DrawerItem('Archives', Icons.archive_outlined, Icons.archive, '/archives'),
+      _DrawerItem('Contrôle d’intégrité', Icons.fact_check_outlined, Icons.fact_check, '/integrity'),
       _DrawerItem('Journal des actions', Icons.history, Icons.history, '/audit-log'),
     ];
 

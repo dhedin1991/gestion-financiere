@@ -1,0 +1,63 @@
+# Option de secours si GitHub Actions est indisponible (facturation).
+# Compile l'APK Android (même étapes que .github/workflows/build.yml, sans signature
+# permanente : ajouter les variables d'environnement KS_PASS dans Codemagic pour signer).
+workflows:
+  android:
+    name: APK Android
+    instance_type: linux_x2
+    max_build_duration: 45
+    environment:
+      flutter: 3.32.0
+    scripts:
+      - name: Projet Android + icônes
+        script: |
+          flutter create --platforms=android --project-name gestion_financiere .
+          flutter pub get
+          dart run flutter_launcher_icons
+          sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
+          sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
+          cat >> android/app/build.gradle.kts << 'EOT'
+
+          android {
+              compileOptions {
+                  isCoreLibraryDesugaringEnabled = true
+              }
+          }
+
+          dependencies {
+              coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+          }
+          EOT
+      - name: Manifest (permissions, notifications)
+        script: |
+          python3 - << 'PY'
+          import re
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          perms = ['android.permission.INTERNET','android.permission.RECEIVE_BOOT_COMPLETED','android.permission.VIBRATE','android.permission.POST_NOTIFICATIONS']
+          perm_xml = ''.join('    <uses-permission android:name="%s"/>\n' % x for x in perms)
+          s = re.sub(r'(<manifest[^>]*>)', lambda m: m.group(1) + '\n' + perm_xml, s, count=1)
+          s = s.replace('<application', '<application android:usesCleartextTraffic="true"', 1)
+          receivers = """
+              <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+              <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+                  <intent-filter>
+                      <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                      <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                      <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                      <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+                  </intent-filter>
+              </receiver>
+          """
+          s = s.replace('</application>', receivers + '</application>', 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+      - name: Analyse et tests
+        script: |
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Build APK
+        script: flutter build apk --release --no-shrink
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk

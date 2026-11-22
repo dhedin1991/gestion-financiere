@@ -1,4 +1,5 @@
 import '../../../../core/database/app_database.dart';
+import '../../../../core/ledger/ledger.dart';
 import '../../../../core/utils/money.dart';
 import '../models/credit_installment_model.dart';
 import '../models/credit_model.dart';
@@ -18,7 +19,10 @@ class CreditDao {
   // ---------------- CREDITS ----------------
 
   /// Crée un crédit ET génère automatiquement son échéancier complet.
-  Future<int> insertCreditWithSchedule(CreditModel credit) async {
+  ///
+  /// Avec [receivePrincipal], le capital reçu est aussi enregistré comme
+  /// entrée d'argent (écriture neutre « Crédit reçu ») sur le compte du crédit.
+  Future<int> insertCreditWithSchedule(CreditModel credit, {bool receivePrincipal = false}) async {
     final db = await appDatabase.database;
 
     return db.transaction((txn) async {
@@ -36,6 +40,19 @@ class CreditDao {
           'created_at': now,
           'updated_at': now,
         });
+      }
+
+      if (receivePrincipal && credit.accountId != null) {
+        await Ledger.post(
+          txn,
+          accountId: credit.accountId!,
+          signedCents: Money.toCents(credit.principalAmount),
+          kind: LedgerKind.creditRecu,
+          refId: creditId,
+          currency: credit.currency,
+          description: 'Crédit reçu — ${credit.name}',
+          date: credit.startDate,
+        );
       }
 
       return creditId;
@@ -58,7 +75,15 @@ class CreditDao {
   /// Supprime un crédit et, grâce à ON DELETE CASCADE, toutes ses échéances.
   Future<int> deleteCredit(int id) async {
     final db = await appDatabase.database;
-    return db.delete(_creditsTable, where: 'id = ?', whereArgs: [id]);
+    return db.transaction((txn) async {
+      final inst = await txn.query(_installmentsTable,
+          columns: ['id'], where: 'credit_id = ?', whereArgs: [id]);
+      for (final r in inst) {
+        await Ledger.unpost(txn, kinds: [LedgerKind.rembCredit], refId: r['id'] as int);
+      }
+      await Ledger.unpost(txn, kinds: [LedgerKind.creditRecu], refId: id);
+      return txn.delete(_creditsTable, where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<CreditModel?> getCreditById(int id) async {
@@ -118,7 +143,7 @@ class CreditDao {
         if (wasPaid != isPaid) {
           final creditRows = await txn.query(
             _creditsTable,
-            columns: ['account_id'],
+            columns: ['account_id', 'name', 'currency'],
             where: 'id = ?',
             whereArgs: [previous.first['credit_id']],
             limit: 1,
@@ -126,11 +151,28 @@ class CreditDao {
           final accountId = creditRows.isEmpty ? null : creditRows.first['account_id'] as int?;
           if (accountId != null) {
             final cents = (previous.first['amount'] as num).round();
-            await txn.rawUpdate(
-              'UPDATE accounts SET current_balance = current_balance ${isPaid ? '-' : '+'} ?, '
-              'updated_at = ? WHERE id = ?',
-              [cents, DateTime.now().toIso8601String(), accountId],
-            );
+            final instId = installment.id!;
+            if (isPaid) {
+              await Ledger.post(
+                txn,
+                accountId: accountId,
+                signedCents: -cents,
+                kind: LedgerKind.rembCredit,
+                refId: instId,
+                currency: (creditRows.first['currency'] as String?) ?? 'XOF',
+                description: 'Remboursement de crédit — ${creditRows.first['name']}',
+                date: DateTime.tryParse('${newRow['payment_date']}'),
+              );
+            } else {
+              final n = await Ledger.unpost(txn, kinds: [LedgerKind.rembCredit], refId: instId);
+              if (n == 0) {
+                // Échéance payée avant l'introduction des écritures.
+                await txn.rawUpdate(
+                  'UPDATE accounts SET current_balance = current_balance + ?, updated_at = ? WHERE id = ?',
+                  [cents, DateTime.now().toIso8601String(), accountId],
+                );
+              }
+            }
           }
         }
       }

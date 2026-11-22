@@ -8,10 +8,13 @@ import '../../features/backup/presentation/pages/backup_page.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
 import '../../features/budgets/presentation/pages/budgets_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/home_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/export/presentation/pages/export_page.dart';
 import '../../features/help/presentation/pages/help_page.dart';
+import '../../features/integrity/presentation/pages/integrity_page.dart';
+import '../../features/invoicing/presentation/pages/invoicing_page.dart';
 import '../../features/patrimoine/presentation/pages/patrimoine_page.dart';
 import '../../features/recurring/presentation/pages/recurring_transactions_page.dart';
 import '../../features/savings/presentation/pages/savings_page.dart';
@@ -49,11 +52,13 @@ class AppModule {
 
 final List<AppModule> kModules = [
   AppModule(label: 'Accueil', route: '/', icon: Icons.dashboard_outlined, selectedIcon: Icons.dashboard, section: 'Général', builder: () => const HomePage()),
+  AppModule(label: 'Tableau de bord', route: '/dashboard', icon: Icons.space_dashboard_outlined, selectedIcon: Icons.space_dashboard, section: 'Général', builder: () => const DashboardPage()),
   AppModule(label: 'Statistiques', route: '/statistics', icon: Icons.insights_outlined, selectedIcon: Icons.insights, section: 'Général', builder: () => const StatisticsPage()),
   AppModule(label: 'Comptes', route: '/accounts', icon: Icons.account_balance_wallet_outlined, selectedIcon: Icons.account_balance_wallet, section: 'Comptabilité', builder: () => const AccountsPage()),
   AppModule(label: 'Revenus & Dépenses', route: '/transactions', icon: Icons.swap_vert, selectedIcon: Icons.swap_vert_circle, section: 'Comptabilité', builder: () => const TransactionsPage()),
   AppModule(label: 'Transactions récurrentes', route: '/recurring', icon: Icons.autorenew, selectedIcon: Icons.autorenew, section: 'Comptabilité', builder: () => const RecurringTransactionsPage()),
   AppModule(label: 'Budgets', route: '/budgets', icon: Icons.pie_chart_outline, selectedIcon: Icons.pie_chart, section: 'Comptabilité', builder: () => const BudgetsPage()),
+  AppModule(label: 'Facturation', route: '/invoicing', icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long, section: 'Comptabilité', builder: () => const InvoicingPage()),
   AppModule(label: 'Épargne', route: '/savings', icon: Icons.savings_outlined, selectedIcon: Icons.savings, section: 'Patrimoine', builder: () => const SavingsPage()),
   AppModule(label: 'Crédits', route: '/credits', icon: Icons.request_quote_outlined, selectedIcon: Icons.request_quote, section: 'Patrimoine', builder: () => const CreditsPage()),
   AppModule(label: 'Dettes & Créances', route: '/debts', icon: Icons.handshake_outlined, selectedIcon: Icons.handshake, section: 'Patrimoine', builder: () => const DebtsPage()),
@@ -63,6 +68,7 @@ final List<AppModule> kModules = [
   AppModule(label: 'Sauvegarde & restauration', route: '/backup', icon: Icons.backup_outlined, selectedIcon: Icons.backup, section: 'Outils', builder: () => const BackupPage()),
   AppModule(label: 'Synchronisation Wi-Fi', route: '/sync', icon: Icons.wifi_tethering, selectedIcon: Icons.wifi_tethering, section: 'Outils', builder: () => const SyncPage()),
   AppModule(label: 'Archives', route: '/archives', icon: Icons.archive_outlined, selectedIcon: Icons.archive, section: 'Outils', builder: () => const ArchivesPage()),
+  AppModule(label: 'Contrôle d’intégrité', route: '/integrity', icon: Icons.fact_check_outlined, selectedIcon: Icons.fact_check, section: 'Outils', builder: () => const IntegrityPage()),
   AppModule(label: 'Journal des actions', route: '/audit-log', icon: Icons.history, selectedIcon: Icons.history, section: 'Outils', builder: () => const AuditLogPage()),
   AppModule(label: 'Paramètres', route: '/settings', icon: Icons.settings_outlined, selectedIcon: Icons.settings, section: 'Application', builder: () => const SettingsPage()),
   AppModule(label: 'Affichage', route: '/display-settings', icon: Icons.palette_outlined, selectedIcon: Icons.palette, section: 'Application', inNav: false, builder: () => const DisplaySettingsPage()),

@@ -30,13 +30,13 @@ void main() {
     return openDatabase(dbPath(), version: version, onCreate: (db, _) => onCreate(db));
   }
 
-  test('installation neuve : schéma v17 complet', () async {
+  test('installation neuve : schéma v18 complet', () async {
     final appDb = AppDatabase(directoryOverride: dir);
     final db = await appDb.database;
 
     final version = (await db.rawQuery('PRAGMA user_version')).first.values.first;
     expect(version, AppDatabase.schemaVersion);
-    expect(AppDatabase.schemaVersion, 17);
+    expect(AppDatabase.schemaVersion, 18);
 
     final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
         .map((r) => r['name'] as String)

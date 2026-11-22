@@ -9,6 +9,9 @@ import '../providers/credit_providers.dart';
 import '../widgets/credit_form_sheet.dart';
 import 'credit_detail_page.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/summary_header.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../dashboard/presentation/providers/summary_providers.dart';
 
 class CreditsPage extends ConsumerWidget {
   const CreditsPage({super.key});
@@ -44,9 +47,10 @@ class CreditsPage extends ConsumerWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: credits.length,
+            itemCount: credits.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) => _CreditCard(credit: credits[index]),
+            itemBuilder: (context, index) =>
+                index == 0 ? const _CreditsSummaryHeader() : _CreditCard(credit: credits[index - 1]),
           );
         },
       ),
@@ -185,6 +189,36 @@ class _CreditCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// Bandeau de synthèse : capital emprunté, remboursé, reste à payer.
+class _CreditsSummaryHeader extends ConsumerWidget {
+  const _CreditsSummaryHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(creditsSummaryProvider);
+    final colors = context.appColors;
+    return async.when(
+      loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text(AppErrorMessage.friendly(e)),
+      data: (s) {
+        final fmt = AppFormat.currency(symbol: s.currency);
+        return SummaryHeader(
+          title: 'Synthèse des crédits',
+          ratio: s.ratio,
+          ringColor: colors.positive,
+          stats: [
+            SummaryStat('Capital emprunté', fmt.format(s.borrowed)),
+            SummaryStat('Déjà remboursé', fmt.format(s.repaid), color: colors.positive),
+            SummaryStat('Reste à rembourser', fmt.format(s.owed), color: colors.negative),
+            SummaryStat('Mensualités (${s.active} actif${s.active > 1 ? 's' : ''})', fmt.format(s.monthly)),
+          ],
+        );
+      },
     );
   }
 }

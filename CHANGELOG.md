@@ -3,6 +3,26 @@
 Ce fichier documente les changements notables du projet.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Moteur d'interconnexion] — 2026-11-22 (branche `moteur`, non fusionné)
+
+### Nouveau
+- **Une seule saisie, synchronisation partout** : grand livre (chaque variation de solde laisse une écriture), service d'opérations (dépôt, retrait Moov/MTN vers la caisse, transfert, épargne, crédit, dette, créance, achat à crédit, remboursements), base de données v18 (migration non destructive).
+- **Comptes** : vues Cartes / Tableau / Évolution, rôles « Caisse principale » et « Épargne immédiate », alertes de solde orange puis rouge (seuils 15 000 / 10 000 modifiables, surchargeables par compte).
+- **Facturation** : liste avec indicateurs, formulaire, aperçu et PDF en 4 modèles, profil de l'entreprise, encaissement qui crédite un compte (revenu compté), annulation d'encaissement.
+- **Accueil** : bloc « Position financière » (trésorerie, épargne, créances, crédits, dettes, factures, position nette) et dernières transactions.
+- **Épargne, Crédits, Dettes** : bandeau de synthèse avec cercle de suivi et chiffres clés (courbe d'évolution pour l'épargne).
+- Facturation : encaissement partiel (acomptes), duplication d'une facture, police intégrée au PDF (accents et ponctuation corrects).
+- **Transactions** : nouveau design (synthèse revenus / dépenses / solde net, regroupement par jour avec total quotidien, lignes en cartes).
+- **Comptes** : bouton « Créer mes comptes types » (Agent liquide, Banque courante, Banque secondaire, Moov, MTN).
+- **Tableau de bord** (nouvelle page) : ce mois-ci (cercle d'épargne, revenus, dépenses, solde net), position financière, patrimoine, revenus/dépenses sur 6 mois, dépenses par catégorie, dernières transactions.
+- **Comptes** : cercle de répartition des soldes et courbe du patrimoine toujours visibles en haut.
+- 10 tests de cohérence des soldes sur SQLite.
+- **Outils > Contrôle d'intégrité** : compare chaque solde à « solde initial + écritures » et ajoute, au besoin, une écriture neutre « Correction d'historique » (le solde affiché ne change pas).
+- Position financière : les versements d'épargne faits via « Nouvelle opération » ne sont plus comptés deux fois (compte d'épargne + enveloppe).
+
+### Corrigé
+- **Icône Android** : icône carrée pleine + premier plan adaptatif dédié (fond #0B1220), contrôle automatique des fichiers générés dans la CI. Désinstaller puis réinstaller l'APK pour vider le cache d'icône.
+
 ## [Interface professionnelle] — 2026-11-21
 
 - **Comptes** : « Ajuster le solde » crée une transaction « Correction de solde » tracée dans l'historique et le journal (plus d'écrasement silencieux).

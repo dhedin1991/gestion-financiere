@@ -16,7 +16,9 @@ import '../../../savings/presentation/providers/savings_providers.dart';
 import '../../../settings/presentation/providers/exchange_rate_providers.dart';
 import '../../../transactions/presentation/pages/transactions_page.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
+import '../../../transactions/domain/entities/transaction.dart';
 import '../providers/insights_providers.dart';
+import '../providers/position_providers.dart';
 
 /// Couleurs des séries (comptes) : fixes pour un compte donné, lisibles sur
 /// tous les thèmes.
@@ -60,6 +62,8 @@ class HomePage extends ConsumerWidget {
           ref.invalidate(accountsListProvider);
           ref.invalidate(accountHistoriesProvider);
           ref.invalidate(ringMetricsProvider);
+          ref.invalidate(financialPositionProvider);
+          ref.invalidate(recentTransactionsProvider);
         },
         child: LayoutBuilder(
           builder: (context, box) {
@@ -73,7 +77,11 @@ class HomePage extends ConsumerWidget {
                 const SizedBox(height: 14),
                 _ChartsRow(width: w),
                 const SizedBox(height: 14),
+                PositionPanel(width: w),
+                const SizedBox(height: 14),
                 _Rings(width: w),
+                const SizedBox(height: 14),
+                RecentTransactionsPanel(),
                 const SizedBox(height: 14),
                 _AccountCards(width: w),
                 const SizedBox(height: 14),
@@ -300,6 +308,118 @@ class _Rings extends ConsumerWidget {
                     ),
                   ),
                 ],
+              ),
+          ]);
+        },
+      ),
+    );
+  }
+}
+
+/// Position financière : trésorerie, épargne, crédits, dettes, créances,
+/// factures à encaisser et patrimoine net estimé.
+class PositionPanel extends ConsumerWidget {
+  final double width;
+  const PositionPanel({required this.width});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final async = ref.watch(financialPositionProvider);
+    return Panel(
+      title: 'Position financière',
+      child: async.when(
+        loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+        error: (e, _) => Text(AppErrorMessage.friendly(e)),
+        data: (p) {
+          final fmt = AppFormat.currency(symbol: p.currency);
+          Widget tile(String label, double v, Color color, IconData icon, String route) => InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => context.go(route),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(children: [
+                    Icon(icon, size: 18, color: color),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(label, style: TextStyle(fontSize: 12, color: colors.muted)),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(fmt.format(v), style: amountTextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+                        ),
+                      ]),
+                    ),
+                  ]),
+                ),
+              );
+          final cols = width >= 900 ? 3 : 2;
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            gridOf(width - 32, cols, [
+              tile('Trésorerie', p.treasury, Theme.of(context).colorScheme.primary, Icons.account_balance_wallet_outlined, '/accounts'),
+              tile('Épargne', p.savings, colors.info, Icons.savings_outlined, '/savings'),
+              tile('Créances à encaisser', p.receivables, colors.positive, Icons.call_received, '/debts'),
+              tile('Crédits à rembourser', p.creditsOwed, colors.negative, Icons.request_quote_outlined, '/credits'),
+              tile('Dettes à rembourser', p.debtsOwed, colors.negative, Icons.call_made, '/debts'),
+              tile('Factures à encaisser', p.invoicesPending, colors.warning, Icons.receipt_long_outlined, '/invoicing'),
+            ]),
+            const Divider(height: 20),
+            Row(children: [
+              Expanded(child: Text('Position nette estimée', style: TextStyle(color: colors.muted))),
+              Text(
+                fmt.format(p.net),
+                style: amountTextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: p.net >= 0 ? colors.positive : colors.negative),
+              ),
+            ]),
+            if (p.invoicesLate > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  '${p.invoicesLate} facture${p.invoicesLate > 1 ? 's' : ''} en retard de paiement.',
+                  style: TextStyle(fontSize: 12, color: colors.negative),
+                ),
+              ),
+          ]);
+        },
+      ),
+    );
+  }
+}
+
+/// Dernières écritures (toutes natures confondues).
+class RecentTransactionsPanel extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final async = ref.watch(recentTransactionsProvider);
+    return Panel(
+      title: 'Dernières transactions',
+      trailing: TextButton(onPressed: () => context.go('/transactions'), child: const Text('Tout voir')),
+      child: async.when(
+        loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
+        error: (e, _) => Text(AppErrorMessage.friendly(e)),
+        data: (list) {
+          if (list.isEmpty) return const Text('Aucune transaction pour l’instant.');
+          final shown = list.take(6).toList();
+          return Column(children: [
+            for (final FinancialTransaction t in shown)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(children: [
+                  Icon(t.signedAmount >= 0 ? Icons.arrow_upward : Icons.arrow_downward, size: 16, color: t.signedAmount >= 0 ? colors.positive : colors.negative),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text((t.description ?? '').isEmpty ? (t.type == TransactionType.revenu ? 'Revenu' : 'Dépense') : t.description!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(DateFormat('dd/MM/yyyy').format(t.transactionDate), style: TextStyle(fontSize: 11, color: colors.muted)),
+                    ]),
+                  ),
+                  Text(
+                    '${t.signedAmount >= 0 ? '+' : '-'} ${AppFormat.currency(symbol: t.currency).format(t.amount)}',
+                    style: amountTextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.signedAmount >= 0 ? colors.positive : colors.negative),
+                  ),
+                ]),
               ),
           ]);
         },
