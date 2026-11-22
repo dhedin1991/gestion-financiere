@@ -27,6 +27,11 @@ class AccountsPage extends ConsumerWidget {
   actions: [
     const AppMenuButton(),
     IconButton(
+      icon: const Icon(Icons.playlist_add_check),
+      tooltip: 'Créer mes comptes types',
+      onPressed: () => _createStandardAccounts(context, ref),
+    ),
+    IconButton(
       icon: const Icon(Icons.notifications_active_outlined),
       tooltip: 'Seuils d\u2019alerte des soldes',
       onPressed: () => _showThresholds(context, ref),
@@ -67,6 +72,50 @@ class AccountsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Crée les comptes du cahier des charges qui n'existent pas encore
+  /// (soldes à 0, à ajuster ensuite) : Agent liquide (caisse principale),
+  /// Banque courante, Banque secondaire, Moov, MTN.
+  Future<void> _createStandardAccounts(BuildContext context, WidgetRef ref) async {
+    final existing = (await ref.read(accountsListProvider.future)).map((a) => a.name.trim().toLowerCase()).toSet();
+    final now = DateTime.now();
+    Account mk(String name, AccountType type, {String? role}) => Account(
+          name: name,
+          type: type,
+          initialBalance: 0,
+          currentBalance: 0,
+          role: role,
+          createdAt: now,
+          updatedAt: now,
+        );
+    final wanted = [
+      mk('Agent liquide', AccountType.especes, role: 'caisse'),
+      mk('Banque courante', AccountType.courant),
+      mk('Banque secondaire', AccountType.courant),
+      mk('Moov', AccountType.mobileMoney),
+      mk('MTN', AccountType.mobileMoney),
+    ].where((a) => !existing.contains(a.name.toLowerCase())).toList();
+    if (!context.mounted) return;
+    if (wanted.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tes comptes types existent déjà.')));
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Créer mes comptes types ?'),
+        content: Text('Seront créés (solde 0, à ajuster ensuite) :\n${wanted.map((a) => '• ${a.name}').join('\n')}'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Créer')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    for (final a in wanted) {
+      await ref.read(accountActionsProvider).create(a);
+    }
   }
 
   Future<void> _showThresholds(BuildContext context, WidgetRef ref) async {
