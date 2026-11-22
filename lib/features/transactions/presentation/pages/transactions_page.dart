@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/app_format.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/panel.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../categories/domain/entities/category.dart';
@@ -152,12 +156,33 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 final accounts = accountsAsync.valueOrNull ?? <Account>[];
 
                 final showFooter = page.hasMore || page.loadingMore;
-                return ListView.separated(
+
+                // Entrées : synthèse, puis un en-tête par jour suivi de ses lignes.
+                final entries = <Object>['summary'];
+                String? lastDay;
+                for (final t in transactions) {
+                  final d = DateFormat('yyyy-MM-dd').format(t.transactionDate);
+                  if (d != lastDay) {
+                    entries.add(d);
+                    lastDay = d;
+                  }
+                  entries.add(t);
+                }
+                final dayNet = <String, double>{};
+                for (final t in transactions) {
+                  if (t.isTransfer) continue;
+                  final d = DateFormat('yyyy-MM-dd').format(t.transactionDate);
+                  dayNet[d] = (dayNet[d] ?? 0) + (t.type == TransactionType.revenu ? t.amount : -t.amount);
+                }
+                final colors = context.appColors;
+                final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                final yesterday = DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(const Duration(days: 1)));
+
+                return ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: transactions.length + (showFooter ? 1 : 0),
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemCount: entries.length + (showFooter ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index >= transactions.length) {
+                    if (index >= entries.length) {
                       // Ligne de pied de liste : bouton "Charger plus" (ou
                       // indicateur de chargement pendant la page suivante).
                       return Padding(
@@ -174,20 +199,51 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       );
                     }
 
-                    final t = transactions[index];
+                    final e = entries[index];
+                    if (e is String && e == 'summary') {
+                      return _TransactionsSummary(items: transactions);
+                    }
+                    if (e is String) {
+                      final date = DateTime.parse(e);
+                      final label = e == today
+                          ? 'Aujourd’hui'
+                          : e == yesterday
+                              ? 'Hier'
+                              : DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(date);
+                      final net = dayNet[e] ?? 0;
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 14, 4, 4),
+                        child: Row(children: [
+                          Expanded(
+                            child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.muted)),
+                          ),
+                          if (net != 0)
+                            Text(
+                              '${net > 0 ? '+' : '-'} ${AppFormat.currency(symbol: transactions.first.currency).format(net.abs())}',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: net > 0 ? colors.positive : colors.negative),
+                            ),
+                        ]),
+                      );
+                    }
+
+                    final t = e as FinancialTransaction;
                     final account = accounts.where((a) => a.id == t.accountId).toList();
                     final accountName = account.isNotEmpty ? account.first.name : 'Compte supprimé';
 
-                    return GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onSecondaryTapUp: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
-                      onLongPressStart: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
-                      child: TransactionTile(
-                        transaction: t,
-                        accountName: accountName,
-                        onTap: () => (t.isTransfer || t.kind != null)
-                            ? _confirmDeleteTransfer(context, ref, t)
-                            : _showTransactionForm(context, ref, existing: t),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      clipBehavior: Clip.antiAlias,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onSecondaryTapUp: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                        onLongPressStart: (t.isTransfer || t.kind != null) ? null : (d) => _showContextMenu(context, ref, t, d.globalPosition),
+                        child: TransactionTile(
+                          transaction: t,
+                          accountName: accountName,
+                          onTap: () => (t.isTransfer || t.kind != null)
+                              ? _confirmDeleteTransfer(context, ref, t)
+                              : _showTransactionForm(context, ref, existing: t),
+                        ),
                       ),
                     );
                   },
@@ -649,4 +705,43 @@ void _showUndoDelete(ScaffoldMessengerState messenger, TransactionActions action
         ),
       ),
     );
+}
+
+
+/// Synthèse des transactions affichées : revenus, dépenses, solde net
+/// (les virements entre comptes sont exclus).
+class _TransactionsSummary extends StatelessWidget {
+  final List<FinancialTransaction> items;
+  const _TransactionsSummary({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final real = items.where((t) => !t.isTransfer);
+    final income = real.where((t) => t.type == TransactionType.revenu).fold<double>(0, (s, t) => s + t.amount);
+    final expense = real.where((t) => t.type == TransactionType.depense).fold<double>(0, (s, t) => s + t.amount);
+    final net = income - expense;
+    final fmt = AppFormat.currency(symbol: items.first.currency);
+
+    Widget cell(String label, double v, Color color) => Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 11, color: colors.muted)),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(fmt.format(v), style: amountTextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
+            ),
+          ]),
+        );
+
+    return Panel(
+      title: 'Synthèse (${items.length} transaction${items.length > 1 ? 's' : ''} affichée${items.length > 1 ? 's' : ''})',
+      child: Row(children: [
+        cell('Revenus', income, colors.positive),
+        cell('Dépenses', expense, colors.negative),
+        cell('Solde net', net.abs(), net >= 0 ? colors.positive : colors.negative),
+      ]),
+    );
+  }
 }
