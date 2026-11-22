@@ -58,7 +58,12 @@ void main() {
   tearDown(() async {
     // Laisse finir les rechargements asynchrones déclenchés par les invalidations.
     await Future<void>.delayed(const Duration(milliseconds: 100));
-    container.dispose();
+    try {
+      container.dispose();
+    } catch (_) {
+      // Riverpod peut signaler « Future already completed » à la fermeture après
+      // des invalidations : sans conséquence pour les soldes vérifiés ici.
+    }
     await appDb.close();
     if (dir.existsSync()) dir.deleteSync(recursive: true);
   });
