@@ -6,10 +6,11 @@ import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../domain/entities/credit.dart';
 import '../providers/credit_providers.dart';
-import '../widgets/credit_form_sheet.dart';
 import 'credit_detail_page.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/ledger/operation_service.dart';
 import '../../../../core/widgets/summary_header.dart';
+import '../../../transactions/presentation/widgets/operation_form_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/providers/summary_providers.dart';
 
@@ -64,7 +65,7 @@ class CreditsPage extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => const CreditFormSheet(),
+      builder: (_) => const OperationFormSheet(initialKind: OperationKind.creditRecu),
     );
   }
 }

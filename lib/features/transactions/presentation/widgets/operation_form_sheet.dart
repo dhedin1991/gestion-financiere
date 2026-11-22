@@ -76,7 +76,9 @@ const _groups = <(String, List<_Op>)>[
 /// l'opération, et une seule saisie met à jour comptes, épargnes, crédits,
 /// dettes, statistiques et historique.
 class OperationFormSheet extends ConsumerStatefulWidget {
-  const OperationFormSheet({super.key});
+  /// Opération présélectionnée (ex. depuis les pages Dettes ou Crédits).
+  final OperationKind? initialKind;
+  const OperationFormSheet({super.key, this.initialKind});
 
   @override
   ConsumerState<OperationFormSheet> createState() => _OperationFormSheetState();
@@ -104,6 +106,22 @@ class _OperationFormSheetState extends ConsumerState<OperationFormSheet> {
   bool _saving = false;
 
   OperationKind get _kind => _op.kind;
+
+  @override
+  void initState() {
+    super.initState();
+    final k = widget.initialKind;
+    if (k != null) {
+      for (final g in _groups) {
+        for (final o in g.$2) {
+          if (o.kind == k) {
+            _op = o;
+            return;
+          }
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -147,7 +165,11 @@ class _OperationFormSheetState extends ConsumerState<OperationFormSheet> {
         _toAccountId = (caisse ?? active.firstWhere((a) => a.id != _accountId, orElse: () => active.first)).id;
         break;
       case OperationKind.epargne:
-        _toAccountId = (epargne ?? active.firstWhere((a) => a.type == AccountType.epargne, orElse: () => active.first)).id;
+        final moov = active.where((a) => a.name.trim().toLowerCase() == 'moov').toList();
+        _toAccountId = (epargne ??
+                (moov.isNotEmpty ? moov.first : null) ??
+                active.firstWhere((a) => a.type == AccountType.epargne, orElse: () => active.first))
+            .id;
         final src = active.where((a) => a.id != _toAccountId).toList();
         _accountId = (caisse != null && caisse.id != _toAccountId ? caisse : (src.isEmpty ? active.first : src.first)).id;
         break;

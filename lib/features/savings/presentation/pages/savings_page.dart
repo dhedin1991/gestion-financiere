@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../transactions/domain/entities/transaction.dart';
+import '../../../../core/widgets/panel.dart';
+import '../../../../core/widgets/charts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
@@ -54,7 +57,13 @@ class SavingsPage extends ConsumerWidget {
             itemCount: savingsList.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              if (index == 0) return const _SavingsSummaryHeader();
+              if (index == 0) {
+                return const Column(children: [
+                  _ImmediateSavingsPanel(),
+                  SizedBox(height: 8),
+                  _SavingsSummaryHeader(),
+                ]);
+              }
               final savings = savingsList[index - 1];
               return _SavingsCard(savings: savings);
             },
@@ -262,6 +271,60 @@ class _SavingsSummaryHeader extends ConsumerWidget {
           ],
           series: s.evolution,
           seriesCaption: 'Évolution de l’épargne',
+        );
+      },
+    );
+  }
+}
+
+
+/// Épargne immédiate (Moov) : solde, évolution et opérations récentes.
+class _ImmediateSavingsPanel extends ConsumerWidget {
+  const _ImmediateSavingsPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final async = ref.watch(immediateSavingsProvider);
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => const SizedBox.shrink(),
+      data: (s) {
+        if (s == null) return const SizedBox.shrink();
+        final fmt = AppFormat.currency(symbol: s.account.currency);
+        return Panel(
+          title: 'Épargne immédiate · ${s.account.name}',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(fmt.format(s.account.currentBalance), style: amountTextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: colors.info)),
+            if (s.evolution.length >= 2) ...[
+              const SizedBox(height: 8),
+              LineAreaChart(values: s.evolution, color: colors.info, height: 90, grid: false),
+            ],
+            const SizedBox(height: 10),
+            Text('Dernières opérations', style: TextStyle(fontSize: 12, color: colors.muted, fontWeight: FontWeight.w600)),
+            if (s.operations.isEmpty)
+              const Padding(padding: EdgeInsets.only(top: 6), child: Text('Aucune opération.')),
+            for (final t in s.operations)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(children: [
+                  Icon(t.type == TransactionType.revenu ? Icons.arrow_upward : Icons.arrow_downward,
+                      size: 14, color: t.type == TransactionType.revenu ? colors.positive : colors.negative),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${DateFormat('dd/MM/yyyy').format(t.transactionDate)} · ${(t.description ?? '').isEmpty ? 'Opération' : t.description!}',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Text(
+                    '${t.type == TransactionType.revenu ? '+' : '-'} ${fmt.format(t.amount)}',
+                    style: amountTextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: t.type == TransactionType.revenu ? colors.positive : colors.negative),
+                  ),
+                ]),
+              ),
+          ]),
         );
       },
     );

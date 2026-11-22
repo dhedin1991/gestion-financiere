@@ -1,3 +1,7 @@
+import '../../features/audit_log/presentation/providers/audit_helper.dart';
+import '../../features/dashboard/presentation/providers/insights_providers.dart';
+import '../../features/dashboard/presentation/providers/position_providers.dart';
+import '../../features/dashboard/presentation/providers/summary_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -142,6 +146,15 @@ class OperationService {
         await _creditPayment(r);
         break;
     }
+    // Traçabilité : chaque opération laisse une trace dans le journal des actions.
+    await logAudit(
+      _ref,
+      entityType: 'opération',
+      action: 'create',
+      newValue: '${r.kind.name} · ${r.amount.round()} · compte ${r.accountId}'
+          '${r.toAccountId != null ? ' → compte ${r.toAccountId}' : ''}'
+          '${(r.description ?? '').isNotEmpty ? ' · ${r.description}' : ''}',
+    );
     _refreshAll();
   }
 
@@ -426,6 +439,7 @@ class OperationService {
       default:
         await _deleteGroup(row);
     }
+    await logAudit(_ref, entityType: 'opération', entityId: txId, action: 'delete', oldValue: 'écriture n°$txId');
     _refreshAll();
   }
 
@@ -459,5 +473,16 @@ class OperationService {
     _ref.invalidate(debtsListProvider);
     _ref.invalidate(creditsListProvider);
     _ref.invalidate(savingsListProvider);
+    // Graphiques, synthèses et indicateurs : tout se recalcule après chaque opération.
+    _ref.invalidate(accountHistoriesProvider);
+    _ref.invalidate(netWorthSeriesProvider);
+    _ref.invalidate(ringMetricsProvider);
+    _ref.invalidate(accountTrackingProvider);
+    _ref.invalidate(expenseByCategoryProvider);
+    _ref.invalidate(monthlyFlowsProvider);
+    _ref.invalidate(financialPositionProvider);
+    _ref.invalidate(savingsSummaryProvider);
+    _ref.invalidate(creditsSummaryProvider);
+    _ref.invalidate(debtsSummaryProvider);
   }
 }

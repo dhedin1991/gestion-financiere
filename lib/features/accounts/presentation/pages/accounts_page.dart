@@ -93,7 +93,7 @@ class AccountsPage extends ConsumerWidget {
       mk('Agent liquide', AccountType.especes, role: 'caisse'),
       mk('Banque courante', AccountType.courant),
       mk('Banque secondaire', AccountType.courant),
-      mk('Moov', AccountType.mobileMoney),
+      mk('Moov', AccountType.mobileMoney, role: 'epargne'),
       mk('MTN', AccountType.mobileMoney),
     ].where((a) => !existing.contains(a.name.toLowerCase())).toList();
     if (!context.mounted) return;

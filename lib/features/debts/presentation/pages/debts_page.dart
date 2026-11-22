@@ -10,7 +10,9 @@ import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/debt.dart';
 import '../providers/debt_providers.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/ledger/operation_service.dart';
 import '../../../../core/widgets/summary_header.dart';
+import '../../../transactions/presentation/widgets/operation_form_sheet.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../dashboard/presentation/providers/summary_providers.dart';
 
@@ -66,6 +68,16 @@ class DebtsPage extends ConsumerWidget {
   }
 
   void _showDebtForm(BuildContext context, WidgetRef ref, {Debt? existing}) {
+    if (existing == null) {
+      // Une seule saisie : la dette ET le mouvement du compte sont créés ensemble.
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (_) => const OperationFormSheet(initialKind: OperationKind.detteRecue),
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
