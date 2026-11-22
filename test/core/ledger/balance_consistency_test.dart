@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gestion_financiere/core/database/app_database.dart';
 import 'package:gestion_financiere/core/database/database_providers.dart';
 import 'package:gestion_financiere/core/ledger/operation_service.dart';
@@ -12,6 +13,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 ///   solde = solde initial + somme des écritures du grand livre.
 /// Montants stockés en centimes (×100).
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -40,6 +43,7 @@ void main() {
       });
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     dir = Directory.systemTemp.createTempSync('gf_ledger_test_');
     appDb = AppDatabase(directoryOverride: dir);
     container = ProviderContainer(overrides: [appDatabaseProvider.overrideWithValue(appDb)]);
@@ -52,6 +56,8 @@ void main() {
   });
 
   tearDown(() async {
+    // Laisse finir les rechargements asynchrones déclenchés par les invalidations.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     container.dispose();
     await appDb.close();
     if (dir.existsSync()) dir.deleteSync(recursive: true);
