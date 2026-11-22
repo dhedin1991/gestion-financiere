@@ -255,7 +255,7 @@ class _TopBar extends ConsumerWidget {
           mi('Taux de change', () => context.go('/exchange-rates')),
           mi('Synchronisation Wi-Fi', () => context.go('/sync')),
           mi('Archives', () => context.go('/archives')),
-          mi('Journal des actions', () => context.go('/audit-log')),
+          mi('Historique des mouvements', () => context.go('/audit-log')),
         ], child: const Text('Outils')),
         SubmenuButton(menuChildren: [
           mi('Mode d’emploi', () => context.go('/help')),

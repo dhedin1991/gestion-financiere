@@ -6,7 +6,11 @@ import '../../../credits/domain/entities/credit_installment.dart';
 import '../../../credits/presentation/providers/credit_providers.dart';
 import '../../../debts/domain/entities/debt.dart';
 import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../accounts/domain/entities/account.dart';
 import '../../../savings/domain/entities/savings.dart';
+import '../../../transactions/domain/entities/transaction.dart';
+import '../../../transactions/presentation/providers/transaction_providers.dart';
+import 'insights_providers.dart';
 import '../../../savings/presentation/providers/savings_providers.dart';
 
 class SavingsSummary {
@@ -105,4 +109,31 @@ final debtsSummaryProvider = FutureProvider.autoDispose<DebtsSummary>((ref) asyn
     sum(creances, (d) => d.totalAmount),
     sum(creances, (d) => d.remainingAmount < 0 ? 0 : d.remainingAmount),
   );
+});
+
+
+/// Épargne immédiate : le compte au rôle « épargne » (ou, à défaut, « Moov »),
+/// son évolution et ses dernières opérations.
+class ImmediateSavings {
+  final Account account;
+  final List<double> evolution;
+  final List<FinancialTransaction> operations;
+  const ImmediateSavings(this.account, this.evolution, this.operations);
+}
+
+final immediateSavingsProvider = FutureProvider.autoDispose<ImmediateSavings?>((ref) async {
+  final accounts = await ref.watch(accountsListProvider.future);
+  Account? acc;
+  for (final a in accounts) {
+    if (a.role == 'epargne') {
+      acc = a;
+      break;
+    }
+  }
+  acc ??= accounts.where((a) => a.name.trim().toLowerCase() == 'moov').cast<Account?>().firstOrNull;
+  if (acc == null || acc.id == null) return null;
+  final hist = await ref.watch(accountHistoriesProvider.future);
+  final h = hist.where((x) => x.account.id == acc!.id).toList();
+  final ops = await ref.watch(transactionRepositoryProvider).getTransactions(accountId: acc.id, limit: 12);
+  return ImmediateSavings(acc, h.isEmpty ? const [] : h.first.values, ops);
 });

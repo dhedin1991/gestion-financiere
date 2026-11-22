@@ -16,6 +16,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Comptes** : bouton « Créer mes comptes types » (Agent liquide, Banque courante, Banque secondaire, Moov, MTN).
 - **Tableau de bord** (nouvelle page) : ce mois-ci (cercle d'épargne, revenus, dépenses, solde net), position financière, patrimoine, revenus/dépenses sur 6 mois, dépenses par catégorie, dernières transactions.
 - **Comptes** : cercle de répartition des soldes et courbe du patrimoine toujours visibles en haut.
+- **Une seule saisie** : « Nouvelle dette » et « Nouveau crédit » ouvrent le formulaire unique (compte obligatoire) ; l'argent et la dette/le crédit sont créés ensemble.
+- **Épargne immédiate (Moov)** : l'épargne est créditée sur Moov par défaut ; la page Épargne affiche son solde, son évolution et ses opérations.
+- **Actualisation automatique** de tous les graphiques et synthèses après chaque opération ; chaque opération est tracée dans l'**Historique des mouvements** (ex-Journal des actions, refait : synthèse, filtres, regroupement par jour).
+- **Budgets** et **Transactions récurrentes** : synthèse en tête et cartes ; **Comptes** : 4e présentation « Cercles » ; fenêtres de saisie redessinées.
 - 10 tests de cohérence des soldes sur SQLite.
 - **Outils > Contrôle d'intégrité** : compare chaque solde à « solde initial + écritures » et ajoute, au besoin, une écriture neutre « Correction d'historique » (le solde affiché ne change pas).
 - Position financière : les versements d'épargne faits via « Nouvelle opération » ne sont plus comptés deux fois (compte d'épargne + enveloppe).

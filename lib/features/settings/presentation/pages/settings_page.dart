@@ -79,7 +79,7 @@ class SettingsPage extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.history),
-            title: const Text('Journal des actions'),
+            title: const Text('Historique des mouvements'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/audit-log'),
           ),
