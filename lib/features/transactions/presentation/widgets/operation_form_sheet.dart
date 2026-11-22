@@ -353,10 +353,20 @@ class _OperationFormSheetState extends ConsumerState<OperationFormSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Nouvelle opération', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text('Une seule saisie : tout est mis à jour automatiquement.',
-                      style: TextStyle(color: colors.muted, fontSize: 12)),
+                  Row(children: [
+                    CircleAvatar(
+                      backgroundColor: scheme.primary.withValues(alpha: 0.15),
+                      child: Icon(_op.icon, color: scheme.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Nouvelle opération · ${_op.label}', style: Theme.of(context).textTheme.titleLarge),
+                        Text('Une seule saisie : comptes, crédits, dettes, épargne et graphiques sont mis à jour.',
+                            style: TextStyle(color: colors.muted, fontSize: 12)),
+                      ]),
+                    ),
+                  ]),
                   const SizedBox(height: 12),
                   for (final g in _groups) ...[
                     Padding(
@@ -377,8 +387,10 @@ class _OperationFormSheetState extends ConsumerState<OperationFormSheet> {
                   TextFormField(
                     controller: _amount,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
                     decoration: InputDecoration(
                       labelText: 'Montant *',
+                      filled: true,
                       suffixText: accounts.firstWhere((a) => a.id == _accountId, orElse: () => active.first).currency,
                     ),
                     onChanged: (_) {
@@ -392,8 +404,17 @@ class _OperationFormSheetState extends ConsumerState<OperationFormSheet> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  ..._accountFields(active),
-                  ..._specificFields(active),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.muted.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      ..._accountFields(active),
+                      ..._specificFields(active),
+                    ]),
+                  ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _description,

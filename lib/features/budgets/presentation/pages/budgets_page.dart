@@ -8,7 +8,10 @@ import '../../../categories/domain/entities/category.dart';
 import '../../../categories/presentation/providers/category_providers.dart';
 import '../../domain/entities/budget.dart';
 import '../providers/budget_providers.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/summary_header.dart';
+import '../../../accounts/presentation/providers/account_providers.dart';
 
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
@@ -44,10 +47,11 @@ class BudgetsPage extends ConsumerWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: budgets.length,
+            itemCount: budgets.length + 1,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              final budget = budgets[index];
+              if (index == 0) return const _BudgetsSummaryHeader();
+              final budget = budgets[index - 1];
               return _BudgetCard(
                 budget: budget,
                 onTap: () => _showBudgetForm(context, ref, existing: budget),
@@ -423,5 +427,59 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
         }
       }
     }
+  }
+}
+
+
+/// Total budgété, total dépensé et nombre de budgets dépassés.
+class _BudgetsTotals {
+  final double budgeted;
+  final double spent;
+  final int over;
+  final int count;
+  const _BudgetsTotals(this.budgeted, this.spent, this.over, this.count);
+}
+
+final _budgetsTotalsProvider = FutureProvider.autoDispose<_BudgetsTotals>((ref) async {
+  final budgets = await ref.watch(budgetsListProvider.future);
+  var b = 0.0, sp = 0.0;
+  var over = 0;
+  for (final x in budgets) {
+    if (x.id == null) continue;
+    final spent = await ref.watch(budgetSpentAmountProvider(x.id!).future);
+    b += x.amount;
+    sp += spent;
+    if (spent > x.amount) over++;
+  }
+  return _BudgetsTotals(b, sp, over, budgets.length);
+});
+
+class _BudgetsSummaryHeader extends ConsumerWidget {
+  const _BudgetsSummaryHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final main = ref.watch(mainCurrencyProvider).valueOrNull ?? 'XOF';
+    final async = ref.watch(_budgetsTotalsProvider);
+    return async.when(
+      loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text(AppErrorMessage.friendly(e)),
+      data: (t) {
+        final fmt = AppFormat.currency(symbol: main);
+        final ratio = t.budgeted > 0 ? (t.spent / t.budgeted).clamp(0.0, 1.0).toDouble() : 0.0;
+        return SummaryHeader(
+          title: 'Synthèse des budgets',
+          ratio: ratio,
+          ringColor: t.over > 0 || ratio >= 1 ? colors.negative : (ratio >= 0.8 ? colors.warning : colors.positive),
+          stats: [
+            SummaryStat('Total budgété', fmt.format(t.budgeted)),
+            SummaryStat('Total dépensé', fmt.format(t.spent), color: colors.negative),
+            SummaryStat('Reste disponible', fmt.format(t.budgeted - t.spent), color: t.budgeted - t.spent >= 0 ? colors.positive : colors.negative),
+            SummaryStat('Budgets dépassés', '${t.over} / ${t.count}', color: t.over > 0 ? colors.negative : colors.positive),
+          ],
+        );
+      },
+    );
   }
 }

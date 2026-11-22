@@ -445,10 +445,25 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                isEditing ? 'Modifier la transaction' : 'Nouvelle transaction',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Row(children: [
+                CircleAvatar(
+                  backgroundColor: (_type == TransactionType.revenu ? context.appColors.positive : context.appColors.negative)
+                      .withValues(alpha: 0.15),
+                  child: Icon(
+                    _type == TransactionType.revenu ? Icons.south_west : Icons.north_east,
+                    color: _type == TransactionType.revenu ? context.appColors.positive : context.appColors.negative,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(isEditing ? 'Modifier la transaction' : 'Nouvelle transaction',
+                        style: Theme.of(context).textTheme.titleLarge),
+                    Text(_type == TransactionType.revenu ? 'Entrée d’argent' : 'Sortie d’argent',
+                        style: TextStyle(fontSize: 12, color: context.appColors.muted)),
+                  ]),
+                ),
+              ]),
               const SizedBox(height: 16),
               SegmentedButton<TransactionType>(
                 segments: const [
@@ -473,7 +488,8 @@ class _TransactionFormSheetState extends ConsumerState<_TransactionFormSheet> {
               TextFormField(
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Montant *'),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(labelText: 'Montant *', filled: true),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final parsed = double.tryParse(v.replaceAll(',', '.'));

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/widgets/summary_header.dart';
+import '../../../../core/utils/app_format.dart';
+import '../../../../core/theme/app_theme.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
@@ -48,18 +51,51 @@ class RecurringTransactionsPage extends ConsumerWidget {
 
           final accounts = accountsAsync.valueOrNull ?? <Account>[];
 
+          final active = items.where((r) => r.active).toList();
+          double monthly(RecurringTransaction r) {
+            switch (r.frequency) {
+              case RecurrenceFrequency.hebdomadaire:
+                return r.amount * 52 / 12;
+              case RecurrenceFrequency.annuelle:
+                return r.amount / 12;
+              default:
+                return r.amount;
+            }
+          }
+          final inc = active.where((r) => r.type == TransactionType.revenu).fold<double>(0, (a, r) => a + monthly(r));
+          final exp = active.where((r) => r.type == TransactionType.depense).fold<double>(0, (a, r) => a + monthly(r));
+          final cur = items.first.currency;
+          final cc = context.appColors;
+          final money = AppFormat.currency(symbol: cur);
+
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            padding: const EdgeInsets.all(16),
+            itemCount: items.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(height: 6),
             itemBuilder: (context, index) {
-              final r = items[index];
+              if (index == 0) {
+                return SummaryHeader(
+                  title: 'Synthèse mensuelle (estimée)',
+                  ratio: inc > 0 ? (exp / inc).clamp(0.0, 1.0).toDouble() : 0,
+                  ringColor: exp > inc ? cc.negative : cc.info,
+                  stats: [
+                    SummaryStat('Récurrences actives', '${active.length} / ${items.length}'),
+                    SummaryStat('Revenus prévus / mois', money.format(inc), color: cc.positive),
+                    SummaryStat('Dépenses prévues / mois', money.format(exp), color: cc.negative),
+                    SummaryStat('Solde prévu / mois', money.format(inc - exp), color: inc - exp >= 0 ? cc.positive : cc.negative),
+                  ],
+                );
+              }
+              final r = items[index - 1];
               final match = accounts.where((a) => a.id == r.accountId).toList();
               final accountName = match.isNotEmpty ? match.first.name : 'Compte supprimé';
-              return RecurringTile(
-                recurring: r,
-                accountName: accountName,
-                onTap: () => _showForm(context, existing: r),
+              return Card(
+                clipBehavior: Clip.antiAlias,
+                child: RecurringTile(
+                  recurring: r,
+                  accountName: accountName,
+                  onTap: () => _showForm(context, existing: r),
+                ),
               );
             },
           );

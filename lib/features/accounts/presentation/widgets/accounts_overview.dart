@@ -13,11 +13,11 @@ import '../../domain/entities/account.dart';
 import '../providers/account_providers.dart';
 import '../providers/balance_alerts.dart';
 
-enum AccountsView { cartes, tableau, evolution }
+enum AccountsView { cartes, cercles, tableau, evolution }
 
 extension on AccountsView {
-  String get label => const ['Cartes', 'Tableau', 'Évolution'][index];
-  IconData get icon => const [Icons.dashboard_outlined, Icons.table_rows_outlined, Icons.show_chart][index];
+  String get label => const ['Cartes', 'Cercles', 'Tableau', 'Évolution'][index];
+  IconData get icon => const [Icons.dashboard_outlined, Icons.donut_large, Icons.table_rows_outlined, Icons.show_chart][index];
 }
 
 class AccountsViewController extends StateNotifier<AccountsView> {
@@ -122,6 +122,7 @@ class AccountsOverview extends ConsumerWidget {
         const SizedBox(height: 12),
         switch (view) {
           AccountsView.cartes => _Cards(accounts: accounts, onOpen: onOpen),
+          AccountsView.cercles => _Circles(accounts: accounts, onOpen: onOpen),
           AccountsView.tableau => _Table(accounts: accounts, onOpen: onOpen),
           AccountsView.evolution => const _Evolution(),
         },
@@ -413,6 +414,65 @@ class _AccountsCharts extends ConsumerWidget {
         ]);
       }
       return Column(children: [donut, const SizedBox(height: 12), curve]);
+    });
+  }
+}
+
+
+/// Présentation « Cercles » : un grand cercle de suivi par compte, qui passe
+/// à l'orange puis au rouge selon les seuils d'alerte configurés.
+class _Circles extends ConsumerWidget {
+  final List<Account> accounts;
+  final void Function(Account) onOpen;
+  const _Circles({required this.accounts, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tracking = ref.watch(accountTrackingProvider).valueOrNull ?? const <AccountTracking>[];
+    final thresholds = ref.watch(balanceThresholdsProvider);
+    return LayoutBuilder(builder: (context, box) {
+      final cols = box.maxWidth >= 900 ? 4 : (box.maxWidth >= 600 ? 3 : 2);
+      const gap = 12.0;
+      final w = (box.maxWidth - gap * (cols - 1)) / cols;
+      return Wrap(spacing: gap, runSpacing: gap, children: [
+        for (final a in accounts)
+          SizedBox(
+            width: w,
+            child: Builder(builder: (context) {
+              final t = tracking.where((x) => x.history.account.id == a.id).toList();
+              final level = alertLevelFor(a, thresholds);
+              final color = level == AlertLevel.ok ? Theme.of(context).colorScheme.primary : alertColor(context, level);
+              final fmt = AppFormat.currency(symbol: a.currency, decimalDigits: 0);
+              return InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => onOpen(a),
+                child: Panel(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(children: [
+                    RingGauge(
+                      value: t.isEmpty ? 0.0 : t.first.ratio,
+                      color: color,
+                      size: 110,
+                      stroke: 12,
+                      centerText: t.isEmpty ? null : '${(t.first.ratio * 100).round()} %',
+                    ),
+                    const SizedBox(height: 10),
+                    Text(a.name, style: const TextStyle(fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        fmt.format(a.currentBalance),
+                        style: amountTextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: level == AlertLevel.ok ? Theme.of(context).colorScheme.onSurface : color),
+                      ),
+                    ),
+                    Text(alertLabel(level), style: TextStyle(fontSize: 11, color: color)),
+                  ]),
+                ),
+              );
+            }),
+          ),
+      ]);
     });
   }
 }
