@@ -140,14 +140,19 @@ class InvoiceRepository {
         where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Encaisse la facture : elle passe en « Payée » ET le montant est crédité
-  /// sur le compte choisi (revenu compté dans les statistiques), en une seule
-  /// transaction.
-  Future<void> collect(Invoice invoice, int accountId, {DateTime? date}) async {
+  /// Encaisse la facture (en totalité ou partiellement) : le montant est crédité
+  /// sur le compte choisi (revenu compté dans les statistiques) et le cumul réglé
+  /// est mis à jour, le tout en une seule transaction. La facture passe en
+  /// « Payée » quand le total est atteint, sinon elle reste « Envoyée ».
+  Future<void> collect(Invoice invoice, int accountId, {DateTime? date, double? amount}) async {
     final id = invoice.id;
     if (id == null) throw StateError('Enregistre d’abord la facture.');
-    final cents = Money.toCents(invoice.remaining);
+    final remainingCents = Money.toCents(invoice.remaining);
+    var cents = amount == null ? remainingCents : Money.toCents(amount);
+    if (cents > remainingCents) cents = remainingCents;
     if (cents <= 0) return;
+    final newPaidCents = Money.toCents(invoice.paidAmount) + cents;
+    final done = newPaidCents >= Money.toCents(invoice.total);
     final db = await _appDatabase.database;
     await db.transaction((txn) async {
       await Ledger.post(
@@ -158,14 +163,14 @@ class InvoiceRepository {
         refId: id,
         neutral: false,
         currency: invoice.currency,
-        description: 'Facture ${invoice.number} — ${invoice.clientName}',
+        description: 'Facture ${invoice.number} — ${invoice.clientName}${done ? '' : ' (acompte)'}',
         date: date ?? DateTime.now(),
       );
       await txn.update(
         'invoices',
         {
-          'status': InvoiceStatus.payee.name,
-          'paid_amount': Money.toCents(invoice.total),
+          'status': (done ? InvoiceStatus.payee : InvoiceStatus.envoyee).name,
+          'paid_amount': newPaidCents,
           'account_id': accountId,
           'updated_at': DateTime.now().toIso8601String(),
         },

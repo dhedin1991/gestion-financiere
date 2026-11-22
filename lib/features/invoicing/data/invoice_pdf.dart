@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -19,7 +20,15 @@ String _date(DateTime d) => DateFormat('dd/MM/yyyy').format(d);
 
 /// Génère le PDF d'une facture selon son modèle (4 présentations).
 Future<Uint8List> buildInvoicePdf(Invoice inv, CompanyProfile co) async {
-  final doc = pw.Document();
+  pw.ThemeData? theme;
+  try {
+    final regular = pw.Font.ttf(await rootBundle.load('assets/fonts/IBMPlexSans_400Regular.ttf'));
+    final bold = pw.Font.ttf(await rootBundle.load('assets/fonts/IBMPlexSans_700Bold.ttf'));
+    theme = pw.ThemeData.withFont(base: regular, bold: bold);
+  } catch (_) {
+    theme = null; // repli sur la police standard du PDF
+  }
+  final doc = theme == null ? pw.Document() : pw.Document(theme: theme);
   final tpl = inv.template;
   final accent = PdfColor.fromInt(tpl.accent);
   final headerBg = PdfColor.fromInt(tpl.header);

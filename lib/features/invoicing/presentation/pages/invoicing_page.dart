@@ -123,7 +123,7 @@ class _Indicators extends ConsumerWidget {
     final main = ref.watch(mainCurrencyProvider).valueOrNull ?? 'XOF';
     final live = invoices.where((i) => i.currency == main && i.status != InvoiceStatus.annulee && i.status != InvoiceStatus.brouillon);
     final billed = live.fold<double>(0, (s, i) => s + i.total);
-    final collected = live.where((i) => i.status == InvoiceStatus.payee).fold<double>(0, (s, i) => s + i.total);
+    final collected = live.fold<double>(0, (s, i) => s + i.paidAmount);
     final pending = live.where((i) => i.status == InvoiceStatus.envoyee).fold<double>(0, (s, i) => s + i.remaining);
     final late = invoices.where((i) => i.currency == main && i.isOverdue);
     final lateSum = late.fold<double>(0, (s, i) => s + i.remaining);

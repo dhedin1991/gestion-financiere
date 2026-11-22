@@ -60,6 +60,7 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
       _snack('Aucun compte en ${inv.currency} pour encaisser cette facture.');
       return;
     }
+    final amountCtrl = TextEditingController(text: inv.remaining.round().toString());
     int? selected = inv.accountId != null && usable.any((a) => a.id == inv.accountId) ? inv.accountId : usable.first.id;
     final fmt = AppFormat.currency(symbol: inv.currency);
     final ok = await showDialog<bool>(
@@ -68,7 +69,13 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
         builder: (ctx, setS) => AlertDialog(
           title: const Text('Encaisser la facture'),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('${fmt.format(inv.remaining)} seront crédités sur le compte choisi et comptés comme revenu.'),
+            Text('Reste à payer : ${fmt.format(inv.remaining)}. Le montant encaissé est crédité sur le compte choisi et compté comme revenu.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Montant encaissé (acompte possible)', border: OutlineInputBorder()),
+            ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               value: selected,
@@ -84,9 +91,15 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
         ),
       ),
     );
+    final typed = double.tryParse(amountCtrl.text.trim().replaceAll(',', '.').replaceAll(' ', ''));
+    amountCtrl.dispose();
     if (ok == true && selected != null) {
-      await _run(() => ref.read(invoiceRepositoryProvider).collect(inv, selected!));
-      if (mounted) _snack('Facture encaissée.');
+      if (typed == null || typed <= 0) {
+        if (mounted) _snack('Montant invalide.');
+        return;
+      }
+      await _run(() => ref.read(invoiceRepositoryProvider).collect(inv, selected!, amount: typed));
+      if (mounted) _snack(typed >= inv.remaining ? 'Facture soldée.' : 'Acompte enregistré.');
     }
   }
 
@@ -152,6 +165,32 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
                     MaterialPageRoute(builder: (_) => InvoiceFormPage(existing: inv)),
                   );
                   if (saved == true) await _reload();
+                case 'dup':
+                  final repo2 = ref.read(invoiceRepositoryProvider);
+                  final newNumber = await repo2.nextNumber();
+                  final now = DateTime.now();
+                  await repo2.save(Invoice(
+                    number: newNumber,
+                    template: inv.template,
+                    clientName: inv.clientName,
+                    clientAddress: inv.clientAddress,
+                    clientPhone: inv.clientPhone,
+                    clientEmail: inv.clientEmail,
+                    issueDate: now,
+                    dueDate: now.add(const Duration(days: 30)),
+                    currency: inv.currency,
+                    taxRate: inv.taxRate,
+                    discount: inv.discount,
+                    notes: inv.notes,
+                    items: inv.items,
+                    createdAt: now,
+                    updatedAt: now,
+                  ));
+                  ref.invalidate(invoicesProvider);
+                  if (mounted) {
+                    _snack('Facture $newNumber créée en brouillon.');
+                    Navigator.of(context).pop(true);
+                  }
                 case 'sent':
                   await _run(() => repo.setStatus(inv.id!, InvoiceStatus.envoyee));
                 case 'cancel':
@@ -170,6 +209,7 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
               if (inv.status == InvoiceStatus.brouillon) const PopupMenuItem(value: 'sent', child: Text('Marquer comme envoyée')),
               if (!paid && inv.status != InvoiceStatus.annulee) const PopupMenuItem(value: 'cancel', child: Text('Annuler la facture')),
               if (paid) const PopupMenuItem(value: 'uncollect', child: Text('Annuler l’encaissement')),
+              const PopupMenuItem(value: 'dup', child: Text('Dupliquer')),
               const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
             ],
           ),

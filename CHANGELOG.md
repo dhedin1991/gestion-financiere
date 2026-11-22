@@ -11,6 +11,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Facturation** : liste avec indicateurs, formulaire, aperçu et PDF en 4 modèles, profil de l'entreprise, encaissement qui crédite un compte (revenu compté), annulation d'encaissement.
 - **Accueil** : bloc « Position financière » (trésorerie, épargne, créances, crédits, dettes, factures, position nette) et dernières transactions.
 - **Épargne, Crédits, Dettes** : bandeau de synthèse avec cercle de suivi et chiffres clés (courbe d'évolution pour l'épargne).
+- Facturation : encaissement partiel (acomptes), duplication d'une facture, police intégrée au PDF (accents et ponctuation corrects).
 - 10 tests de cohérence des soldes sur SQLite.
 - **Outils > Contrôle d'intégrité** : compare chaque solde à « solde initial + écritures » et ajoute, au besoin, une écriture neutre « Correction d'historique » (le solde affiché ne change pas).
 - Position financière : les versements d'épargne faits via « Nouvelle opération » ne sont plus comptés deux fois (compte d'épargne + enveloppe).
