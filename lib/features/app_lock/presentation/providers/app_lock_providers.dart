@@ -1,11 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/biometric_service.dart';
 import '../../data/pin_storage_service.dart';
 import '../../data/recovery_code_service.dart';
 import '../../data/verification_result.dart';
 
 final pinStorageServiceProvider = Provider<PinStorageService>((ref) {
   return PinStorageService();
+});
+
+final biometricServiceProvider = Provider<BiometricService>((ref) {
+  return BiometricService();
+});
+
+/// Empreinte disponible sur l'appareil ET activée par l'utilisatrice.
+final biometricLoginEnabledProvider = FutureProvider.autoDispose<bool>((ref) async {
+  final service = ref.read(biometricServiceProvider);
+  return await service.isEnabled() && await service.isAvailable();
 });
 
 final recoveryCodeServiceProvider = Provider<RecoveryCodeService>((ref) {

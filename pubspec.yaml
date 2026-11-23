@@ -36,6 +36,7 @@ dependencies:
 
   # Verrouillage par code PIN (stockage sécurisé du hash)
   flutter_secure_storage: ^9.2.2
+  local_auth: ^2.3.0   # empreinte digitale (Android)
   crypto: ^3.0.5
 
   # Graphiques (Bilans)

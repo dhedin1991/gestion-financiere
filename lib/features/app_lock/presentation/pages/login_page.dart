@@ -32,6 +32,8 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
     super.initState();
     _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500))
       ..forward();
+    // Invite d'empreinte automatique à l'ouverture (si activée).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryBiometric());
     SharedPreferences.getInstance().then((prefs) {
       final saved = prefs.getString(_kDisplayUsernameKey);
       if (saved != null && mounted) _usernameController.text = saved;
@@ -44,6 +46,19 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
     _passwordController.dispose();
     _fadeController.dispose();
     super.dispose();
+  }
+
+  bool _biometricAvailable = false;
+
+  Future<void> _tryBiometric() async {
+    final enabled = await ref.read(biometricLoginEnabledProvider.future);
+    if (!mounted) return;
+    setState(() => _biometricAvailable = enabled);
+    if (!enabled) return;
+    final ok = await ref
+        .read(biometricServiceProvider)
+        .authenticate('Déverrouille ton application financière');
+    if (ok && mounted) ref.read(appLockControllerProvider.notifier).unlock();
   }
 
   Future<void> _login() async {
@@ -171,6 +186,17 @@ class _LoginPageState extends ConsumerState<LoginPage> with SingleTickerProvider
                               : const Text('Connexion'),
                         ),
                       ),
+                      if (_biometricAvailable) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _checking ? null : _tryBiometric,
+                            icon: const Icon(Icons.fingerprint),
+                            label: const Text('Utiliser l\'empreinte digitale'),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,

@@ -48,6 +48,17 @@ jobs:
               coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
           }
           EOF
+      - name: Empreinte digitale (activité Fragment + thème AppCompat)
+        run: |
+          set -e
+          K=$(find android/app/src/main -name MainActivity.kt)
+          echo "MainActivity : $K"
+          sed -i 's/FlutterActivity/FlutterFragmentActivity/g' "$K"
+          grep -q "FlutterFragmentActivity" "$K"
+          for f in $(find android/app/src/main/res -name styles.xml); do
+            sed -i -E 's#@android:style/Theme\.(Light|Black)\.NoTitleBar#Theme.AppCompat.DayNight.NoActionBar#g' "$f"
+            echo "--- $f"; cat "$f"
+          done
       - name: Manifest Android (Internet, sync Wi-Fi, notifications programmées)
         run: |
           python3 - << 'PY'
@@ -59,6 +70,7 @@ jobs:
               'android.permission.RECEIVE_BOOT_COMPLETED',
               'android.permission.VIBRATE',
               'android.permission.POST_NOTIFICATIONS',
+              'android.permission.USE_BIOMETRIC',
           ]
           perm_xml = ''.join('    <uses-permission android:name="%s"/>\n' % x for x in perms)
           s = re.sub(r'(<manifest[^>]*>)', lambda m: m.group(1) + '\n' + perm_xml, s, count=1)
@@ -177,6 +189,7 @@ jobs:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
       - name: Publier l'APK dans la Release « dernier-build »
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -207,6 +220,7 @@ jobs:
           name: app-windows
           path: build/windows/x64/runner/Release
       - name: Publier Windows dans la Release « dernier-build »
+        if: github.ref == 'refs/heads/main'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
