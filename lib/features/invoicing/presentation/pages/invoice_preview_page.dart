@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/utils/app_format.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
@@ -39,6 +41,28 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
     });
     ref.invalidate(invoicesProvider);
     ref.invalidate(accountsListProvider);
+  }
+
+  /// Rédige un message de relance poli (amende le ton selon le retard) et
+  /// l'envoie via le menu de partage : l'utilisatrice choisit WhatsApp, SMS
+  /// ou e-mail. Sans menu de partage disponible, le texte est copié.
+  Future<void> _sendReminder(Invoice inv) async {
+    final fmt = AppFormat.currency(symbol: inv.currency);
+    final due = inv.dueDate;
+    final isLate = due != null && due.isBefore(DateTime.now());
+    final dueTxt = due == null ? '' : DateFormat('dd/MM/yyyy').format(due);
+    final text = StringBuffer('Bonjour ${inv.clientName},\n\n')
+      ..write(isLate
+          ? 'Sauf erreur de ma part, la facture ${inv.number} dont l\'échéance était le $dueTxt reste impayée. '
+          : 'Je me permets de vous rappeler la facture ${inv.number}${due == null ? '' : ' à régler avant le $dueTxt'}. ')
+      ..write('Montant restant dû : ${fmt.format(inv.remaining)}.\n\n')
+      ..write('Merci de votre retour. Bonne journée.');
+    try {
+      await Share.share(text.toString(), subject: 'Rappel facture ${inv.number}');
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: text.toString()));
+      if (mounted) _snack('Message de rappel copié : colle-le dans WhatsApp ou ton e-mail.');
+    }
   }
 
   void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -191,6 +215,8 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
                     _snack('Facture $newNumber créée en brouillon.');
                     Navigator.of(context).pop(true);
                   }
+                case 'remind':
+                  await _sendReminder(inv);
                 case 'sent':
                   await _run(() => repo.setStatus(inv.id!, InvoiceStatus.envoyee));
                 case 'cancel':
@@ -207,6 +233,8 @@ class _InvoicePreviewPageState extends ConsumerState<InvoicePreviewPage> {
             itemBuilder: (_) => [
               if (!paid) const PopupMenuItem(value: 'edit', child: Text('Modifier')),
               if (inv.status == InvoiceStatus.brouillon) const PopupMenuItem(value: 'sent', child: Text('Marquer comme envoyée')),
+              if (!paid && inv.status != InvoiceStatus.annulee && inv.status != InvoiceStatus.brouillon)
+                const PopupMenuItem(value: 'remind', child: Text('Envoyer un rappel (WhatsApp, SMS, e-mail)')),
               if (!paid && inv.status != InvoiceStatus.annulee) const PopupMenuItem(value: 'cancel', child: Text('Annuler la facture')),
               if (paid) const PopupMenuItem(value: 'uncollect', child: Text('Annuler l’encaissement')),
               const PopupMenuItem(value: 'dup', child: Text('Dupliquer')),
