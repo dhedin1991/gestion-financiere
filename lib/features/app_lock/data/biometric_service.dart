@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
-/// Déverrouillage par empreinte digitale (Android).
+/// Déverrouillage par empreinte digitale (Android) ou Windows Hello
+/// (empreinte, visage ou code Hello) sur PC.
 ///
 /// L'empreinte n'est qu'un **raccourci** : le mot de passe reste le secret
 /// de référence (il est toujours demandé en cas d'échec, de changement
@@ -17,9 +18,11 @@ class BiometricService {
 
   /// Vrai si l'appareil sait lire une empreinte et en a au moins une enregistrée.
   Future<bool> isAvailable() async {
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid && !Platform.isWindows) return false;
     try {
       if (!await _auth.isDeviceSupported()) return false;
+      // Windows Hello ne sait pas lister les biométries : le test d'appareil suffit.
+      if (Platform.isWindows) return true;
       if (!await _auth.canCheckBiometrics) return false;
       return (await _auth.getAvailableBiometrics()).isNotEmpty;
     } catch (_) {
@@ -49,7 +52,8 @@ class BiometricService {
       return await _auth.authenticate(
         localizedReason: reason,
         options: const AuthenticationOptions(
-          biometricOnly: true,
+          // Windows Hello n'accepte pas « biométrie seule » (il propose aussi son code).
+          biometricOnly: !Platform.isWindows,
           stickyAuth: true,
           useErrorDialogs: true,
         ),
