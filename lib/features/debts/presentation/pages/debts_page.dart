@@ -151,10 +151,25 @@ class _DebtCard extends ConsumerWidget {
           child: Icon(isDette ? Icons.arrow_upward : Icons.arrow_downward, color: color),
         ),
         title: Text(debt.personName, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-          debt.isSettled
-              ? 'Soldée'
-              : 'Reste ${fmt.format(debt.remainingAmount)} sur ${fmt.format(debt.totalAmount)}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${isDette ? 'Dette' : 'Créance'} · ${debt.isSettled ? 'Soldée' : 'Reste ${fmt.format(debt.remainingAmount)} sur ${fmt.format(debt.totalAmount)}'}',
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: debt.totalAmount <= 0
+                    ? 1.0
+                    : ((debt.totalAmount - debt.remainingAmount) / debt.totalAmount).clamp(0.0, 1.0),
+                minHeight: 6,
+                color: color,
+                backgroundColor: color.withValues(alpha: 0.15),
+              ),
+            ),
+          ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

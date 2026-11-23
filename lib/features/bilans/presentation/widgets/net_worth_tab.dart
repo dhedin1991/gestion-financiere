@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/panel.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../providers/bilan_providers.dart';
 import '../../../../core/utils/app_format.dart';
@@ -62,33 +63,27 @@ class NetWorthTab extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Text('Répartition actuelle', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 220,
-                child: _BreakdownChart(latest: latest),
+              Panel(
+                title: 'Répartition actuelle',
+                child: Column(children: [
+                  SizedBox(height: 220, child: _BreakdownChart(latest: latest)),
+                  const SizedBox(height: 12),
+                  _BreakdownLegend(latest: latest, fmt: fmt),
+                ]),
               ),
               const SizedBox(height: 12),
-              _BreakdownLegend(latest: latest, fmt: fmt),
-              const SizedBox(height: 32),
-              Text('Évolution dans le temps', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              if (history.length < 2)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'Pas encore assez d\'historique pour tracer une courbe. '
-                    'Une nouvelle photo de ton patrimoine est enregistrée chaque jour '
-                    'où tu ouvres cet écran — reviens dans quelques jours !',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 220,
-                  child: _EvolutionChart(history: history),
-                ),
+              Panel(
+                title: 'Évolution dans le temps',
+                child: history.length < 2
+                    ? Text(
+                        'Pas encore assez d\'historique pour tracer une courbe. '
+                        'Une nouvelle photo de ton patrimoine est enregistrée chaque jour '
+                        'où tu ouvres cet écran — reviens dans quelques jours !',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      )
+                    : SizedBox(height: 220, child: _EvolutionChart(history: history)),
+              ),
             ],
           ),
         );
