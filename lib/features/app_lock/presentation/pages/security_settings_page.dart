@@ -119,7 +119,7 @@ class _BiometricTileState extends ConsumerState<_BiometricTile> {
   Future<void> _toggle(bool value) async {
     final service = ref.read(biometricServiceProvider);
     if (value) {
-      final ok = await service.authenticate('Confirme avec ton empreinte pour activer le déverrouillage');
+      final ok = await service.authenticate('Confirme ton identité pour activer le déverrouillage');
       if (!ok) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +143,7 @@ class _BiometricTileState extends ConsumerState<_BiometricTile> {
         title: Text('Empreinte digitale'),
         subtitle: Text(
           'Indisponible : aucun lecteur, aucune empreinte enregistrée dans les réglages '
-          'du téléphone, ou appareil non Android.',
+          'du téléphone, ou Windows Hello non configuré sur ce PC.',
         ),
       );
     }
