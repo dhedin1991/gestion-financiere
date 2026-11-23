@@ -51,7 +51,7 @@ class BiometricService {
     try {
       return await _auth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
+        options: AuthenticationOptions(
           // Windows Hello n'accepte pas « biométrie seule » (il propose aussi son code).
           biometricOnly: !Platform.isWindows,
           stickyAuth: true,
