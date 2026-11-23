@@ -7,6 +7,7 @@ import '../../../../core/navigation/app_menu_button.dart';
 import '../../../accounts/domain/entities/account.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/panel.dart';
 
 /// Page listant tous les éléments archivés de l'application. Pour l'instant,
 /// seul le module Comptes gère l'archivage — les autres modules (Épargne,
@@ -42,17 +43,15 @@ class ArchivesPage extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(
-                'Comptes archivés',
-                style: Theme.of(context).textTheme.titleMedium,
+              Panel(
+                title: 'Comptes archivés (${accounts.length})',
+                child: Text(
+                  'Ces comptes ne sont plus affichés dans la liste principale, mais '
+                  'toutes leurs données (transactions, dettes, épargne liées) sont conservées.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Ces comptes ne sont plus affichés dans la liste principale, mais '
-                'toutes leurs données (transactions, dettes, épargne liées) sont conservées.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               ...accounts.map((account) => _ArchivedAccountTile(account: account)),
             ],
           );

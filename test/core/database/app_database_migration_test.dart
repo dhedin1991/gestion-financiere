@@ -166,6 +166,12 @@ void main() {
       throwsA(isA<DatabaseException>()),
     );
 
+    final safety = dir
+        .listSync()
+        .whereType<File>()
+        .where((f) => p.basename(f.path).startsWith('avant_migration_v14_'));
+    expect(safety, isNotEmpty, reason: 'toute migration doit être précédée d\'une copie');
+
     await appDb.close();
   });
 

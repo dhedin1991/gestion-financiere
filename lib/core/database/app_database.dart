@@ -84,9 +84,15 @@ class AppDatabase {
         await raf.close();
       }
 
-      if (currentVersion > 0 && currentVersion < centsMigrationVersion) {
+      // Toute mise à jour de structure est précédée d'une copie : la
+      // migration vers les centimes garde son nom historique, les autres
+      // utilisent « avant_migration_v<ancienne version> ».
+      if (currentVersion > 0 && currentVersion < _dbVersion) {
         final timestamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
-        final backupPath = join(dirname(path), 'avant_migration_centimes_$timestamp.db');
+        final prefix = currentVersion < centsMigrationVersion
+            ? 'avant_migration_centimes_'
+            : 'avant_migration_v${currentVersion}_';
+        final backupPath = join(dirname(path), '$prefix$timestamp.db');
         await file.copy(backupPath);
         DatabaseFileUtils.pruneSafetyCopies(Directory(dirname(path)));
         AppLogger.info(
