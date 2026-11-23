@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
+import '../providers/app_lock_providers.dart';
 import '../providers/auto_lock_delay_provider.dart';
 import 'password_setup_page.dart';
 
@@ -45,6 +46,7 @@ class SecuritySettingsPage extends ConsumerWidget {
             },
           ),
           const Divider(),
+          const _BiometricTile(),
           ListTile(
             leading: const Icon(Icons.timer_outlined),
             title: const Text('Verrouillage automatique'),
@@ -77,6 +79,80 @@ class SecuritySettingsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Interrupteur « empreinte digitale ». Invisible si l'appareil n'a pas de
+/// lecteur ou aucune empreinte enregistrée. L'activation exige de poser le
+/// doigt une première fois, pour être sûr que ça fonctionne.
+class _BiometricTile extends ConsumerStatefulWidget {
+  const _BiometricTile();
+
+  @override
+  ConsumerState<_BiometricTile> createState() => _BiometricTileState();
+}
+
+class _BiometricTileState extends ConsumerState<_BiometricTile> {
+  bool _available = false;
+  bool _enabled = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final service = ref.read(biometricServiceProvider);
+    final available = await service.isAvailable();
+    final enabled = await service.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _available = available;
+      _enabled = enabled;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _toggle(bool value) async {
+    final service = ref.read(biometricServiceProvider);
+    if (value) {
+      final ok = await service.authenticate('Confirme avec ton empreinte pour activer le déverrouillage');
+      if (!ok) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Empreinte non reconnue : réglage inchangé.')),
+          );
+        }
+        return;
+      }
+    }
+    await service.setEnabled(value);
+    ref.invalidate(biometricLoginEnabledProvider);
+    if (mounted) setState(() => _enabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded) return const SizedBox.shrink();
+    if (!_available) {
+      return const ListTile(
+        leading: Icon(Icons.fingerprint),
+        title: Text('Empreinte digitale'),
+        subtitle: Text(
+          'Indisponible : aucun lecteur, aucune empreinte enregistrée dans les réglages '
+          'du téléphone, ou appareil non Android.',
+        ),
+      );
+    }
+    return SwitchListTile(
+      secondary: const Icon(Icons.fingerprint),
+      title: const Text('Déverrouiller avec l\'empreinte digitale'),
+      subtitle: const Text('Le mot de passe reste demandé si l\'empreinte échoue.'),
+      value: _enabled,
+      onChanged: _toggle,
     );
   }
 }
