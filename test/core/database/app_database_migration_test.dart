@@ -30,13 +30,13 @@ void main() {
     return openDatabase(dbPath(), version: version, onCreate: (db, _) => onCreate(db));
   }
 
-  test('installation neuve : schéma v18 complet', () async {
+  test('installation neuve : schéma v19 complet', () async {
     final appDb = AppDatabase(directoryOverride: dir);
     final db = await appDb.database;
 
     final version = (await db.rawQuery('PRAGMA user_version')).first.values.first;
     expect(version, AppDatabase.schemaVersion);
-    expect(AppDatabase.schemaVersion, 18);
+    expect(AppDatabase.schemaVersion, 19);
 
     final tables = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
         .map((r) => r['name'] as String)
@@ -60,6 +60,9 @@ void main() {
         .map((c) => c['name'])
         .toSet();
     expect(cols, contains('anchor_day'));
+
+    final savingsCols = (await db.rawQuery('PRAGMA table_info(savings)')).map((c) => c['name']).toSet();
+    expect(savingsCols, contains('category'));
 
     final fk = (await db.rawQuery('PRAGMA foreign_keys')).first.values.first;
     expect(fk, 1);
@@ -213,6 +216,29 @@ void main() {
     await db.insert('exchange_rates', {'currency': 'EUR', 'rate_to_xof': 655.0, 'updated_at': 'x'});
     final rows = await db.query('exchange_rates');
     expect(rows, hasLength(1));
+
+    await appDb.close();
+  });
+
+  test('v18 -> v19 : catégorie d\'épargne ajoutée, épargnes existantes rangées dans « libre »', () async {
+    final raw = await openRaw(18, (db) async {
+      await db.execute(
+          'CREATE TABLE savings (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, account_id INTEGER NOT NULL, current_balance INTEGER NOT NULL DEFAULT 0)');
+      await db.insert('savings', {'name': 'Fonds', 'account_id': 1, 'current_balance': 500000});
+    });
+    await raw.close();
+
+    final appDb = AppDatabase(directoryOverride: dir);
+    final db = await appDb.database;
+
+    final rows = await db.query('savings');
+    expect(rows, hasLength(1));
+    expect(rows.first['name'], 'Fonds');
+    expect(rows.first['current_balance'], 500000);
+    expect(rows.first['category'], 'libre');
+
+    final backups = dir.listSync().whereType<File>().where((f) => p.basename(f.path).startsWith('avant_migration_v18_'));
+    expect(backups, isNotEmpty);
 
     await appDb.close();
   });

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/app_error_message.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/savings.dart';
+import 'savings_category_ui.dart';
 import '../providers/savings_providers.dart';
 
 class SavingsFormSheet extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _targetAmountController;
   int? _selectedAccountId;
+  SavingsCategory _category = SavingsCategory.libre;
   DateTime? _selectedTargetDate;
 
   @override
@@ -31,6 +33,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
       text: e?.targetAmount != null ? e!.targetAmount!.toStringAsFixed(0) : '',
     );
     _selectedAccountId = e?.accountId;
+    _category = e?.category ?? SavingsCategory.libre;
     _selectedTargetDate = e?.targetDate;
   }
 
@@ -84,6 +87,23 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
                     validator: (v) => v == null ? 'Choisis un compte' : null,
                   );
                 },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<SavingsCategory>(
+                value: _category,
+                decoration: const InputDecoration(labelText: 'Catégorie (intercalaire du classeur)'),
+                items: [
+                  for (final c in SavingsCategory.values)
+                    DropdownMenuItem(
+                      value: c,
+                      child: Row(children: [
+                        Icon(c.icon, size: 18, color: c.color),
+                        const SizedBox(width: 8),
+                        Text(c.label),
+                      ]),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _category = v ?? SavingsCategory.libre),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -150,6 +170,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
           accountId: _selectedAccountId!,
           targetAmount: targetAmount,
           targetDate: _selectedTargetDate,
+          category: _category,
           createdAt: now,
           updatedAt: now,
         ));
@@ -159,6 +180,7 @@ class _SavingsFormSheetState extends ConsumerState<SavingsFormSheet> {
           accountId: _selectedAccountId!,
           targetAmount: targetAmount,
           targetDate: _selectedTargetDate,
+          category: _category,
         ));
       }
       if (mounted) Navigator.of(context).pop();

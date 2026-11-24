@@ -1,7 +1,15 @@
+/// Catégories du classeur de patrimoine. Stockées par leur nom : les biens
+/// déjà enregistrés (immobilier, vehicule, materiel, autre) restent valides.
 enum PatrimoineCategory {
   immobilier,
+  terrain,
   vehicule,
   materiel,
+  electronique,
+  mobilier,
+  bijoux,
+  placement,
+  entreprise,
   autre,
 }
 

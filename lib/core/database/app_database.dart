@@ -22,7 +22,7 @@ class AppDatabase {
   final Directory? _directoryOverride;
 
   static const String _dbName = 'gestion_financiere.db';
-  static const int _dbVersion = 18;
+  static const int _dbVersion = 19;
 
   /// Version de schéma que cette version de l'app sait lire.
   static const int schemaVersion = _dbVersion;
@@ -302,6 +302,7 @@ CREATE TABLE budgets (
         target_date TEXT,
         current_balance REAL NOT NULL DEFAULT 0,
         currency TEXT NOT NULL DEFAULT 'XOF',
+        category TEXT NOT NULL DEFAULT 'libre',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
@@ -861,6 +862,16 @@ CREATE TABLE budgets (
         await db.execute('DROP INDEX IF EXISTS idx_snapshot_date');
         await db.execute(
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_date_entity ON net_worth_snapshots (snapshot_date, IFNULL(entity_id, 0))');
+      }
+    }
+
+    if (oldVersion < 19) {
+      // Classeur d'épargne : catégorie de chaque épargne. Migration non
+      // destructive : une colonne ajoutée, les épargnes existantes sont
+      // rangées dans « libre » (modifiable ensuite).
+      final cols = await db.rawQuery('PRAGMA table_info(savings)');
+      if (cols.isNotEmpty && !cols.any((c) => c['name'] == 'category')) {
+        await db.execute("ALTER TABLE savings ADD COLUMN category TEXT NOT NULL DEFAULT 'libre'");
       }
     }
   }
