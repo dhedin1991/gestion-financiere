@@ -249,17 +249,14 @@ class _ClasseurBoardState extends ConsumerState<ClasseurBoard> {
         Align(alignment: Alignment.centerLeft, child: modeSwitch),
         const SizedBox(height: 12),
         tabs,
-        // Corps du classeur, relié à l'intercalaire sélectionné.
+        // Corps du classeur, relié à l'intercalaire sélectionné : un liseré de
+        // la couleur de la catégorie, puis le contenu dans un cadre uniforme.
+        Container(height: 3, color: accent),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: scheme.surface,
-            border: Border(
-              top: BorderSide(color: accent, width: 3),
-              left: BorderSide(color: colors.border),
-              right: BorderSide(color: colors.border),
-              bottom: BorderSide(color: colors.border),
-            ),
+            border: Border.all(color: colors.border),
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -309,11 +306,7 @@ class _FolderTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.16) : colors.panel2,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            border: Border(
-              top: BorderSide(color: selected ? color : colors.border, width: selected ? 3 : 1),
-              left: BorderSide(color: colors.border),
-              right: BorderSide(color: colors.border),
-            ),
+            border: Border.all(color: selected ? color : colors.border, width: selected ? 1.5 : 1),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 16, color: selected ? color : colors.muted),
@@ -574,7 +567,7 @@ class _ColumnsView extends StatelessWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          border: Border(left: BorderSide(color: g.key.color, width: 3), top: BorderSide(color: colors.border), right: BorderSide(color: colors.border), bottom: BorderSide(color: colors.border)),
+                          border: Border.all(color: g.key.color.withValues(alpha: 0.45)),
                         ),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(e.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),

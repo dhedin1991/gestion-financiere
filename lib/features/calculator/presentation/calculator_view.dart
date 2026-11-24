@@ -488,7 +488,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                 ? Text(_error!, style: TextStyle(color: colors.negative, fontSize: 13))
                 : Text(
                     preview == null ? '' : '= ${ExpressionEvaluator.pretty(preview)}',
-                    style: amountTextStyle(fontSize: 16, color: colors.muted),
+                    style: amountTextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: colors.muted),
                   ),
           ),
         ],
