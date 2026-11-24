@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/theme/chart_style.dart';
 import '../../../../core/widgets/panel.dart';
 import '../../domain/entities/net_worth_snapshot.dart';
 import '../providers/bilan_providers.dart';
@@ -100,12 +101,12 @@ class _BreakdownChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <_BreakdownItem>[
-      _BreakdownItem('Comptes', latest.totalAccounts, Colors.blue),
-      _BreakdownItem('Épargne', latest.totalSavings, Colors.teal),
-      _BreakdownItem('Patrimoine', latest.totalPatrimoine, Colors.orange),
-      _BreakdownItem('Créances', latest.totalReceivables, Colors.purple),
-      _BreakdownItem('Dettes', -latest.totalDebts, Colors.red),
-      _BreakdownItem('Crédits restants', -latest.totalCreditsRemaining, Colors.brown),
+      _BreakdownItem('Comptes', latest.totalAccounts, context.appColors.info),
+      _BreakdownItem('Épargne', latest.totalSavings, context.chartStyle.seriesColor(1, Colors.teal)),
+      _BreakdownItem('Patrimoine', latest.totalPatrimoine, context.appColors.warning),
+      _BreakdownItem('Créances', latest.totalReceivables, context.chartStyle.seriesColor(3, Colors.purple)),
+      _BreakdownItem('Dettes', -latest.totalDebts, context.appColors.negative),
+      _BreakdownItem('Crédits restants', -latest.totalCreditsRemaining, context.chartStyle.seriesColor(4, Colors.brown)),
     ];
 
     final maxAbs = items.map((i) => i.value.abs()).fold<double>(0, (a, b) => a > b ? a : b);
@@ -123,7 +124,7 @@ class _BreakdownChart extends StatelessWidget {
                   toY: items[i].value,
                   color: items[i].color,
                   width: 22,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: context.chartStyle.barRadius(22),
                 ),
               ],
             ),
@@ -174,12 +175,12 @@ class _BreakdownLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <_BreakdownItem>[
-      _BreakdownItem('Comptes', latest.totalAccounts, Colors.blue),
-      _BreakdownItem('Épargne', latest.totalSavings, Colors.teal),
-      _BreakdownItem('Patrimoine', latest.totalPatrimoine, Colors.orange),
-      _BreakdownItem('Créances', latest.totalReceivables, Colors.purple),
-      _BreakdownItem('Dettes', -latest.totalDebts, Colors.red),
-      _BreakdownItem('Crédits restants', -latest.totalCreditsRemaining, Colors.brown),
+      _BreakdownItem('Comptes', latest.totalAccounts, context.appColors.info),
+      _BreakdownItem('Épargne', latest.totalSavings, context.chartStyle.seriesColor(1, Colors.teal)),
+      _BreakdownItem('Patrimoine', latest.totalPatrimoine, context.appColors.warning),
+      _BreakdownItem('Créances', latest.totalReceivables, context.chartStyle.seriesColor(3, Colors.purple)),
+      _BreakdownItem('Dettes', -latest.totalDebts, context.appColors.negative),
+      _BreakdownItem('Crédits restants', -latest.totalCreditsRemaining, context.chartStyle.seriesColor(4, Colors.brown)),
     ];
 
     return Wrap(

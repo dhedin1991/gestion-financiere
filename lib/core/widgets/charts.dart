@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/chart_style.dart';
 
 /// Courbe d'évolution avec aire dégradée (style TradingView).
 class LineAreaChart extends StatelessWidget {
@@ -21,6 +22,7 @@ class LineAreaChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = context.chartStyle;
     return SizedBox(
       height: height,
       width: double.infinity,
@@ -28,8 +30,10 @@ class LineAreaChart extends StatelessWidget {
         painter: _LinePainter(
           series: [values],
           colors: [color],
-          fill: true,
-          gridColor: grid ? context.appColors.border : null,
+          fill: style.fillArea,
+          gridColor: grid && style.showGrid ? context.appColors.border : null,
+          mode: style.lineMode,
+          lineWidth: style.lineWidth,
         ),
       ),
     );
@@ -46,6 +50,7 @@ class MultiLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = context.chartStyle;
     return SizedBox(
       height: height,
       width: double.infinity,
@@ -54,8 +59,10 @@ class MultiLineChart extends StatelessWidget {
           series: series,
           colors: colors,
           fill: false,
-          gridColor: context.appColors.border,
+          gridColor: style.showGrid ? context.appColors.border : null,
           normalizeEach: true,
+          mode: style.lineMode,
+          lineWidth: style.lineWidth,
         ),
       ),
     );
@@ -68,6 +75,8 @@ class _LinePainter extends CustomPainter {
   final bool fill;
   final Color? gridColor;
   final bool normalizeEach;
+  final ChartLineMode mode;
+  final double lineWidth;
 
   _LinePainter({
     required this.series,
@@ -75,6 +84,8 @@ class _LinePainter extends CustomPainter {
     required this.fill,
     this.gridColor,
     this.normalizeEach = false,
+    this.mode = ChartLineMode.smooth,
+    this.lineWidth = 2.4,
   });
 
   @override
@@ -105,15 +116,34 @@ class _LinePainter extends CustomPainter {
       }
       final pad = (mx - mn).abs() < 1e-9 ? 1.0 : (mx - mn) * 0.12;
       final lo = mn - pad, hi = mx + pad;
-      final path = Path();
-      for (var i = 0; i < data.length; i++) {
-        final x = size.width * i / (data.length - 1);
-        final y = size.height - ((data[i] - lo) / (hi - lo)) * size.height;
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
+      final pts = <Offset>[
+        for (var i = 0; i < data.length; i++)
+          Offset(size.width * i / (data.length - 1),
+              size.height - ((data[i] - lo) / (hi - lo)) * size.height),
+      ];
+      final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+      switch (mode) {
+        case ChartLineMode.straight:
+          for (var i = 1; i < pts.length; i++) {
+            path.lineTo(pts[i].dx, pts[i].dy);
+          }
+        case ChartLineMode.step:
+          for (var i = 1; i < pts.length; i++) {
+            path.lineTo(pts[i].dx, pts[i - 1].dy);
+            path.lineTo(pts[i].dx, pts[i].dy);
+          }
+        case ChartLineMode.smooth:
+          // Courbe lissée (Catmull-Rom → Bézier), sans dépasser les points voisins.
+          for (var i = 0; i < pts.length - 1; i++) {
+            final p0 = i > 0 ? pts[i - 1] : pts[i];
+            final p1 = pts[i];
+            final p2 = pts[i + 1];
+            final p3 = i + 2 < pts.length ? pts[i + 2] : p2;
+            double clampY(double y) => y.clamp(math.min(p1.dy, p2.dy), math.max(p1.dy, p2.dy));
+            final c1 = Offset(p1.dx + (p2.dx - p0.dx) / 6, clampY(p1.dy + (p2.dy - p0.dy) / 6));
+            final c2 = Offset(p2.dx - (p3.dx - p1.dx) / 6, clampY(p2.dy - (p3.dy - p1.dy) / 6));
+            path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p2.dx, p2.dy);
+          }
       }
       if (fill) {
         final area = Path.from(path)
@@ -135,7 +165,7 @@ class _LinePainter extends CustomPainter {
         Paint()
           ..color = colors[si]
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.2
+          ..strokeWidth = lineWidth
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
@@ -143,7 +173,8 @@ class _LinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LinePainter old) => old.series != series || old.colors != colors;
+  bool shouldRepaint(covariant _LinePainter old) =>
+      old.series != series || old.colors != colors || old.mode != mode || old.lineWidth != lineWidth || old.fill != fill || old.gridColor != gridColor;
 }
 
 /// Cercle de suivi qui se remplit progressivement à l'affichage.
@@ -168,6 +199,7 @@ class RingGauge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final target = value.isNaN ? 0.0 : value.clamp(0.0, 1.0);
+    final ringStroke = (stroke * context.chartStyle.thickness).clamp(3.0, size * 0.25);
     final text = centerText ?? '${(target * 100).round()} %';
     return Semantics(
       label: 'Progression $text',
@@ -183,7 +215,7 @@ class RingGauge extends StatelessWidget {
               progress: v,
               color: color,
               track: context.appColors.border,
-              stroke: stroke,
+              stroke: ringStroke,
             ),
             child: Center(
               child: Text(
@@ -259,6 +291,7 @@ class DonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ringStroke = (stroke * context.chartStyle.thickness).clamp(4.0, size * 0.3);
     return SizedBox(
       width: size,
       height: size,
@@ -267,7 +300,7 @@ class DonutChart extends StatelessWidget {
         duration: const Duration(milliseconds: 1200),
         curve: Curves.easeOutCubic,
         builder: (context, t, _) => CustomPaint(
-          painter: _DonutPainter(slices, stroke, context.appColors.border, t),
+          painter: _DonutPainter(slices, ringStroke, context.appColors.border, t),
           child: Center(child: center),
         ),
       ),
@@ -359,9 +392,9 @@ class PairBarChart extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        _bar(a[i] / maxV, colorA),
+                        _bar(context, a[i] / maxV, colorA),
                         const SizedBox(width: 4),
-                        _bar(b[i] / maxV, colorB),
+                        _bar(context, b[i] / maxV, colorB),
                       ],
                     ),
                   ),
@@ -375,7 +408,8 @@ class PairBarChart extends StatelessWidget {
     );
   }
 
-  Widget _bar(double f, Color c) {
+  Widget _bar(BuildContext outer, double f, Color c) {
+    final radius = outer.chartStyle.barRadius(14);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: f.clamp(0.0, 1.0)),
       duration: const Duration(milliseconds: 900),
@@ -384,7 +418,7 @@ class PairBarChart extends StatelessWidget {
         heightFactor: v < 0.01 ? 0.01 : v,
         child: Container(
           width: 14,
-          decoration: BoxDecoration(color: c, borderRadius: const BorderRadius.vertical(top: Radius.circular(3))),
+          decoration: BoxDecoration(color: c, borderRadius: radius),
         ),
       ),
     );

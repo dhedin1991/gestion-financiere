@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/chart_style.dart';
 import '../../../../core/widgets/panel.dart';
 import '../../../../core/widgets/summary_header.dart';
 import '../providers/bilan_providers.dart';
@@ -103,12 +105,12 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
                 SummaryHeader(
                   title: 'Synthèse des 6 dernières périodes',
                   ratio: totalRev <= 0 ? 0 : (net / totalRev).clamp(0.0, 1.0),
-                  ringColor: net >= 0 ? Colors.green : Colors.red,
+                  ringColor: net >= 0 ? context.appColors.positive : context.appColors.negative,
                   ringText: totalRev <= 0 ? '—' : '${(net / totalRev * 100).round()}%',
                   stats: [
-                    SummaryStat('Revenus', full.format(totalRev), color: Colors.green),
-                    SummaryStat('Dépenses', full.format(totalExp), color: Colors.red),
-                    SummaryStat('Résultat', full.format(net), color: net >= 0 ? Colors.green : Colors.red),
+                    SummaryStat('Revenus', full.format(totalRev), color: context.appColors.positive),
+                    SummaryStat('Dépenses', full.format(totalExp), color: context.appColors.negative),
+                    SummaryStat('Résultat', full.format(net), color: net >= 0 ? context.appColors.positive : context.appColors.negative),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -127,15 +129,15 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
                                 barRods: [
                                   BarChartRodData(
                                     toY: periods[i].totalRevenue,
-                                    color: Colors.green,
+                                    color: context.appColors.positive,
                                     width: 10,
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: context.chartStyle.barRadius(10),
                                   ),
                                   BarChartRodData(
                                     toY: periods[i].totalExpense,
-                                    color: Colors.red,
+                                    color: context.appColors.negative,
                                     width: 10,
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: context.chartStyle.barRadius(10),
                                   ),
                                 ],
                               ),
@@ -181,9 +183,9 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _LegendDot(color: Colors.green, label: 'Revenus'),
+                        _LegendDot(color: context.appColors.positive, label: 'Revenus'),
                         const SizedBox(width: 24),
-                        _LegendDot(color: Colors.red, label: 'Dépenses'),
+                        _LegendDot(color: context.appColors.negative, label: 'Dépenses'),
                       ],
                     ),
                   ]),
@@ -203,11 +205,11 @@ class _RevenueExpenseTabState extends ConsumerState<RevenueExpenseTab> {
                           ),
                           Expanded(
                             child: Text('+ ${fmt.format(p.totalRevenue)}',
-                                style: const TextStyle(color: Colors.green, fontSize: 12)),
+                                style: TextStyle(color: context.appColors.positive, fontSize: 12)),
                           ),
                           Expanded(
                             child: Text('- ${fmt.format(p.totalExpense)}',
-                                style: const TextStyle(color: Colors.red, fontSize: 12)),
+                                style: TextStyle(color: context.appColors.negative, fontSize: 12)),
                           ),
                           Text(fmt.format(p.totalRevenue - p.totalExpense),
                               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),

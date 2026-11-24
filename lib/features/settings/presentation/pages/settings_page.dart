@@ -31,6 +31,8 @@ class SettingsPage extends ConsumerWidget {
           _Group('Apparence', [
             _Row(Icons.palette_outlined, 'Affichage',
                 'Zoom, thèmes, polices, fenêtres, recherche', '/display-settings'),
+            _Row(Icons.auto_graph, 'Graphiques',
+                'Couleurs, palettes et styles des courbes, barres et anneaux', '/chart-settings'),
           ]),
           _Group('Données', [
             _Row(Icons.ios_share_outlined, 'Exporter mes données', null, '/export'),

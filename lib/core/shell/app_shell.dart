@@ -1,3 +1,4 @@
+import '../../features/calculator/presentation/calculator_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -234,6 +235,7 @@ class _TopBar extends ConsumerWidget {
           mi('Nouveau virement', () => showTransferFormSheet(context)),
           mi('Exporter mes données', () => context.go('/export')),
           mi('Sauvegarde & restauration', () => context.go('/backup')),
+          mi('Calculatrice', () => showCalculator(context), key: const SingleActivator(LogicalKeyboardKey.f8)),
           mi('Verrouiller', () => ref.read(appLockControllerProvider.notifier).lockAgain()),
         ], child: const Text('Fichier')),
         SubmenuButton(menuChildren: [
@@ -313,6 +315,11 @@ class _TopBar extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(border: Border.all(color: colors.border), borderRadius: BorderRadius.circular(6)),
             child: Text(main, style: amountTextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: scheme.onSurface)),
+          ),
+          IconButton(
+            tooltip: 'Calculatrice (F8)',
+            icon: const Icon(Icons.calculate_outlined),
+            onPressed: () => showCalculator(context),
           ),
           IconButton(
             tooltip: 'Verrouiller',

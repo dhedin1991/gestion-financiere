@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_theme.dart';
+import 'chart_style.dart';
 
 const String _presetPrefsKey = 'theme_preset_v2';
 const String _oldPresetPrefsKey = 'theme_preset';
@@ -57,4 +58,36 @@ class ThemePresetController extends StateNotifier<AppThemePreset> {
 
 final themePresetProvider = StateNotifierProvider<ThemePresetController, AppThemePreset>((ref) {
   return ThemePresetController();
+});
+
+
+const String _chartPrefsKey = 'chart_style_v1';
+
+/// Réglages des graphiques (couleurs + styles), mémorisés sur l'appareil.
+class ChartStyleController extends StateNotifier<ChartStyle> {
+  ChartStyleController() : super(ChartStyle.defaults) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_chartPrefsKey);
+      if (raw != null && mounted) state = ChartStyle.decode(raw);
+    } catch (_) {}
+  }
+
+  Future<void> set(ChartStyle style) async {
+    state = style;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_chartPrefsKey, style.encode());
+    } catch (_) {}
+  }
+
+  Future<void> reset() => set(ChartStyle.defaults);
+}
+
+final chartStyleProvider = StateNotifierProvider<ChartStyleController, ChartStyle>((ref) {
+  return ChartStyleController();
 });

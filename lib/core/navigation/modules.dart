@@ -5,8 +5,10 @@ import '../../features/app_lock/presentation/pages/security_settings_page.dart';
 import '../../features/archives/presentation/pages/archives_page.dart';
 import '../../features/audit_log/presentation/pages/audit_log_page.dart';
 import '../../features/backup/presentation/pages/backup_page.dart';
+import '../../features/calculator/presentation/calculator_view.dart';
 import '../../features/bilans/presentation/pages/bilans_page.dart';
 import '../../features/budgets/presentation/pages/budgets_page.dart';
+import '../../features/settings/presentation/pages/chart_settings_page.dart';
 import '../../features/credits/presentation/pages/credits_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/home_page.dart';
@@ -64,6 +66,7 @@ final List<AppModule> kModules = [
   AppModule(label: 'Dettes & Créances', route: '/debts', icon: Icons.handshake_outlined, selectedIcon: Icons.handshake, section: 'Patrimoine', builder: () => const DebtsPage()),
   AppModule(label: 'Patrimoine', route: '/patrimoine', icon: Icons.home_work_outlined, selectedIcon: Icons.home_work, section: 'Patrimoine', builder: () => const PatrimoinePage()),
   AppModule(label: 'Bilans', route: '/bilans', icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart, section: 'Patrimoine', builder: () => const BilansPage()),
+  AppModule(label: 'Calculatrice', route: '/calculator', icon: Icons.calculate_outlined, selectedIcon: Icons.calculate, section: 'Outils', builder: () => const CalculatorPage()),
   AppModule(label: 'Exporter mes données', route: '/export', icon: Icons.ios_share_outlined, selectedIcon: Icons.ios_share, section: 'Outils', builder: () => const ExportPage()),
   AppModule(label: 'Sauvegarde & restauration', route: '/backup', icon: Icons.backup_outlined, selectedIcon: Icons.backup, section: 'Outils', builder: () => const BackupPage()),
   AppModule(label: 'Synchronisation Wi-Fi', route: '/sync', icon: Icons.wifi_tethering, selectedIcon: Icons.wifi_tethering, section: 'Outils', builder: () => const SyncPage()),
@@ -72,6 +75,7 @@ final List<AppModule> kModules = [
   AppModule(label: 'Historique des mouvements', route: '/audit-log', icon: Icons.history, selectedIcon: Icons.history, section: 'Outils', builder: () => const AuditLogPage()),
   AppModule(label: 'Paramètres', route: '/settings', icon: Icons.settings_outlined, selectedIcon: Icons.settings, section: 'Application', builder: () => const SettingsPage()),
   AppModule(label: 'Affichage', route: '/display-settings', icon: Icons.palette_outlined, selectedIcon: Icons.palette, section: 'Application', inNav: false, builder: () => const DisplaySettingsPage()),
+  AppModule(label: 'Graphiques', route: '/chart-settings', icon: Icons.insights_outlined, selectedIcon: Icons.insights, section: 'Application', inNav: false, builder: () => const ChartSettingsPage()),
   AppModule(label: 'Taux de change', route: '/exchange-rates', icon: Icons.currency_exchange, selectedIcon: Icons.currency_exchange, section: 'Application', inNav: false, builder: () => const ExchangeRatesPage()),
   AppModule(label: 'Sécurité', route: '/security', icon: Icons.shield_outlined, selectedIcon: Icons.shield, section: 'Application', inNav: false, builder: () => const SecuritySettingsPage()),
   AppModule(label: 'Mode d’emploi', route: '/help', icon: Icons.help_outline, selectedIcon: Icons.help, section: 'Application', inNav: false, builder: () => const HelpPage()),
