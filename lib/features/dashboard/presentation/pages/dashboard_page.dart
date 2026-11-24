@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_back_button.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_error_message.dart';
@@ -9,6 +11,8 @@ import '../../../../core/utils/app_format.dart';
 import '../../../../core/widgets/charts.dart';
 import '../../../../core/widgets/panel.dart';
 import '../../../accounts/presentation/providers/account_providers.dart';
+import '../../../calculator/presentation/calculator_view.dart';
+import '../../../transactions/presentation/pages/transactions_page.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../providers/insights_providers.dart';
 import '../providers/position_providers.dart';
@@ -47,6 +51,7 @@ class DashboardPage extends ConsumerWidget {
       body: LayoutBuilder(builder: (context, c) {
         final wide = c.maxWidth >= 900;
         final left = <Widget>[
+          const _QuickActions(),
           const _MonthKpis(),
           PositionPanel(width: c.maxWidth),
           const _NetWorthPanel(),
@@ -199,6 +204,44 @@ class _CategoriesPanel extends ConsumerWidget {
           ]);
         },
       ),
+    );
+  }
+}
+
+
+/// Raccourcis du tableau de bord : les gestes les plus fréquents en un toucher.
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget action(IconData icon, String label, VoidCallback onTap) => Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: scheme.primary.withValues(alpha: 0.14),
+                  child: Icon(icon, size: 20, color: scheme.primary),
+                ),
+                const SizedBox(height: 6),
+                Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600), textAlign: TextAlign.center, maxLines: 2),
+              ]),
+            ),
+          ),
+        );
+    return Panel(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Row(children: [
+        action(Icons.add_circle_outline, 'Nouvelle opération', () => showTransactionFormSheet(context)),
+        action(Icons.savings_outlined, 'Épargne', () => context.go('/savings')),
+        action(Icons.receipt_long_outlined, 'Facturation', () => context.go('/invoicing')),
+        action(Icons.calculate_outlined, 'Calculatrice', () => showCalculator(context)),
+      ]),
     );
   }
 }

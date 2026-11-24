@@ -1,4 +1,5 @@
 
+import 'chart_style.dart';
 import 'package:flutter/material.dart';
 
 import '../display/display_prefs.dart';
@@ -176,6 +177,7 @@ class AppTheme {
     AppThemePreset preset, {
     AppFont font = AppFont.ibmPlex,
     ListDensity density = ListDensity.comfortable,
+    ChartStyle chart = ChartStyle.defaults,
   }) {
     final c = _palettes[preset]!;
     final brightness = c.dark ? Brightness.dark : Brightness.light;
@@ -227,14 +229,15 @@ class AppTheme {
       iconTheme: IconThemeData(color: c.muted),
       extensions: [
         AppColors(
-          positive: c.pos,
-          negative: c.neg,
-          warning: c.warn,
-          info: c.info,
+          positive: chart.positive ?? c.pos,
+          negative: chart.negative ?? c.neg,
+          warning: chart.warning ?? c.warn,
+          info: chart.line ?? c.info,
           panel2: c.panel2,
           border: c.border,
           muted: c.muted,
         ),
+        chart,
       ],
       appBarTheme: AppBarTheme(
         backgroundColor: c.panel2,

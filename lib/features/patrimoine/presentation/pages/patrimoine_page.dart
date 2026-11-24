@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
-import '../../../../core/utils/app_error_message.dart';
 import '../../../../core/navigation/app_back_button.dart';
 import '../../../../core/navigation/app_menu_button.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/app_error_message.dart';
+import '../../../../core/utils/app_format.dart';
+import '../../../../core/widgets/charts.dart';
+import '../../../../core/widgets/classeur.dart';
 import '../../domain/entities/patrimoine_item.dart';
 import '../providers/patrimoine_providers.dart';
+import '../widgets/patrimoine_category_ui.dart';
 import '../widgets/patrimoine_form_sheet.dart';
-import '../../../../core/utils/app_format.dart';
 
+/// Patrimoine : un classeur à intercalaires (immobilier, véhicules,
+/// matériel…) consultable en grille, en liste ou en colonnes. Chaque bien
+/// a une fiche détaillée (modifier, supprimer).
 class PatrimoinePage extends ConsumerWidget {
   const PatrimoinePage({super.key});
 
@@ -35,95 +42,97 @@ class PatrimoinePage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showItemForm(context),
+        onPressed: () => showPatrimoineForm(context),
         icon: const Icon(Icons.add),
         label: const Text('Nouveau bien'),
       ),
-      body: Column(
-        children: [
-          _TotalHeader(totalAsync: totalAsync),
-          Expanded(
-            child: itemsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
-              data: (items) {
-                if (items.isEmpty) {
-                  return const _EmptyState();
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    return _PatrimoineCard(item: items[index]);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+      body: itemsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text(AppErrorMessage.friendly(err))),
+        data: (items) {
+          if (items.isEmpty) return const _EmptyState();
+          final dateFmt = DateFormat('dd/MM/yyyy');
+          final entries = [
+            for (final it in items)
+              ClasseurEntry(
+                id: 'p${it.id}',
+                title: it.nom,
+                subtitle: (it.localisation != null && it.localisation!.isNotEmpty) ? it.localisation : it.categorie.label,
+                categoryKey: it.categorie.name,
+                amount: it.valeurEstimee,
+                currency: it.devise,
+                footnote: it.dateAcquisition == null ? null : 'Acquis le ${dateFmt.format(it.dateAcquisition!)}',
+                date: it.dateAcquisition ?? it.createdAt,
+                onTap: () => _showFiche(context, it),
+              ),
+          ];
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            children: [
+              _Summary(items: items, totalAsync: totalAsync),
+              const SizedBox(height: 14),
+              ClasseurBoard(
+                storageKey: 'patrimoine',
+                entries: entries,
+                categories: kPatrimoineClasseur,
+                searchHint: 'Rechercher un bien, un lieu, une catégorie…',
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  void _showItemForm(BuildContext context, {PatrimoineItem? existing}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => PatrimoineFormSheet(existing: existing),
-    );
+  void _showFiche(BuildContext context, PatrimoineItem item) {
+    showFicheSheet<void>(context, builder: (_) => _Fiche(item: item));
   }
 }
 
-class _TotalHeader extends StatelessWidget {
-  final AsyncValue<double> totalAsync;
+void showPatrimoineForm(BuildContext context, {PatrimoineItem? existing}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    builder: (_) => PatrimoineFormSheet(existing: existing),
+  );
+}
 
-  const _TotalHeader({required this.totalAsync});
+class _Summary extends StatelessWidget {
+  final List<PatrimoineItem> items;
+  final AsyncValue<double> totalAsync;
+  const _Summary({required this.items, required this.totalAsync});
 
   @override
   Widget build(BuildContext context) {
     final fmt = AppFormat.currency(symbol: 'XOF');
+    final byCat = <PatrimoineCategory, double>{};
+    for (final it in items) {
+      byCat[it.categorie] = (byCat[it.categorie] ?? 0) + it.valeurEstimee;
+    }
+    final sorted = byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final total = totalAsync.valueOrNull ?? byCat.values.fold<double>(0, (a, b) => a + b);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
+    return ClasseurSummary(
+      title: 'Valeur totale du patrimoine',
+      totalText: totalAsync.isLoading && totalAsync.valueOrNull == null ? '…' : fmt.format(total),
+      caption: '${items.length} bien${items.length > 1 ? 's' : ''} · ${byCat.length} catégorie${byCat.length > 1 ? 's' : ''}',
+      chart: DonutChart(
+        size: 104,
+        stroke: 14,
+        slices: [for (final e in sorted) DonutSlice(e.value < 0 ? 0 : e.value, e.key.color)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Valeur totale du patrimoine',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-              fontSize: 13,
+      legend: Wrap(spacing: 10, runSpacing: 4, children: [
+        for (final e in sorted.take(5))
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: e.key.color, shape: BoxShape.circle)),
+            const SizedBox(width: 4),
+            Text(
+              '${e.key.label.split(' ').first} ${total > 0 ? '${(e.value / total * 100).round()} %' : ''}',
+              style: TextStyle(fontSize: 11, color: context.appColors.muted),
             ),
-          ),
-          const SizedBox(height: 4),
-          totalAsync.when(
-            loading: () => const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            error: (err, _) => const Text('Erreur'),
-            data: (total) => Text(
-              fmt.format(total),
-              style: amountTextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-          ),
-        ],
-      ),
+          ]),
+      ]),
     );
   }
 }
@@ -141,13 +150,11 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(Icons.home_work_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            const Text(
-              'Aucun bien enregistré',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            const Text('Aucun bien enregistré', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text(
-              'Ajoute un bien immobilier, un véhicule ou tout autre élément de ton patrimoine',
+              'Ajoute un bien immobilier, un terrain, un véhicule ou tout autre élément de ton patrimoine : '
+              'ils seront classés par catégorie.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
             ),
@@ -158,146 +165,108 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _PatrimoineCard extends ConsumerWidget {
+/// Fiche d'un bien : toutes ses informations, de façon structurée.
+class _Fiche extends ConsumerWidget {
   final PatrimoineItem item;
-
-  const _PatrimoineCard({required this.item});
-
-  String _categoryLabel(PatrimoineCategory category) {
-    switch (category) {
-      case PatrimoineCategory.immobilier:
-        return 'Immobilier';
-      case PatrimoineCategory.vehicule:
-        return 'Véhicule';
-      case PatrimoineCategory.materiel:
-        return 'Matériel';
-      case PatrimoineCategory.autre:
-        return 'Autre';
-    }
-  }
-
-  IconData _categoryIcon(PatrimoineCategory category) {
-    switch (category) {
-      case PatrimoineCategory.immobilier:
-        return Icons.home_outlined;
-      case PatrimoineCategory.vehicule:
-        return Icons.directions_car_outlined;
-      case PatrimoineCategory.materiel:
-        return Icons.devices_other_outlined;
-      case PatrimoineCategory.autre:
-        return Icons.category_outlined;
-    }
-  }
+  const _Fiche({required this.item});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
     final fmt = AppFormat.currency(symbol: item.devise);
+    final dateFmt = DateFormat('dd/MM/yyyy');
+    final cat = item.categorie;
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: cat.color.withValues(alpha: 0.16),
+              child: Icon(cat.icon, color: cat.color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(item.nom, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(cat.label, style: TextStyle(color: cat.color, fontWeight: FontWeight.w600, fontSize: 13)),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Valeur estimée', style: TextStyle(color: colors.muted, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(fmt.format(item.valeurEstimee), style: amountTextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: cat.color)),
+            ]),
           ),
-          builder: (_) => PatrimoineFormSheet(existing: item),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                child: Icon(_categoryIcon(item.categorie)),
+          const SizedBox(height: 10),
+          FicheRow(icon: Icons.category_outlined, label: 'Catégorie', value: cat.label),
+          if (item.dateAcquisition != null)
+            FicheRow(icon: Icons.event_outlined, label: 'Date d\'acquisition', value: dateFmt.format(item.dateAcquisition!)),
+          if (item.localisation != null && item.localisation!.isNotEmpty)
+            FicheRow(icon: Icons.location_on_outlined, label: 'Localisation', value: item.localisation!),
+          if (item.description != null && item.description!.isNotEmpty)
+            FicheRow(icon: Icons.notes_outlined, label: 'Description', value: item.description!),
+          FicheRow(icon: Icons.add_circle_outline, label: 'Ajouté le', value: dateFmt.format(item.createdAt)),
+          FicheRow(icon: Icons.update, label: 'Dernière mise à jour', value: dateFmt.format(item.updatedAt)),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  showPatrimoineForm(context, existing: item);
+                },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Modifier'),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.nom,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _categoryLabel(item.categorie),
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                    if (item.localisation != null && item.localisation!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade500),
-                          const SizedBox(width: 2),
-                          Text(
-                            item.localisation!,
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, ref),
+                style: OutlinedButton.styleFrom(foregroundColor: colors.negative),
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text('Supprimer'),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    fmt.format(item.valeurEstimee),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    color: Colors.red.shade400,
-                    onPressed: () => _confirmDelete(context, ref),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+            ),
+          ]),
+        ]),
       ),
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
-    showDialog(
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Supprimer ce bien ?'),
         content: Text('Voulez-vous vraiment supprimer "${item.nom}" ? Cette action est irréversible.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Annuler'),
-          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Annuler')),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
-    ).then((confirmed) async {
-      if (confirmed == true && item.id != null) {
-        try {
-          await ref.read(patrimoineActionsProvider).delete(item.id!);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Bien supprimé')),
-            );
-          }
-        } catch (e) {
-          if (context.mounted) {
-            AppErrorMessage.showSnackBar(context, e);
-          }
-        }
+    );
+    if (confirmed != true || item.id == null) return;
+    try {
+      await ref.read(patrimoineActionsProvider).delete(item.id!);
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bien supprimé')));
       }
-    });
+    } catch (e) {
+      if (context.mounted) AppErrorMessage.showSnackBar(context, e);
+    }
   }
 }

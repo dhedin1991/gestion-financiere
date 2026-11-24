@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/calculator/presentation/calculator_view.dart';
 import 'scaffold_key_provider.dart';
 import '../shell/app_shell.dart';
 
@@ -15,10 +16,21 @@ class AppMenuButton extends ConsumerWidget {
     // Sur le poste de travail, le Navigateur remplace le menu latéral.
     if (isDesktopWidth(context)) return const SizedBox.shrink();
     final scaffoldKey = ref.watch(scaffoldKeyProvider);
-    return IconButton(
-      icon: const Icon(Icons.menu),
-      tooltip: 'Menu',
-      onPressed: () => scaffoldKey.currentState?.openDrawer(),
+    // La calculatrice est à portée de main sur toutes les pages (mobile).
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.calculate_outlined),
+          tooltip: 'Calculatrice',
+          onPressed: () => showCalculator(context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: 'Menu',
+          onPressed: () => scaffoldKey.currentState?.openDrawer(),
+        ),
+      ],
     );
   }
 }

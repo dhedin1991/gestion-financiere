@@ -13,6 +13,8 @@ import '../../../accounts/presentation/providers/account_providers.dart';
 import '../../domain/entities/savings.dart';
 import '../providers/savings_providers.dart';
 import '../widgets/savings_movement_dialog.dart';
+import '../../../../core/widgets/classeur.dart';
+import '../widgets/savings_category_ui.dart';
 import '../widgets/savings_form_sheet.dart';
 import 'savings_history_page.dart';
 import '../../../../core/utils/app_format.dart';
@@ -26,6 +28,7 @@ class SavingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final savingsAsync = ref.watch(savingsListProvider);
+    final accounts = ref.watch(allAccountsIncludingArchivedProvider).valueOrNull ?? <Account>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -52,21 +55,47 @@ class SavingsPage extends ConsumerWidget {
           if (savingsList.isEmpty) {
             return const _EmptyState();
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: savingsList.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return const Column(children: [
-                  _ImmediateSavingsPanel(),
-                  SizedBox(height: 8),
-                  _SavingsSummaryHeader(),
-                ]);
-              }
-              final savings = savingsList[index - 1];
-              return _SavingsCard(savings: savings);
-            },
+          String accountName(int id) {
+            final m = accounts.where((a) => a.id == id);
+            return m.isEmpty ? '' : m.first.name;
+          }
+
+          final dateFmt = DateFormat('dd/MM/yyyy');
+          final entries = [
+            for (final sv in savingsList)
+              ClasseurEntry(
+                id: 's${sv.id}',
+                title: sv.name,
+                subtitle: accountName(sv.accountId),
+                categoryKey: sv.category.name,
+                amount: sv.currentBalance,
+                currency: sv.currency,
+                progress: sv.progress,
+                footnote: sv.hasTarget
+                    ? 'Objectif ${AppFormat.currency(symbol: sv.currency, decimalDigits: 0).format(sv.targetAmount ?? 0)}'
+                        '${sv.targetDate != null ? ' · avant le ${dateFmt.format(sv.targetDate!)}' : ''}'
+                    : 'Sans objectif',
+                date: sv.createdAt,
+                onTap: () => showFicheSheet<void>(
+                  context,
+                  builder: (_) => _SavingsFiche(savings: sv, accountName: accountName(sv.accountId), pageContext: context),
+                ),
+              ),
+          ];
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            children: [
+              const _ImmediateSavingsPanel(),
+              const SizedBox(height: 10),
+              const _SavingsSummaryHeader(),
+              const SizedBox(height: 14),
+              ClasseurBoard(
+                storageKey: 'epargne',
+                entries: entries,
+                categories: kSavingsClasseur,
+                searchHint: 'Rechercher une épargne, un compte, une catégorie…',
+              ),
+            ],
           );
         },
       ),
@@ -104,7 +133,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Crée une épargne, avec ou sans objectif, reliée à un de tes comptes',
+              'Crée une épargne, avec ou sans objectif, rangée dans une catégorie et reliée à un de tes comptes',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
             ),
@@ -115,131 +144,135 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _SavingsCard extends ConsumerWidget {
+/// Fiche d'une épargne : progression, informations et toutes les actions
+/// (verser, retirer, historique, modifier).
+class _SavingsFiche extends StatelessWidget {
   final Savings savings;
+  final String accountName;
+  final BuildContext pageContext;
 
-  const _SavingsCard({required this.savings});
+  const _SavingsFiche({required this.savings, required this.accountName, required this.pageContext});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(allAccountsIncludingArchivedProvider);
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final cat = savings.category;
     final fmt = AppFormat.currency(symbol: savings.currency, decimalDigits: 0);
+    final dateFmt = DateFormat('dd/MM/yyyy');
+    final remaining = savings.hasTarget ? (savings.targetAmount! - savings.currentBalance) : null;
 
-    String accountName = '...';
-    final accounts = accountsAsync.valueOrNull ?? <Account>[];
-    final match = accounts.where((a) => a.id == savings.accountId).toList();
-    if (match.isNotEmpty) accountName = match.first.name;
-
-    Color gaugeColor(double ratio) {
-      if (ratio >= 1.0) return Colors.green;
-      if (ratio >= 0.5) return Colors.orange;
-      return Colors.blueGrey;
+    void closeThen(void Function(BuildContext) action) {
+      Navigator.of(context).pop();
+      if (pageContext.mounted) action(pageContext);
     }
 
-    return Card(
-      child: InkWell(
-        onTap: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (_) => SavingsFormSheet(existing: savings),
-        ),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      savings.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                    ),
-                  ),
-                  Chip(
-                    label: Text(accountName),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: cat.color.withValues(alpha: 0.16),
+              child: Icon(cat.icon, color: cat.color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(savings.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(cat.label, style: TextStyle(color: cat.color, fontWeight: FontWeight.w600, fontSize: 13)),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Montant épargné', style: TextStyle(color: colors.muted, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(fmt.format(savings.currentBalance), style: amountTextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: cat.color)),
               if (savings.hasTarget) ...[
+                const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: savings.progress,
                     minHeight: 10,
-                    backgroundColor: gaugeColor(savings.progress!).withValues(alpha: 0.15),
-                    valueColor: AlwaysStoppedAnimation(gaugeColor(savings.progress!)),
+                    color: savings.progress! >= 1 ? colors.positive : cat.color,
+                    backgroundColor: cat.color.withValues(alpha: 0.15),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
-                  '${fmt.format(savings.currentBalance)} sur ${fmt.format(savings.targetAmount ?? 0)}'
-                  '${savings.targetDate != null ? ' - avant le ${DateFormat('dd/MM/yyyy').format(savings.targetDate!)}' : ''}',
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                ),
-              ] else ...[
-                Text(
-                  'Solde : ${fmt.format(savings.currentBalance)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  '${((savings.progress ?? 0) * 100).round()} % de ${fmt.format(savings.targetAmount ?? 0)}',
+                  style: TextStyle(color: colors.muted, fontSize: 12),
                 ),
               ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (_) => SavingsMovementDialog(
-                          savings: savings,
-                          type: SavingsTransactionType.versement,
-                        ),
-                      ),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Verser'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (_) => SavingsMovementDialog(
-                          savings: savings,
-                          type: SavingsTransactionType.retrait,
-                        ),
-                      ),
-                      icon: const Icon(Icons.remove, size: 18),
-                      label: const Text('Retirer'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => SavingsHistoryPage(savings: savings),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.history, size: 18),
-                  label: const Text('Historique'),
-                ),
-              ),
-            ],
+            ]),
           ),
-        ),
+          const SizedBox(height: 10),
+          FicheRow(icon: Icons.account_balance_wallet_outlined, label: 'Compte lié', value: accountName.isEmpty ? '—' : accountName),
+          FicheRow(icon: Icons.category_outlined, label: 'Catégorie', value: cat.label),
+          if (savings.hasTarget && remaining != null)
+            FicheRow(
+              icon: Icons.flag_outlined,
+              label: 'Reste à épargner',
+              value: remaining > 0 ? fmt.format(remaining) : 'Objectif atteint',
+            ),
+          if (savings.targetDate != null)
+            FicheRow(icon: Icons.event_outlined, label: 'Date cible', value: dateFmt.format(savings.targetDate!)),
+          FicheRow(icon: Icons.add_circle_outline, label: 'Créée le', value: dateFmt.format(savings.createdAt)),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => closeThen((c) => showDialog(
+                      context: c,
+                      builder: (_) => SavingsMovementDialog(savings: savings, type: SavingsTransactionType.versement),
+                    )),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Verser'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => closeThen((c) => showDialog(
+                      context: c,
+                      builder: (_) => SavingsMovementDialog(savings: savings, type: SavingsTransactionType.retrait),
+                    )),
+                icon: const Icon(Icons.remove, size: 18),
+                label: const Text('Retirer'),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: TextButton.icon(
+                onPressed: () => closeThen((c) => Navigator.of(c).push(
+                      MaterialPageRoute(builder: (_) => SavingsHistoryPage(savings: savings)),
+                    )),
+                icon: const Icon(Icons.history, size: 18),
+                label: const Text('Historique'),
+              ),
+            ),
+            Expanded(
+              child: TextButton.icon(
+                onPressed: () => closeThen((c) => showModalBottomSheet(
+                      context: c,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      builder: (_) => SavingsFormSheet(existing: savings),
+                    )),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Modifier'),
+              ),
+            ),
+          ]),
+        ]),
       ),
     );
   }

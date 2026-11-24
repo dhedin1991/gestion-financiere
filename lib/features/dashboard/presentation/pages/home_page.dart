@@ -17,6 +17,7 @@ import '../../../settings/presentation/providers/exchange_rate_providers.dart';
 import '../../../transactions/presentation/pages/transactions_page.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../transactions/domain/entities/transaction.dart';
+import '../../../../core/theme/chart_style.dart';
 import '../providers/insights_providers.dart';
 import '../providers/position_providers.dart';
 
@@ -25,7 +26,7 @@ import '../providers/position_providers.dart';
 Color seriesColor(BuildContext context, int index) {
   final c = context.appColors;
   final palette = [c.info, c.positive, const Color(0xFF8E7CF0), Theme.of(context).colorScheme.primary, c.warning, const Color(0xFF2EC4B6)];
-  return palette[index % palette.length];
+  return context.chartStyle.seriesColor(index, palette[index % palette.length]);
 }
 
 /// Dispose des enfants en grille de `cols` colonnes (largeur disponible `w`).

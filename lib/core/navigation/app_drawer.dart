@@ -37,6 +37,7 @@ class AppDrawer extends StatelessWidget {
       _DrawerItem('Bilans', Icons.bar_chart_outlined, Icons.bar_chart, '/bilans'),
     ];
     final outils = <_DrawerItem>[
+      _DrawerItem('Calculatrice', Icons.calculate_outlined, Icons.calculate, '/calculator'),
       _DrawerItem('Exporter mes données', Icons.ios_share_outlined, Icons.ios_share, '/export'),
       _DrawerItem('Sauvegarde & restauration', Icons.backup_outlined, Icons.backup, '/backup'),
       _DrawerItem('Synchronisation Wi-Fi', Icons.wifi_tethering, Icons.wifi_tethering, '/sync'),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_error_message.dart';
 import '../../domain/entities/patrimoine_item.dart';
+import 'patrimoine_category_ui.dart';
 import '../providers/patrimoine_providers.dart';
 
 class PatrimoineFormSheet extends ConsumerStatefulWidget {
@@ -55,18 +56,7 @@ class _PatrimoineFormSheetState extends ConsumerState<PatrimoineFormSheet> {
     super.dispose();
   }
 
-  String _categoryLabel(PatrimoineCategory category) {
-    switch (category) {
-      case PatrimoineCategory.immobilier:
-        return 'Immobilier';
-      case PatrimoineCategory.vehicule:
-        return 'Véhicule';
-      case PatrimoineCategory.materiel:
-        return 'Matériel';
-      case PatrimoineCategory.autre:
-        return 'Autre';
-    }
-  }
+  String _categoryLabel(PatrimoineCategory category) => category.label;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(

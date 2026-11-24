@@ -1,3 +1,18 @@
+/// Catégorie d'une épargne (intercalaire du classeur). Stockée par son nom ;
+/// les épargnes existantes sont rangées dans « libre ».
+enum SavingsCategory {
+  urgence,
+  projet,
+  voyage,
+  immobilier,
+  education,
+  vehicule,
+  evenement,
+  retraite,
+  sante,
+  libre,
+}
+
 /// Entité métier représentant une Épargne.
 ///
 /// Une épargne est toujours rattachée à un compte (accountId) : chaque
@@ -12,6 +27,7 @@ class Savings {
   final DateTime? targetDate;
   final double currentBalance;
   final String currency;
+  final SavingsCategory category;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +39,7 @@ class Savings {
     this.targetDate,
     this.currentBalance = 0,
     this.currency = 'XOF',
+    this.category = SavingsCategory.libre,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -47,6 +64,7 @@ class Savings {
     DateTime? targetDate,
     double? currentBalance,
     String? currency,
+    SavingsCategory? category,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -58,6 +76,7 @@ class Savings {
       targetDate: targetDate ?? this.targetDate,
       currentBalance: currentBalance ?? this.currentBalance,
       currency: currency ?? this.currency,
+      category: category ?? this.category,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -12,6 +12,7 @@ import 'core/constants/app_constants.dart';
 import 'core/display/display_prefs.dart';
 import 'core/display/display_scope.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/chart_style.dart';
 import 'core/theme/theme_providers.dart';
 import 'features/app_lock/presentation/pages/login_page.dart';
 import 'features/app_lock/presentation/pages/password_setup_page.dart';
@@ -162,7 +163,8 @@ class _GestionFinanciereAppState extends ConsumerState<GestionFinanciereApp>
   Widget build(BuildContext context) {
     final themePreset = ref.watch(themePresetProvider);
     final display = ref.watch(displayPrefsProvider);
-    final themes = _resolveThemes(themePreset, display);
+    final chart = ref.watch(chartStyleProvider);
+    final themes = _resolveThemes(themePreset, display, chart);
     final lockPhase = ref.watch(appLockControllerProvider).phase;
 
     // Tant que le verrouillage n'a pas tranché (chargement, code à saisir,
@@ -256,8 +258,8 @@ class _ResolvedThemes {
   const _ResolvedThemes(this.light, this.dark, this.mode);
 }
 
-_ResolvedThemes _resolveThemes(AppThemePreset preset, DisplayPrefs d) {
-  ThemeData build(AppThemePreset p) => AppTheme.build(p, font: d.font, density: d.density);
+_ResolvedThemes _resolveThemes(AppThemePreset preset, DisplayPrefs d, ChartStyle chart) {
+  ThemeData build(AppThemePreset p) => AppTheme.build(p, font: d.font, density: d.density, chart: chart);
   if (d.followSystemTheme) {
     final light = build(preset.isDark ? AppThemePreset.clairPro : preset);
     final dark = build(preset.isDark ? preset : AppThemePreset.nuitBancaire);

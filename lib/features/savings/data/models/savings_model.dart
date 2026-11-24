@@ -12,6 +12,10 @@ class SavingsModel {
       targetDate: map['target_date'] == null ? null : DateTime.parse(map['target_date'] as String),
       currentBalance: Money.fromCents((map['current_balance'] as num).toInt()),
       currency: map['currency'] as String,
+      category: SavingsCategory.values.firstWhere(
+        (c) => c.name == map['category'],
+        orElse: () => SavingsCategory.libre,
+      ),
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -26,6 +30,7 @@ class SavingsModel {
       'target_date': savings.targetDate?.toIso8601String(),
       'current_balance': Money.toCents(savings.currentBalance),
       'currency': savings.currency,
+      'category': savings.category.name,
       'created_at': savings.createdAt.toIso8601String(),
       'updated_at': savings.updatedAt.toIso8601String(),
     };
