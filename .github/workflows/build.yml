@@ -29,9 +29,14 @@ jobs:
           grep -rh "ic_launcher_background" $R/values* 2>/dev/null || true
           echo "--- manifeste"
           grep -n 'android:icon' android/app/src/main/AndroidManifest.xml || true
-          # Seule vraie condition bloquante : l'icône générée existe et le manifeste la référence
+          # Conditions bloquantes. Le modèle Flutter par défaut ne crée PAS d'icône
+          # adaptative : si ce fichier manque, c'est que notre icône n'a pas été
+          # générée et l'APK partirait avec le logo Flutter (c'était le bug).
           test -f $R/mipmap-xxxhdpi/ic_launcher.png
           grep -q '@mipmap/ic_launcher' android/app/src/main/AndroidManifest.xml
+          test -f $R/mipmap-anydpi-v26/ic_launcher.xml || { echo "ERREUR : icône adaptative non générée (logo Flutter par défaut)"; exit 1; }
+          grep -q 'ic_launcher_background' $R/mipmap-anydpi-v26/ic_launcher.xml
+          grep -rq '0B1220' $R/values*/ || { echo "ERREUR : fond marine #0B1220 absent"; exit 1; }
       - run: sed -i 's/id "org.jetbrains.kotlin.android" version "[^"]*"/id "org.jetbrains.kotlin.android" version "1.9.24"/' android/settings.gradle.kts
       - run: sed -i '/android {/a\    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
       - name: Activer le core library desugaring (requis par flutter_local_notifications)
@@ -211,7 +216,7 @@ jobs:
           channel: 'stable'
 
       - run: flutter create --platforms=windows --project-name gestion_financiere .
-      - run: flutter pub get && dart run flutter_launcher_icons -f flutter_launcher_icons-windows.yaml
+      - run: flutter pub get && dart run flutter_launcher_icons -f icones_windows.yaml
       - run: flutter build windows --release
 
       - uses: actions/upload-artifact@v4
