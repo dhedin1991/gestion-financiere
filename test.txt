@@ -1,0 +1,137 @@
+
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: arithmétique priorités et parenthèses
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: arithmétique virgule décimale et parenthèse oubliée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: arithmétique multiplication implicite
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: arithmétique erreurs lisibles
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: pourcentages à la façon d'une caisse
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: scientifique racines, puissances, factorielle
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: scientifique trigonométrie en degrés et en radians
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: scientifique logarithmes, exponentielle, constantes, ans
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/calculator/expression_evaluator_test.dart: affichage formats
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/sync/database_merge_service_test.dart: deux appareils avec le même compte : leurs transactions respectives sont toutes conservées
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/sync/database_merge_service_test.dart: rejouer la même fusion deux fois ne crée aucun doublon
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/sync/database_merge_service_test.dart: un nouveau compte distant est ajouté avec les bonnes transactions rattachées
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/sync/database_merge_service_test.dart: un virement fusionné garde ses deux écritures liées par un NOUVEL id local
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/sync/database_merge_service_test.dart: une échéance de crédit payée sur un appareil le reste après fusion
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/settings/exchange_rate_dao_test.dart: setRate puis getAll retrouve le taux enregistré
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/settings/exchange_rate_dao_test.dart: setRate sur une devise déjà enregistrée remplace l'ancien taux (pas de doublon)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/settings/exchange_rate_dao_test.dart: deleteRate retire la devise
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurrence_end_of_month_test.dart: une récurrence mensuelle au 31 ne saute jamais de mois et ne dérive pas
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurrence_end_of_month_test.dart: sans jour d'ancrage (anciennes données), pas de saut de mois
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_test.dart: RecurringTransaction.computeNextDueDate hebdomadaire : ajoute 7 jours
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_test.dart: RecurringTransaction.computeNextDueDate mensuelle : passe au mois suivant, même jour
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_test.dart: RecurringTransaction.computeNextDueDate mensuelle : franchit le passage d'année (décembre -> janvier)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_test.dart: RecurringTransaction.computeNextDueDate annuelle : ajoute un an, même jour et mois
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_generator_test.dart: RecurringTransactionGenerator génère une transaction pour une échéance passée d'un jour
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_generator_test.dart: RecurringTransactionGenerator ne génère rien pour une échéance future
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_generator_test.dart: RecurringTransactionGenerator rattrape plusieurs échéances hebdomadaires manquées
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/recurring/recurring_transaction_generator_test.dart: RecurringTransactionGenerator ignore une récurrence inactive même en retard
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings hasTarget est faux sans montant cible
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings hasTarget est faux si le montant cible est 0
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings progress est null sans objectif
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings progress calcule correctement le ratio
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings progress est plafonné à 1.0 même si l'objectif est dépassé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/savings/savings_test.dart: Savings progress est plancher à 0.0 (jamais négatif)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_pagination_test.dart: parcourir toutes les pages retrouve exactement les 25 transactions, sans doublon
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_pagination_test.dart: la dernière page indique bien qu'il n'y en a plus (moins que pageSize)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_pagination_test.dart: les pages sont triées du plus récent au plus ancien, cohérentes entre elles
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transfer_test.dart: un virement crée deux écritures liées et met à jour les deux soldes
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transfer_test.dart: un virement n'entre jamais dans les totaux Revenus/Dépenses
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transfer_test.dart: supprimer un virement supprime ses deux écritures et annule l'effet sur les deux soldes
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transfer_test.dart: refuse un virement vers le même compte ou un montant nul
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive faux quand aucun filtre n'est appliqué
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive vrai avec une recherche texte non vide
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive faux avec une recherche texte vide ou seulement des espaces
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive vrai avec un filtre de compte, catégorie ou type
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive copyWith remet un filtre à null via la fonction fournie
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/transactions/transaction_filters_test.dart: TransactionFilters.isActive copyWith sans argument conserve les valeurs existantes
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/backup/auto_backup_service_test.dart: AutoBackupService.isDue jamais lancée -> due
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/backup/auto_backup_service_test.dart: AutoBackupService.isDue il y a moins de 7 jours -> pas due
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/backup/auto_backup_service_test.dart: AutoBackupService.isDue il y a exactement 7 jours -> due
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/backup/auto_backup_service_test.dart: AutoBackupService.isDue il y a plus de 7 jours -> due
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_test.dart: Debt remainingAmount = totalAmount - paidAmount
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_test.dart: Debt isSettled est faux tant qu'il reste un solde
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_test.dart: Debt isSettled est vrai quand tout est payé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_test.dart: Debt isSettled tolère une infime erreur d'arrondi flottant
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_test.dart: Debt remainingAmount peut être négatif en cas de trop-perçu
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: signedDebtPaymentAmount payer une dette retire de l'argent du compte (négatif)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: signedDebtPaymentAmount recevoir un paiement de créance ajoute de l'argent au compte (positif)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: signedDebtPaymentAmount le montant en entrée est toujours positif, jamais déjà signé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: reverseSignedAmount inverse un montant positif
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: reverseSignedAmount inverse un montant négatif
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: reverseSignedAmount scénario complet : annuler une dette partiellement payée redonne exactement l'argent prélevé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/features/debts/debt_balance_calculator_test.dart: reverseSignedAmount scénario complet équivalent pour une créance
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Zoom les paliers vont de 75 à 150 par pas de 5
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Zoom clampZoom borne et aligne sur le pas de 5
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Formatage des montants séparateur configurable
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Formatage des montants mode confidentialité masque les montants
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Thèmes les 8 thèmes se construisent avec chaque police
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Historique de solde reconstitue les soldes passés à partir des écritures
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Graphiques RingGauge atteint la valeur demandée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/display/display_and_charts_test.dart: Graphiques courbes, anneau et barres s’affichent sans erreur
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: retrait Moov vers caisse : Moov baisse, caisse monte, rien dans les stats
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: transfert entre comptes : soldes déplacés, total inchangé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/theme/chart_style_test.dart: sauvegarde et relecture des réglages de graphiques
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/theme/chart_style_test.dart: réglages absents ou abîmés : valeurs d'origine
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/theme/chart_style_test.dart: palette : couleur d'origine sans palette, palette sinon
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/theme/chart_style_test.dart: retour au thème pour une couleur
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: dépôt : le solde augmente sans compter comme revenu
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: épargne vers le compte d’épargne immédiate
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: suppression d’un transfert supprime les deux écritures et rétablit les soldes
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: dette contractée puis remboursée en deux fois, puis supprimée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: installation neuve : schéma v19 complet
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: créance accordée puis encaissée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v13 -> v15 : colonne anchor_day ajoutée, données conservées
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v12 -> v15 : montants convertis en centimes entiers + sauvegarde de sécurité
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v14 -> v15 : photos existantes rattachées à la première entité, index par entité
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v15 -> v16 : colonne transfer_group ajoutée, transactions existantes conservées
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v16 -> v17 : table exchange_rates créée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: v18 -> v19 : catégorie d'épargne ajoutée, épargnes existantes rangées dans « libre »
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/database/app_database_migration_test.dart: ouvertures simultanées : une seule connexion, aucune erreur
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: achat à crédit : dépense comptée, solde inchangé, dette créée ; remboursement débite
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: crédit contracté, échéance payée puis annulée, crédit supprimé
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/ledger/balance_consistency_test.dart: enchaînement complet : tout reste cohérent avec le grand livre
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment la mensualité amortit exactement le capital sur la durée
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment taux à 0% : mensualité = capital / durée, sans intérêts
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment retourne null si le capital est nul ou négatif
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment retourne null si la durée est nulle ou négative
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment retourne null si le taux est négatif
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment retourne null si un paramètre est manquant
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/loan_calculator_test.dart: calculateMonthlyPayment mensualité × durée > capital (les intérêts sont bien inclus)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents convertit unités -> centimes -> unités sans perte
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents arrondit correctement au centime le plus proche
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents corrige les imprécisions classiques des flottants
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents gère zéro et les valeurs négatives
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents toCentsOrNull / fromCentsOrNull gèrent le null
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.toCents / fromCents un aller-retour ne dérive jamais, même après de nombreuses opérations
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.round arrondit à 2 décimales
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.round corrige les imprécisions classiques des flottants
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.equals considère 0.1 + 0.2 comme égal à 0.3
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/money_test.dart: Money.equals détecte une vraie différence
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/currency_test.dart: pickMainCurrency aucune donnée : XOF par défaut
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/currency_test.dart: pickMainCurrency la devise la plus utilisée gagne
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/currency_test.dart: pickMainCurrency égalité : XOF prioritaire
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/currency_test.dart: pickMainCurrency égalité sans XOF : ordre alphabétique
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/file_encryption_test.dart: FileEncryption round-trip : les octets déchiffrés sont identiques aux octets d'origine
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/month_math_test.dart: addMonthsClamped 31 janvier + 1 mois = 28 février (année non bissextile), pas le 3 mars
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/month_math_test.dart: addMonthsClamped 31 janvier + 1 mois = 29 février (année bissextile)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/month_math_test.dart: addMonthsClamped le jour d'ancrage est retrouvé après un mois court
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/month_math_test.dart: addMonthsClamped passage d'année
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/month_math_test.dart: addMonthsClamped +12 mois conserve le jour (29 février bissextile -> 28 février)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/file_encryption_test.dart: FileEncryption fonctionne avec des octets binaires quelconques (simulant un PDF/DB)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 est déterministe : mêmes entrées => même sortie
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 longueur de sortie = 2 * keyLengthBytes (hexadécimal)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 un sel différent produit une sortie différente
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 un nombre d'itérations différent produit une sortie différente
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 un mot de passe différent produit une sortie différente
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 gère correctement les caractères accentués (mots de passe FR)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/pbkdf2_test.dart: Pbkdf2 une clé plus longue que 32 octets (un seul bloc SHA-256) fonctionne
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/file_encryption_test.dart: FileEncryption un mauvais mot de passe échoue clairement, sans donnée fausse
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/file_encryption_test.dart: FileEncryption un fichier non reconnu (mauvais en-tête) échoue clairement
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/widgets/classeur_test.dart: les trois affichages montrent tous les éléments
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/widgets/classeur_test.dart: un intercalaire filtre sur sa catégorie
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/widgets/classeur_test.dart: la recherche retrouve un élément
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/core/utils/file_encryption_test.dart: FileEncryption deux chiffrements du même contenu ne produisent jamais le même fichier (sel/IV aléatoires)
+✅ /home/runner/work/gestion-financiere/gestion-financiere/test/widget_test.dart: Un widget simple s'affiche sans erreur (sanity check)
+
+🎉 134 tests passed.

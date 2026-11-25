@@ -1,0 +1,97 @@
+Analyzing gestion-financiere...                                 
+
+   info • Use of an async 'dart:io' method • lib/core/database/app_database.dart:68:16 • avoid_slow_async_io
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • lib/core/database/database_initializer.dart:5:8 • unnecessary_import
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:21:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:22:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:23:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:26:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:27:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:28:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:29:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:30:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:33:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:34:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:35:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:36:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:37:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:40:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:41:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:42:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:43:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:44:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:45:7 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/core/navigation/app_drawer.dart:46:7 • prefer_const_constructors
+   info • Use of an async 'dart:io' method • lib/core/router/app_info_service.dart:58:17 • avoid_slow_async_io
+   info • Use 'const' with the constructor to improve performance • lib/core/shell/app_shell.dart:277:11 • prefer_const_constructors
+   info • Don't use 'BuildContext's across async gaps • lib/core/shell/app_shell.dart:385:27 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:476:9 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:494:37 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:497:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:505:7 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:519:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/accounts/presentation/pages/accounts_page.dart:522:40 • use_build_context_synchronously
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/forgot_password_page.dart:78:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/forgot_password_page.dart:81:28 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/login_page.dart:127:23 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/login_page.dart:130:32 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/password_setup_page.dart:106:34 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/password_setup_page.dart:201:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/password_setup_page.dart:203:28 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/app_lock/presentation/pages/password_setup_page.dart:216:28 • prefer_const_constructors
+   info • Use of an async 'dart:io' method • lib/features/backup/data/auto_backup_service.dart:44:18 • avoid_slow_async_io
+   info • Use of an async 'dart:io' method • lib/features/backup/data/backup_service.dart:49:16 • avoid_slow_async_io
+   info • Use of an async 'dart:io' method • lib/features/backup/data/backup_service.dart:142:17 • avoid_slow_async_io
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/budgets/presentation/pages/budgets_page.dart:423:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/budgets/presentation/pages/budgets_page.dart:426:40 • use_build_context_synchronously
+   info • Constructors for public widgets should have a named 'key' parameter • lib/features/dashboard/presentation/pages/home_page.dart:324:9 • use_key_in_widget_constructors
+   info • Constructors for public widgets should have a named 'key' parameter • lib/features/dashboard/presentation/pages/home_page.dart:392:7 • use_key_in_widget_constructors
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/debts/presentation/pages/debts_page.dart:541:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/debts/presentation/pages/debts_page.dart:544:40 • use_build_context_synchronously
+   info • Use 'const' with the constructor to improve performance • lib/features/export/data/statement_export_service.dart:157:21 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:48:27 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:48:45 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:60:72 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:102:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:102:46 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:106:86 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/invoicing/data/invoice_pdf.dart:106:104 • prefer_const_constructors
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/invoicing/presentation/pages/invoice_preview_page.dart:216:34 • use_build_context_synchronously
+   info • Use 'const' with the constructor to improve performance • lib/features/onboarding/presentation/pages/onboarding_page.dart:100:34 • prefer_const_constructors
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/savings/presentation/widgets/savings_form_sheet.dart:210:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/savings/presentation/widgets/savings_form_sheet.dart:213:40 • use_build_context_synchronously
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:25:11 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/features/settings/presentation/pages/settings_page.dart:25:30 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:26:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:28:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:31:11 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/features/settings/presentation/pages/settings_page.dart:31:31 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:32:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:34:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:37:11 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/features/settings/presentation/pages/settings_page.dart:37:29 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:38:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:39:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:40:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:42:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:44:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:45:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:47:11 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/features/settings/presentation/pages/settings_page.dart:47:32 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:48:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/pages/settings_page.dart:49:13 • prefer_const_constructors
+   info • Use of an async 'dart:io' method • lib/features/sync/data/sync_server_service.dart:160:23 • avoid_slow_async_io
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/sync/presentation/pages/sync_page.dart:258:7 • use_build_context_synchronously
+   info • Unnecessary 'this.' qualifier • lib/features/transactions/domain/entities/transaction.dart:77:13 • unnecessary_this
+   info • Unnecessary 'this.' qualifier • lib/features/transactions/domain/entities/transaction.dart:78:14 • unnecessary_this
+   info • Don't use 'BuildContext's across async gaps • lib/features/transactions/presentation/pages/transactions_page.dart:648:46 • use_build_context_synchronously
+   info • The 'if' statement could be replaced by a null-aware assignment • lib/features/transactions/presentation/widgets/transfer_form_sheet.dart:109:19 • prefer_conditional_assignment
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • test/core/display/display_and_charts_test.dart:97:36 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • test/core/display/display_and_charts_test.dart:98:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • test/core/display/display_and_charts_test.dart:99:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • test/core/display/display_and_charts_test.dart:101:13 • prefer_const_constructors
+   info • Use 'const' for final variables initialized to a constant value • test/core/utils/loan_calculator_test.dart:20:7 • prefer_const_declarations
+   info • Use 'const' for final variables initialized to a constant value • test/core/utils/money_test.dart:17:7 • prefer_const_declarations
+   info • Use 'const' for final variables initialized to a constant value • test/core/utils/money_test.dart:53:7 • prefer_const_declarations
+
+93 issues found. (ran in 18.9s)
